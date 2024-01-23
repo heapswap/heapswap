@@ -1,0 +1,52 @@
+[package]
+name = "server"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+
+# networking
+http = "1.0.0"
+url = "2.5.0"
+headers = "0.4.0"
+
+tokio = { version = "1.35.1", features = ["full"] }
+tokio-tungstenite = "0.21.0"
+tokio-stream = "0.1.14"
+tracing = "0.1.40"
+tracing-subscriber = {version = "0.3.18", features = ["env-filter"]}
+
+tower = {version = "0.4.13", features = ["util"]}
+tower-http = {version = "0.5.1", features = ["fs","trace"]}
+
+axum = { version = "0.7.4", features = ["ws"] }
+axum-extra = {version = "0.9.2", features = ["typed-header"]}
+
+# async
+async-trait = "0.1.77"
+futures = "0.3.30"
+futures-util = { version = "0.3", default-features = false, features = ["sink", "std"] }
+
+# data structures
+dashmap = "5.5.3"
+
+# crdt
+yrs = {version = "0.17.4", features = ["weak"] }
+yrs-kvstore = "0.2.0"
+y-sync = "0.4.0"
+y-sweet-core = "0.1.0"
+
+# logging
+anyhow = "1.0.79"
+clap = { version = "4.4.18", features = ["derive", "env"] }
+colored = "2.1.0"
+
+# serialization
+serde = {version = "1.0.195", features=["derive"]}
+serde_json = "1.0.111"
+
+# utils
+lib0 = "0.16.10"
+nanoid = "0.4.0"
