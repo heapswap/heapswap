@@ -193,7 +193,7 @@ impl Server {
 struct HandlerParams {
     token: Option<String>,
 }
-
+ 
 async fn handle_socket_upgrade(
     ws: WebSocketUpgrade,
     Path(doc_id): Path<String>,

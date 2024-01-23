@@ -78,7 +78,7 @@ async fn main() {
 	// ...
 let router = Router::new()
 	.route("/", get(|| async { "Hello, World!" }))
-    .route("/ws", get(handler))
+    //.route("/ws", get(handler))
 	.route("/ws/:roomName", get(handler_room_name))
     .with_state(AppState {
 		docs: Arc::new(DashMap::new()),

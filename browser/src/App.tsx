@@ -1,74 +1,83 @@
-import { useState, useEffect } from "react";
-// import reactLogo from './assets/react.svg'
-// import viteLogo from '/vite.svg'
+import { useState, useEffect, useLayoutEffect, useRef } from "react";
 import * as Y from "yjs";
 import { WebsocketProvider } from "y-websocket";
-// import './App.css'
+import { yCollab } from "y-codemirror.next";
+import { EditorView, basicSetup } from "codemirror";
+import { EditorState } from "@codemirror/state";
+import { javascript } from "@codemirror/lang-javascript";
+import {
+	syntaxHighlighting,
+	defaultHighlightStyle,
+} from "@codemirror/language";
+import * as random from "lib0/random";
 
 function App() {
 	
-	const ydoc = new Y.Doc();
-	const ymap = ydoc.getMap('my-map') 
 	
-	const [status, setStatus] = useState("disconnected") // "connected" | "disconnected"
-	const now = Date.now()
+	// Create a ref for the editor div
+	const editorRef = useRef(null);	
+	
+	let view = null;
+	
+	useLayoutEffect(() => {
+	const usercolors = [
+		{ color: "#30bced", light: "#30bced33" },
+		{ color: "#6eeb83", light: "#6eeb8333" },
+		{ color: "#ffbc42", light: "#ffbc4233" },
+		{ color: "#ecd444", light: "#ecd44433" },
+		{ color: "#ee6352", light: "#ee635233" },
+		{ color: "#9ac2c9", light: "#9ac2c933" },
+		{ color: "#8acb88", light: "#8acb8833" },
+		{ color: "#1be7ff", light: "#1be7ff33" },
+	];
 
-	useEffect(() => {
-	console.log("useEffect fired")
-	
-	const wsProvider = new WebsocketProvider('ws://localhost:3000/ws', 'my-roomname', ydoc)
+	// select a random color for this user
+	const userColor = usercolors[random.uint32() % usercolors.length];
 
-	wsProvider.on('status', (event) => {
-	// console.log(event.status) // logs "connected" or "disconnected"
-	setStatus(event.status)
-	})
-	
-	
-	// wait 1 second, then refresh the page
-	//setTimeout(() => {
-	//	window.location.reload()
-	//}, 5000)
-	
-	
-	ymap.set('prop-name', 'value') // value can be anything json-encodable
+	const doc = new Y.Doc();
+	const ytext = doc.getText("codemirror");
 
-	}, []); // Empty dependency array ensures this runs once on mount and not on updates
-	
-	
-	return <>
-		<h1>Yjs + Vite + React</h1>
-		<h1>{now}</h1>
-		<p>map:</p>
-		{JSON.stringify(ymap.toJSON())}
-		<p>status: {status}</p>
-	</>;
-	
-	/*
-	useEffect(() => {
-        // create a test websocket  and send "ping"
-        const ws = new WebSocket('ws://localhost:3000/ws/test')
-        ws.onopen = () => {
-            ws.send('ping')
-            console.log('sent ping')
-            
-            // send a message every 5 seconds
-            setInterval(() => {
-                ws.send('ping')
-                console.log('sent ping')
-            }, 5000)
-        }
-        
-        ws.onmessage = (event) => {
-            console.log(event.data)
-        }
+	const provider = new WebsocketProvider(
+		"ws://localhost:8000",
+		"my-room",
+		doc,
+		{ disableBc: true },
+	);
 
-        // Clean up the connection when the component unmounts
-        return () => ws.close();
-    }, []); // Empty dependency array ensures this runs once on mount and not on updates
-	return <>
+	const undoManager = new Y.UndoManager(ytext);
+
+	provider.awareness.setLocalStateField("user", {
+		name: "Anonymous " + Math.floor(Math.random() * 100),
+		color: userColor.color,
+		colorLight: userColor.light,
+	});
+
+	const state = EditorState.create({
+		doc: ytext.toString(),
+		extensions: [
+			basicSetup,
+			javascript(),
+			syntaxHighlighting(defaultHighlightStyle),
+			yCollab(ytext, provider.awareness, { undoManager }),
+		],
+	});
 	
-	</>
-		*/
+    if (editorRef.current && !view) {
+      view = new EditorView({ state, parent: editorRef.current });
+    }
+	
+	//view = new EditorView({ state, parent: document.querySelector('#editor') })
+
+}, []);
+
+	return (
+		<div className="App">
+			<header className="App-header">
+				<h1>Yjs + CodeMirror</h1>
+				<div id="editor" ref={editorRef}></div>
+			</header>
+		</div>
+	);
 }
 
 export default App;
