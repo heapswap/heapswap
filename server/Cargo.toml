@@ -71,5 +71,10 @@ thiserror = "1.0.56"
 human_bytes = "0.4.3"
 time = "0.3.31"
 memory-stats = "1.1.0"
-ort = "1.16.3"
+ort = { version = "1.16.3", features = ["load-dynamic", "profiling", "fetch-models"] }
+rand = "0.8.5"
+ndarray = "0.15.6"
+tokenizers = "0.15.1"
+timeit = "0.1.2"
+base64 = "0.21.7"
 
