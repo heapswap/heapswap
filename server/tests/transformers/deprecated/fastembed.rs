@@ -1,18 +1,28 @@
-use heapswap::embeddings::EmbeddingSession;
+/*
+DEPRECATED - fastembed is technically faster, but it uses *all* cores
+*/
+
+use fastembed::{FlagEmbedding, InitOptions, EmbeddingModel, EmbeddingBase};
 use dashmap::DashMap;
 use anyhow::Result;
 use timeit::*;
 
 #[test]
-fn test_vector_timing() -> Result<()> {
-	let session = EmbeddingSession::new(
-		"gte-small",
-		"models/gte-small/model.onnx",
-		"models/gte-small/tokenizer.json",
-		512,
-		2, //gte-small seems to have diminishing returns after 3 threads
-	);
+fn main(){
+	
+	// With default InitOptions
+	let model: FlagEmbedding = FlagEmbedding::try_new(Default::default()).unwrap();
 
+	/*
+	// With custom InitOptions
+	let model: FlagEmbedding = FlagEmbedding::try_new(InitOptions {
+		model_name: EmbeddingModel::BGEBaseEN,
+		show_download_message: true,
+		..Default::default()
+	}).unwrap();
+	*/
+	
+	
 	let loop_count = 10;
 
 	let sequence_map: DashMap<&str, &str> = DashMap::new();
@@ -32,25 +42,19 @@ fn test_vector_timing() -> Result<()> {
 		
 		let mut embedding = vec![];
 
-		let sequence = *sequence_map.get(length).unwrap().value();
+		let sequence = vec![*sequence_map.get(length).unwrap().value()];
 		
 		let sec = timeit_loops!(loop_count, {
-			embedding = session.binary_quantize(
-				session.embed(sequence)?,
-			)?;
+			embedding = model.embed(sequence.clone(), None).unwrap()
 		});
 
 		println!(
-			"{} sequence ({} tokens) : {} loops @ {} ms per loop",
+			"{} sequence : {} loops @ {} ms per loop",
 			length,
-			session.count_tokens(sequence).unwrap(),
 			loop_count,
 			(sec as f64 * 1000.0).round()
 		);
-
-		//println!("vector binary: {}", session.display_binary(embedding.clone())?);
-		println!("vector hash: {}", session.display_base64(embedding)?);
 	}
 
-	Ok(())
+
 }
