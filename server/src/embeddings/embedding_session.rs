@@ -78,15 +78,15 @@ impl EmbeddingSession {
 			threads: threads as usize,
 		}
 	}
-	
+
 	// return the token count of a sequence
-	pub fn count_tokens (
+	pub fn count_tokens(
 		&self,
 		sequence: &str,
 	) -> Result<usize> {
 		// tokenize the sequence
 		let tokenizer_output = self.tokenizer.encode(sequence, true).unwrap();
-		
+
 		// return the number of tokens
 		Ok(tokenizer_output.get_ids().len())
 	}
@@ -96,7 +96,6 @@ impl EmbeddingSession {
 		&self,
 		sequence: &str,
 	) -> Result<Vec<f32>> {
-		
 		/*
 		utility functions
 		*/
@@ -126,11 +125,11 @@ impl EmbeddingSession {
 		{
 			ndarray::CowArray::from(create_ndarray(tokenizer_output, func))
 		}
-		
+
 		/*
 		embedding functions
 		*/
-		
+
 		// Step 1:	Tokenize the sequence
 		let tokenizer_output = self.tokenizer.encode(sequence, true).unwrap();
 
