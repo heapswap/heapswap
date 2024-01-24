@@ -1,15 +1,19 @@
 use anyhow::Result;
 use base64::prelude::*;
+use dashmap::mapref::multiple::RefMulti;
+use dashmap::DashMap;
 use ndarray::Axis;
+use num_cpus;
 use ort::{
-	tensor::OrtOwnedTensor, Environment, GraphOptimizationLevel, LoggingLevel,
-	OrtError, Session, SessionBuilder, Value,
+	Environment, GraphOptimizationLevel, LoggingLevel, Session, SessionBuilder,
+	Value,
 };
 use std::sync::Arc;
 use timeit::*;
 use tokenizers::utils::truncation::*;
 use tokenizers::{Encoding, Tokenizer};
 
+// this struct holds data for creating sentence embeddings
 pub struct EmbeddingSession {
 	session: Session,
 	tokenizer: Tokenizer,
@@ -25,7 +29,7 @@ impl EmbeddingSession {
 		model_path: &str,
 		tokenizer_path: &str,
 		tokenizer_max_len: usize,
-		threads: i16,
+		threads: i16, // 0 uses all available threads
 	) -> Self {
 		// Initialize the ONNX Runtime environment
 		let environment = Environment::builder()
@@ -40,6 +44,13 @@ impl EmbeddingSession {
 			.unwrap()
 			.with_optimization_level(GraphOptimizationLevel::Level3)
 			.unwrap();
+
+		// make sure there are not more threads	than cpu cores
+		let threads = if threads > 0 {
+			std::cmp::min(threads, num_cpus::get() as i16)
+		} else {
+			num_cpus::get() as i16
+		};
 
 		if threads > 0 {
 			// use the number of threads specified
@@ -67,32 +78,17 @@ impl EmbeddingSession {
 			threads: threads as usize,
 		}
 	}
-
-	// create an ndarray from a vector
-	fn create_ndarray<F>(
-		&self,
-		tokenizer_output: &Encoding,
-		func: F,
-	) -> ndarray::Array2<i64>
-	where
-		F: Fn(&Encoding) -> &[u32],
-	{
-		ndarray::Array::from_shape_vec(
-			(1, tokenizer_output.len()),
-			func(tokenizer_output).iter().map(|&x| x as i64).collect(),
-		)
-		.unwrap()
-	}
 	
-	fn create_cow_array<F>(
+	// return the token count of a sequence
+	fn count_tokens (
 		&self,
-		tokenizer_output: &Encoding,
-		func: F,
-	) -> ndarray::CowArray<'_, i64, ndarray::Dim<[usize; 2]>>
-	where
-		F: Fn(&Encoding) -> &[u32],
-	{
-		ndarray::CowArray::from(self.create_ndarray(tokenizer_output, func))
+		sequence: &str,
+	) -> Result<usize> {
+		// tokenize the sequence
+		let tokenizer_output = self.tokenizer.encode(sequence, true).unwrap();
+		
+		// return the number of tokens
+		Ok(tokenizer_output.get_ids().len())
 	}
 
 	// embed a sequence of text
@@ -101,38 +97,71 @@ impl EmbeddingSession {
 		sequence: &str,
 	) -> Result<Vec<f32>> {
 		
+		/*
+		utility functions
+		*/
+
+		// create an ndarray from a vector
+		fn create_ndarray<F>(
+			tokenizer_output: &Encoding,
+			func: F,
+		) -> ndarray::Array2<i64>
+		where
+			F: Fn(&Encoding) -> &[u32],
+		{
+			ndarray::Array::from_shape_vec(
+				(1, tokenizer_output.len()),
+				func(tokenizer_output).iter().map(|&x| x as i64).collect(),
+			)
+			.unwrap()
+		}
+
+		// create a cow array from a vector
+		fn create_cow_array<F>(
+			tokenizer_output: &Encoding,
+			func: F,
+		) -> ndarray::CowArray<'_, i64, ndarray::Dim<[usize; 2]>>
+		where
+			F: Fn(&Encoding) -> &[u32],
+		{
+			ndarray::CowArray::from(create_ndarray(tokenizer_output, func))
+		}
+		
+		/*
+		embedding functions
+		*/
+		
 		// Step 1:	Tokenize the sequence
 		let tokenizer_output = self.tokenizer.encode(sequence, true).unwrap();
 
-		// debugging
-		//println!("embedding {} tokens",  tokenizer_output.get_ids().len());
-
 		// Step 2: run the session
 		let outputs = self.session.run(vec![
-			
 			// input_ids
 			Value::from_array(
 				self.session.allocator(),
-				&self.create_cow_array(&tokenizer_output, Encoding::get_ids).into_dyn(),
-			) 
+				&create_cow_array(&tokenizer_output, Encoding::get_ids)
+					.into_dyn(),
+			)
 			.unwrap(),
-			
 			// attention_mask
 			Value::from_array(
 				self.session.allocator(),
-				&self.create_cow_array(&tokenizer_output, Encoding::get_attention_mask).into_dyn(),
+				&create_cow_array(
+					&tokenizer_output,
+					Encoding::get_attention_mask,
+				)
+				.into_dyn(),
 			)
 			.unwrap(),
-			
 			// token_type_ids
 			Value::from_array(
 				self.session.allocator(),
-				&self.create_cow_array(&tokenizer_output, Encoding::get_type_ids).into_dyn(),
+				&create_cow_array(&tokenizer_output, Encoding::get_type_ids)
+					.into_dyn(),
 			)
 			.unwrap(),
-			
 		])?;
-		
+
 		// Step 3: Parse the outputs
 
 		let result = outputs[0]
@@ -140,12 +169,12 @@ impl EmbeddingSession {
 			.unwrap()
 			.view()
 			.mean_axis(Axis(1)) // average over the sequence
-			.unwrap() 
+			.unwrap()
 			.to_owned()
 			.as_slice()
 			.unwrap()
 			.to_vec(); // convert to Vec<f32>
-			
+
 		// Return the pooled output
 		Ok(result)
 	}
@@ -203,42 +232,52 @@ impl EmbeddingSession {
 }
 
 #[test]
-fn main() -> Result<()> {
+fn test_vector_timing() -> Result<()> {
 	let session = EmbeddingSession::new(
 		"gte-small",
 		"models/gte-small/model.onnx",
 		"models/gte-small/tokenizer.json",
 		512,
-		0, // use default number of threads
+		3, //gte-small seems to have diminishing returns after 3 threads
 	);
 
 	let loop_count = 10;
 
-	///*
-	let sequence = r#"Orangutans are great apes native to the rainforests of Indonesia and Malaysia. They are now found only in parts of Borneo and Sumatra, but during the Pleistocene they ranged throughout Southeast Asia and South China. Classified in the genus Pongo, orangutans were originally considered to be one species. From 1996, they were divided into two species: the Bornean orangutan (P. pygmaeus, with three subspecies) and the Sumatran orangutan (P. abelii). A third species, the Tapanuli orangutan (P. tapanuliensis), was identified definitively in 2017. The orangutans are the only surviving species of the subfamily Ponginae, which diverged genetically from the other hominids (gorillas, chimpanzees, and humans) between 19.3 and 15.7 million years ago.
+	let sequence_map: DashMap<&str, &str> = DashMap::new();
+
+	sequence_map.insert("short", "orangutans are cool");
+	sequence_map.insert("medium", r#"Orangutans are great apes native to the rainforests of Indonesia and Malaysia. They are now found only in parts of Borneo and Sumatra, but during the Pleistocene they ranged throughout Southeast Asia and South China. Classified in the genus Pongo, orangutans were originally considered to be one species. From 1996, they were divided into two species: the Bornean orangutan (P. pygmaeus, with three subspecies) and the Sumatran orangutan (P. abelii). A third species, the Tapanuli orangutan (P. tapanuliensis), was identified definitively in 2017. The orangutans are the only surviving species of the subfamily Ponginae, which diverged genetically from the other hominids (gorillas, chimpanzees, and humans) between 19.3 and 15.7 million years ago. "#);
+	sequence_map.insert("long", r#"Orangutans are great apes native to the rainforests of Indonesia and Malaysia. They are now found only in parts of Borneo and Sumatra, but during the Pleistocene they ranged throughout Southeast Asia and South China. Classified in the genus Pongo, orangutans were originally considered to be one species. From 1996, they were divided into two species: the Bornean orangutan (P. pygmaeus, with three subspecies) and the Sumatran orangutan (P. abelii). A third species, the Tapanuli orangutan (P. tapanuliensis), was identified definitively in 2017. The orangutans are the only surviving species of the subfamily Ponginae, which diverged genetically from the other hominids (gorillas, chimpanzees, and humans) between 19.3 and 15.7 million years ago.
 
 	The most arboreal of the great apes, orangutans spend most of their time in trees. They have proportionally long arms and short legs, and have reddish-brown hair covering their bodies. Adult males weigh about 75 kg (165 lb), while females reach about 37 kg (82 lb). Dominant adult males develop distinctive cheek pads or flanges and make long calls that attract females and intimidate rivals; younger subordinate males do not and more resemble adult females. Orangutans are the most solitary of the great apes: social bonds occur primarily between mothers and their dependent offspring. Fruit is the most important component of an orangutan's diet; but they will also eat vegetation, bark, honey, insects and bird eggs. They can live over 30 years, both in the wild and in captivity.
 
 	Orangutans are among the most intelligent primates. They use a variety of sophisticated tools and construct elaborate sleeping nests each night from branches and foliage. The apes' learning abilities have been studied extensively. There may be distinctive cultures within populations. Orangutans have been featured in literature and art since at least the 18th century, particularly in works that comment on human society. Field studies of the apes were pioneered by primatologist Birutė Galdikas and they have been kept in captive facilities around the world since at least the early 19th century.
 
-	All three orangutan species are considered critically endangered. Human activities have caused severe declines in populations and ranges. Threats to wild orangutan populations include poaching (for bushmeat and retaliation for consuming crops), habitat destruction and deforestation (for palm oil cultivation and logging), and the illegal pet trade. Several conservation and rehabilitation organisations are dedicated to the survival of orangutans in the wild. "#;
-	//*/
-	//let sequence = "orangutans are cool";
+	All three orangutan species are considered critically endangered. Human activities have caused severe declines in populations and ranges. Threats to wild orangutan populations include poaching (for bushmeat and retaliation for consuming crops), habitat destruction and deforestation (for palm oil cultivation and logging), and the illegal pet trade. Several conservation and rehabilitation organisations are dedicated to the survival of orangutans in the wild. "#);
 
-	//let sequence = r#"Orangutans are great apes native to the rainforests of Indonesia and Malaysia. They are now found only in parts of Borneo and Sumatra, but during the Pleistocene they ranged throughout Southeast Asia and South China. Classified in the genus Pongo, orangutans were originally considered to be one species. From 1996, they were divided into two species: the Bornean orangutan (P. pygmaeus, with three subspecies) and the Sumatran orangutan (P. abelii). A third species, the Tapanuli orangutan (P. tapanuliensis), was identified definitively in 2017. The orangutans are the only surviving species of the subfamily Ponginae, which diverged genetically from the other hominids (gorillas, chimpanzees, and humans) between 19.3 and 15.7 million years ago. "#;
+	// timing
+	for length in ["short", "medium", "long"].iter() {
+		
+		let mut embedding = vec![];
 
-	let mut embedding = vec![];
-	let sec = timeit_loops!(loop_count, {
-		embedding = session.binary_quantize(session.embed(sequence)?)?;
-		//println!("{:?}", embedding);
-	});
-	println!(
-		"{} loops at {} ms per loop",
-		loop_count,
-		(sec as f64 * 1000.0).round()
-	);
+		let sequence = *sequence_map.get(length).unwrap().value();
+		
+		let sec = timeit_loops!(loop_count, {
+			embedding = session.binary_quantize(
+				session.embed(sequence)?,
+			)?;
+		});
 
-	println!("{}", session.display_base64(embedding)?);
+		println!(
+			"{} sequence ({} tokens) : {} loops @ {} ms per loop",
+			length,
+			session.count_tokens(sequence).unwrap(),
+			loop_count,
+			(sec as f64 * 1000.0).round()
+		);
+
+		println!("vector hash: {}", session.display_base64(embedding)?);
+	}
 
 	Ok(())
 }

@@ -2436,6 +2436,7 @@ dependencies = [
  "memory-stats",
  "nanoid",
  "ndarray",
+ "num_cpus",
  "ort",
  "rand 0.8.5",
  "serde",
