@@ -44,7 +44,7 @@ function App() {
 
 
 	const provider = new WebsocketProvider(
-		"ws://localhost:8000",
+		"ws://localhost:8000/api/v0/yjs",
 		"my-room",
 		doc,
 		{ disableBc: true },
@@ -74,7 +74,7 @@ function App() {
 	
 	
 	const provider2 = new WebsocketProvider(
-		"ws://localhost:8000",
+		"ws://localhost:8000/api/v0/yjs",
 		"my-room",
 		doc2,
 		{ disableBc: true },

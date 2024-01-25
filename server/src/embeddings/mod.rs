@@ -1,1 +1,2 @@
-pub mod embedding_session;
+mod embedding_session;
+pub use self::embedding_session::EmbeddingSession;
