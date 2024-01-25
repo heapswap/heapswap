@@ -1,6 +1,6 @@
 [package]
 name = "heapswap"
-version = "0.1.0"
+version = "0.0.1"
 edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
@@ -51,6 +51,17 @@ yrs-warp = "0.7.0"
 anyhow = "1.0.79"
 clap = { version = "4.4.18", features = ["derive", "env"] }
 colored = "2.1.0"
+thiserror = "1.0.56"
+human_bytes = "0.4.3"
+
+# profiling
+memory-stats = "1.1.0"
+num_cpus = "1.16.0"
+
+# time
+timeit = "0.1.2"
+time = "0.3.31"
+ndarray = "0.15.6"
 
 # serialization
 serde = {version = "1.0.195", features=["derive"]}
@@ -64,24 +75,17 @@ serde_v8 = "0.158.0"
 #swc_ecma_visit = { version = "=0.96.17"}
 
 # embeddings
-ort = { version = "1.16.3", features = ["load-dynamic", "profiling", "fetch-models"] } # unsure if these features are needed
+ort = { version = "1.16.3" } #  features = ["profiling"]
 tokenizers = "0.15.1"
 instant-distance = "0.6.1"
 
 # utils
+rand = "0.8.5"
 lib0 = "0.16.10"
 nanoid = "0.4.0"
-thiserror = "1.0.56"
-human_bytes = "0.4.3"
-time = "0.3.31"
-memory-stats = "1.1.0"
-rand = "0.8.5"
-ndarray = "0.15.6"
-timeit = "0.1.2"
 base64 = "0.21.7"
-num_cpus = "1.16.0"
-faiss = { version = "0.12.1", features = ["static"] }
 terny = "0.2.0"
 
 [dev-dependencies]
 fastembed = "2.0.1"
+#faiss = { version = "0.12.1", features = ["static"] }
