@@ -1,7 +1,6 @@
 use crate::app_state::GlobalAppState;
 use crate::yrs_axum::{
-	Awareness, AwarenessRef, AxumSink, AxumStream, BroadcastGroup,
-	BroadcastRef, YrsDoc,
+ AxumSink, AxumStream, YrsDoc,
 };
 use axum::{
 	extract::{
@@ -12,8 +11,7 @@ use axum::{
 };
 use futures::stream::StreamExt;
 use std::sync::Arc;
-use tokio::sync::{Mutex, RwLock};
-use yrs::{Doc, Text, Transact};
+use tokio::sync::Mutex;
 
 // connect with no room name
 pub async fn get_yjs_default_room_handler(

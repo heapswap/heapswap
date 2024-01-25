@@ -1,5 +1,4 @@
 pub mod yjs_handlers;
-use yjs_handlers::{get_yjs_default_room_handler, get_yjs_named_room_handler};
 
 pub mod yrs_doc;
 pub use yrs_doc::{AwarenessRef, BroadcastRef, YrsDoc};

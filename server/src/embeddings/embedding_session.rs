@@ -1,24 +1,21 @@
 use anyhow::Result;
 use base64::prelude::*;
-use dashmap::mapref::multiple::RefMulti;
-use dashmap::DashMap;
 use ndarray::Axis;
 use num_cpus;
 use ort::{
 	Environment, GraphOptimizationLevel, LoggingLevel, Session, SessionBuilder,
 	Value,
 };
-use std::sync::Arc;
-use timeit::*;
 use tokenizers::utils::truncation::*;
 use tokenizers::{Encoding, Tokenizer};
 
+#[allow(dead_code)]
 // holds a runtime for creating sentence embeddings
 pub struct EmbeddingSession {
 	session: Session,
 	tokenizer: Tokenizer,
-	env: Arc<Environment>,
-	threads: usize,
+	//env: Arc<Environment>,
+	//threads: usize,
 }
 
 // for an onnx embedding model, specifically gte-small
@@ -74,8 +71,8 @@ impl EmbeddingSession {
 		Self {
 			session: session,
 			tokenizer: tokenizer,
-			env: environment,
-			threads: threads as usize,
+			//env: environment,
+			//threads: threads as usize,
 		}
 	}
 
