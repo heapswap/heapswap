@@ -1,0 +1,25 @@
+[package]
+name = "y-sync"
+version = "0.4.0"
+edition = "2021"
+description = "Yrs synchronization protocol"
+license-file = "LICENSE"
+authors = ["Bartosz Sypytkowski <b.sypytkowski@gmail.com>"]
+keywords = ["crdt", "yrs", "y-sync"]
+homepage = "https://github.com/y-crdt/y-sync/"
+repository = "https://github.com/y-crdt/y-sync/"
+readme = "./README.md"
+
+[features]
+net = ["dep:tokio", "dep:futures-util"]
+
+[dependencies]
+yrs = "0.17"
+thiserror = "1.0"
+tokio = { version = "1.26.0", features = ["net", "sync"], optional = true }
+futures-util = { version = "0.3", features = ["sink"], optional = true }
+
+[dev-dependencies]
+tokio = { version = "1.26.0", features = ["full"] }
+tokio-util = { version ="0.7", features = ["codec"] }
+bytes = "1.4"

@@ -16,8 +16,10 @@ function App() {
 	
 	// Create a ref for the editor div
 	const editorRef = useRef(null);	
+	const editorRef2 = useRef(null);	
 	
-	let view = null;
+	const view = useRef(null);
+	const view2 = useRef(null);
 	
 	useLayoutEffect(() => {
 	const usercolors = [
@@ -36,6 +38,10 @@ function App() {
 
 	const doc = new Y.Doc();
 	const ytext = doc.getText("codemirror");
+	
+	const doc2 = new Y.Doc();
+	const ytext2 = doc2.getText("codemirror");
+
 
 	const provider = new WebsocketProvider(
 		"ws://localhost:8000",
@@ -62,12 +68,41 @@ function App() {
 		],
 	});
 	
-    if (editorRef.current && !view) {
-      view = new EditorView({ state, parent: editorRef.current });
+    if (editorRef.current && !view.current) {
+      view.current = new EditorView({ state: state, parent: editorRef.current });
     }
 	
-	//view = new EditorView({ state, parent: document.querySelector('#editor') })
+	
+	const provider2 = new WebsocketProvider(
+		"ws://localhost:8000",
+		"my-room",
+		doc2,
+		{ disableBc: true },
+	);
 
+	const undoManager2 = new Y.UndoManager(ytext2);
+
+	provider2.awareness.setLocalStateField("user", {
+		name: "Anonymous " + Math.floor(Math.random() * 100),
+		color: userColor.color,
+		colorLight: userColor.light,
+	});
+
+	const state2 = EditorState.create({
+		doc: ytext2.toString(),
+		extensions: [
+			basicSetup,
+			javascript(),
+			syntaxHighlighting(defaultHighlightStyle),
+			yCollab(ytext2, provider2.awareness, { undoManager2 }),
+		],
+	});
+	
+    if (editorRef2.current && !view2.current) {
+      view2.current = new EditorView({ state: state2, parent: editorRef2.current });
+    }
+	
+	
 }, []);
 
 	return (
@@ -75,6 +110,7 @@ function App() {
 			<header className="App-header">
 				<h1>Yjs + CodeMirror</h1>
 				<div id="editor" ref={editorRef}></div>
+				<div id="editor2" ref={editorRef2}></div>
 			</header>
 		</div>
 	);

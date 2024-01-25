@@ -1,0 +1,27 @@
+[package]
+name = "yrs-warp"
+version = "0.7.0"
+edition = "2021"
+description = "Yrs synchronization protocol using Warp web sockets"
+license = "MIT"
+authors = ["Bartosz Sypytkowski <b.sypytkowski@gmail.com>"]
+keywords = ["crdt", "yrs", "warp"]
+homepage = "https://github.com/y-crdt/yrs-warp/"
+repository = "https://github.com/y-crdt/yrs-warp/"
+readme = "./README.md"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+yrs = "0.17"
+y-sync = { version = "0.4", features = ["net"] }
+warp = "0.3"
+futures-util = { version = "0.3", features = ["sink"] }
+tokio = { version = "1.34", features = ["rt","net","sync","macros"] }
+serde = { version = "1.0", features = ["derive", "rc"] }
+serde_json = "1.0"
+log = "0.4"
+
+[dev-dependencies]
+tokio-tungstenite = "0.20"
+tokio = { version = "1", features = ["full"] }
