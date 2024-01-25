@@ -1161,6 +1161,7 @@ dependencies = [
  "serde",
  "serde_json",
  "serde_v8",
+ "terny",
  "thiserror",
  "tikv-jemalloc-ctl",
  "tikv-jemalloc-sys",
@@ -3182,6 +3183,12 @@ dependencies = [
  "libc",
  "xattr",
 ]
+
+[[package]]
+name = "terny"
+version = "0.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "cea18c7eb8944102ab0973817e4aa5f558fe9679b96b843600c0d365c7d115de"
 
 [[package]]
 name = "text_lines"

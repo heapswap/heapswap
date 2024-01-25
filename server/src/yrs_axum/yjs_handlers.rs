@@ -82,9 +82,9 @@ async fn yjs_socket_handler(
 
 	// wait for the broadcast to finish
 	match bsub.completed().await {
-		Ok(_) => println!("broadcasting for channel finished successfully"),
+		Ok(_) => println!("broadcasting finished successfully"),
 		Err(e) => {
-			eprintln!("broadcasting for channel finished abruptly: {}", e)
+			eprintln!("broadcasting finished abruptly: {}", e)
 		}
 	}
 }
