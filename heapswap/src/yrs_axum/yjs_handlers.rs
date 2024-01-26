@@ -1,7 +1,5 @@
 use crate::app_state::GlobalAppState;
-use crate::yrs_axum::{
- AxumSink, AxumStream, YrsDoc,
-};
+use crate::yrs_axum::{AxumSink, AxumStream, YrsDoc};
 use axum::{
 	extract::{
 		ws::{WebSocket, WebSocketUpgrade},

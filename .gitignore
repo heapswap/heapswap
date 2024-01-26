@@ -2,3 +2,4 @@ target
 dist
 tests/deno/deno_core
 local_cache
+data/*

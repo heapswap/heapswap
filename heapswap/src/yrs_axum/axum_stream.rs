@@ -50,24 +50,29 @@ impl Stream for AxumStream {
 				}
 
 				// If the message is not binary, return an error
-				
-				// check for internal failure: AxumStream: non-binary message received Ok(Close(Some(CloseFrame { code: 1001, reason: "" })))			
-				Ok(axum::extract::ws::Message::Close(Some(axum::extract::ws::CloseFrame {code, reason}))) => {
-					Poll::Ready(Some(Err(axum::Error::new(
+
+				// check for internal failure: AxumStream: non-binary message received Ok(Close(Some(CloseFrame { code: 1001, reason: "" })))
+				Ok(axum::extract::ws::Message::Close(Some(
+					axum::extract::ws::CloseFrame { code, reason },
+				))) => Poll::Ready(Some(Err(axum::Error::new(
 					std::io::Error::new(
 						std::io::ErrorKind::Other,
-						format!("Client Disconnected {:?} {:?}", code, {if reason.is_empty(){ None }else{ Some(reason)}}),
+						format!("Client Disconnected {:?} {:?}", code, {
+							if reason.is_empty() {
+								None
+							} else {
+								Some(reason)
+							}
+						}),
 					),
-				))))},
-				
-				
-				Ok(_) => {					
-					Poll::Ready(Some(Err(axum::Error::new(
+				)))),
+
+				Ok(_) => Poll::Ready(Some(Err(axum::Error::new(
 					std::io::Error::new(
 						std::io::ErrorKind::Other,
 						format!("non-binary message received {:?}", res),
 					),
-				))))},
+				)))),
 
 				// otherwise, return an error
 				Err(e) => Poll::Ready(Some(Err(e))),

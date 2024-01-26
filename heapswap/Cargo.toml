@@ -6,6 +6,10 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+# local
+heapswap_macros = {path = "../heapswap_macros"}
+
+
 # async
 tokio = { version = "1.35.1", features = ["full"] }
 tokio-tungstenite = "0.21.0"
@@ -79,12 +83,24 @@ ort = { version = "1.16.3" } #  features = ["profiling"]
 tokenizers = "0.15.1"
 instant-distance = "0.6.1"
 
+
+# storage
+vectordb = "0.4.5"
+sled = "0.34.7"
+byteorder = "1.5.0"
+zerocopy = "0.7.32"
+zerocopy-derive = "0.7.32"
+arrow-schema = "49"
+arrow-array = "49"
+
 # utils
 rand = "0.8.5"
 lib0 = "0.16.10"
 nanoid = "0.4.0"
 base64 = "0.21.7"
 terny = "0.2.0"
+tempfile = "3.9.0"
+
 
 [dev-dependencies]
 fastembed = "2.0.1"

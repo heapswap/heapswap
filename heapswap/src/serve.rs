@@ -1,5 +1,5 @@
-use axum::Router;
 use crate::{api_routers::api_v0_router, app_state::GlobalAppState};
+use axum::Router;
 use std::net::SocketAddr;
 
 pub async fn serve(port: u16) {
