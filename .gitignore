@@ -2,4 +2,4 @@ target
 dist
 tests/deno/deno_core
 local_cache
-heapswap/data/*
+server/data/*

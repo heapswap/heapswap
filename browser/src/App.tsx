@@ -9,7 +9,7 @@ import {
 	syntaxHighlighting,
 	defaultHighlightStyle,
 } from "@codemirror/language";
-import * as random from "lib0/random";
+import * as random from "lib0/random.js";
 
 function App() {
 	
