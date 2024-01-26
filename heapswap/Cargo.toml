@@ -8,7 +8,7 @@ edition = "2021"
 [dependencies]
 
 # local
-heapswap_macros = {path = "../macros"}
+heapswap_macros = {path = "../heapswap_macros"}
 
 
 # async
