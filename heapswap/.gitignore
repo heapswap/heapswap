@@ -1,0 +1,5 @@
+# kv store dev data
+data/*
+
+# auto generated capnp files
+src/schemas/* 
