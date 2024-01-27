@@ -3,7 +3,7 @@ name = "heapswap_macros"
 version = "0.0.1"
 edition = "2021"
 license = "Apache-2.0"
-homepage = "heapswap.com"
+homepage = "https://heapswap.com"
 documentation = "https://docs.rs/heapswap"
 description = "Heapswap's macros"
 
