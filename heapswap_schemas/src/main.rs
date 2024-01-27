@@ -6,13 +6,15 @@ use filetime::FileTime;
 use walkdir::WalkDir;
 
 mod build_capnp;
-use build_capnp::build_capnp::build_capnp as build_capnp_func;
+use crate::build_capnp::build_capnp_func;
 
 // custom build script
 fn main() {
   
+  println!("Building schemas");
+  
   // build the capnp files if they have changed since the last build  
-  let input_schema_folder = "schemas/";
+  let input_schema_folder = "schemas";
   let output_schema_folder = "src/schemas";
   
   // get the last build time
@@ -21,6 +23,7 @@ fn main() {
   // check if the capnp files have changed since the last build and rebuild them if necessary
   check_capnp(input_schema_folder, output_schema_folder, last_build_time);
 
+  println!("Finished building schemas");
 }
 
 // get the last build time

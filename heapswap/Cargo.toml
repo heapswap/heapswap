@@ -18,6 +18,7 @@ description = "Heapswap's server-side engine"
 
 # local
 heapswap_macros = {path = "../heapswap_macros", version = "0.0.2"}
+heapswap_schema = {path = "../heapswap_schema", version = "0.0.1"}
 
 # async
 tokio = { version = "1.35.1", features = ["full"] }
