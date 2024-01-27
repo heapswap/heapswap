@@ -35,4 +35,14 @@ if [[ -n "$json_files" ]]; then
         git add "$file"
     done
 fi
+
+# Run Prettier for js/ts/jsx/tsx files
+js_files=$(git diff --cached --name-only --diff-filter=ACM ".js" ".ts" ".jsx" ".tsx")
+if [[ -n "$js_files" ]]; then
+	echo "Running prettier on staged JS/TS files:"
+	echo "$js_files"
+	prettier --write "$js_files"
+	git add "$js_files"
+fi
+
 EOF

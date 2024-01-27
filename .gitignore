@@ -1,4 +1,4 @@
 target
 dist
-tests/deno/deno_core
 local_cache
+server/models/*

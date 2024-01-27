@@ -16,8 +16,8 @@ exclude = ["tests/*", "examples/*", "models/*"]
 [dependencies]
 
 # local
-heapswap_macros = {path = "../heapswap_macros", version = "0.0.2"}
-heapswap_schemas = {path = "../heapswap_schemas", version = "0.0.1"}
+heapswap_macros = {path = "../macros", version = "0.0.2"}
+heapswap_schemas = {path = "../schemas", version = "0.0.1"}
 
 # async
 tokio = { version = "1.35.1", features = ["full"] }
@@ -125,6 +125,7 @@ nanoid = "0.4.0"
 terny = "0.2.0"
 tempfile = "3.9.0"
 pin-utils = "0.1.0"
+xxhash-rust = "0.8.8"
 
 [dev-dependencies]
 criterion = { version = "0.5.1", features = ["html_reports"] }
