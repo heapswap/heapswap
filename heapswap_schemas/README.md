@@ -1,6 +1,6 @@
 # Heapswap Schemas
 
-This crate contains the Cap'n Proto schemas used by Heapswap.
+This crate contains Heapswap's Cap'n Proto schemas.
 
 It features a flattener that reexports all schemas at the root of the crate.
 
