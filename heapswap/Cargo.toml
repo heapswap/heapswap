@@ -1,15 +1,23 @@
+# see more package metadata at https://doc.rust-lang.org/cargo/reference/publishing.html
+
 [package]
 name = "heapswap"
 version = "0.0.1"
 edition = "2021"
 build = "build/build.rs"
+license = "Apache-2.0"
+#publish = ["crates.io"]
+homepage = "heapswap.com"
+documentation = "https://docs.rs/heapswap"
+description = "Heapswap's server-side engine"
+
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
 
 # local
-heapswap_macros = {path = "../heapswap_macros"}
+heapswap_macros = {path = "../heapswap_macros", version = "0.0.1"}
 
 # async
 tokio = { version = "1.35.1", features = ["full"] }
