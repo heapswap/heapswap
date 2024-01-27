@@ -1,5 +1,7 @@
 //folders
-pub mod schemas; // auto-generated capnp schemas
+pub mod schemas{
+	use heapswap_macros::*;
+}; // auto-generated capnp schemas
 pub mod embeddings; // embeddings
 pub mod yrs_axum;  // axum handlers for yrs/yjs
 
