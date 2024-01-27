@@ -1,4 +1,5 @@
 mod build_capnp;
-pub mod schemas;
+mod schemas;
+pub use schemas::*;
 //pub mod schemas_rs;
 //pub use schemas_rs as schemas;

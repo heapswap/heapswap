@@ -2463,6 +2463,7 @@ dependencies = [
  "futures-util",
  "headers 0.4.0",
  "heapswap_macros",
+ "heapswap_schemas",
  "hex",
  "http 1.0.0",
  "human_bytes",
@@ -2522,6 +2523,17 @@ dependencies = [
  "syn 2.0.48",
  "zerocopy",
  "zerocopy-derive",
+]
+
+[[package]]
+name = "heapswap_schemas"
+version = "0.0.1"
+dependencies = [
+ "capnp",
+ "capnpc",
+ "filetime",
+ "pkg-config",
+ "walkdir",
 ]
 
 [[package]]
