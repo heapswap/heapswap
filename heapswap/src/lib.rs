@@ -1,6 +1,7 @@
 //folders
-pub mod embeddings;
-pub mod yrs_axum;
+pub mod schemas; // auto-generated capnp schemas
+pub mod embeddings; // embeddings
+pub mod yrs_axum;  // axum handlers for yrs/yjs
 
 // files
 pub mod api_routers;

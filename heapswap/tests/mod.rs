@@ -7,3 +7,5 @@ extern crate heapswap;
 //pub mod transformers;
 //pub mod yrs;
 pub mod storage;
+pub mod crypto;
+pub mod protobufs;
