@@ -5,7 +5,7 @@ pub fn test_ed_sign(){
   
   use rand::rngs::OsRng;
   use ed25519_dalek::{SigningKey, Signature, Signer};  
-  use ed25519_dalek::{PUBLIC_KEY_LENGTH, SECRET_KEY_LENGTH, KEYPAIR_LENGTH, SIGNATURE_LENGTH};
+  use ed25519_dalek::{SECRET_KEY_LENGTH};
   use ed25519_dalek::{VerifyingKey, Verifier};
   
   // the dalek library calls the private key a signing key and the public key a verifying key
@@ -56,7 +56,7 @@ pub fn test_ed_exchange(){
   use x25519_dalek::{EphemeralSecret, PublicKey};
 
   // get the random number generator
-  let mut rng = OsRng;
+  let rng = OsRng;
 
   // generate alice's secret key
   let alice_private = EphemeralSecret::random_from_rng(rng);
@@ -75,7 +75,7 @@ pub fn test_ed_exchange(){
   // send a message from alice to bob
   use chacha20poly1305::{
     aead::{Aead, AeadCore, KeyInit, generic_array::GenericArray},
-    ChaCha20Poly1305, Nonce
+    ChaCha20Poly1305
   };
   
   // generate a random nonce

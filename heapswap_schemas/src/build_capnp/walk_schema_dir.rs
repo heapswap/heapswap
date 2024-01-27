@@ -6,6 +6,7 @@ use std::path::Path;
 use super::write_flattened_mod::write_flattened_mod;
 
 // recursively walk through a directory and generate a list of all the schema files and folders
+#[allow(dead_code)]
 pub fn walk_schema_dir(input_dir_path_name: &str, output_dir_path_name: &str) -> Vec<String> {
   // this is the list of schema files and folders to reexport
   let mut reexport_list = Vec::new();

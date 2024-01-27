@@ -4,6 +4,7 @@ use std::fs;
 use std::io;
 
 // write a mod file that reexports all the schemas
+#[allow(dead_code)]
 pub fn write_flattened_mod(
   output_filepath: String, // the path to the mod file to write (including the filename)
   input_vec: &Vec<String>, // the list of all the schema files and folders to reexport

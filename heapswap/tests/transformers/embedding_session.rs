@@ -5,10 +5,15 @@ use timeit::*;
 
 #[test]
 fn test_vector_timing() -> Result<()> {
+    
+   	let model_bytes = include_bytes!("../../models/gte-small/model.onnx");	
+	let tokenizer_bytes = include_bytes!("../../models/gte-small/tokenizer.json");
+
 	let session = EmbeddingSession::new(
 		"gte-small",
-		"models/gte-small/model.onnx",
-		"models/gte-small/tokenizer.json",
+		model_bytes,
+		//model_bytes_static,
+		tokenizer_bytes,
 		512,
 		2, //gte-small seems to have diminishing returns after 3 threads
 	);

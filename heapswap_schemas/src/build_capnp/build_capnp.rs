@@ -4,6 +4,7 @@ use std::fs;
 use walkdir::WalkDir;
 
 // this function builds the capnp command
+#[allow(dead_code)]
 pub fn build_capnp(input_schema_folder: &str, output_schema_folder: &str) {
   
   // delete the output folder if it exists

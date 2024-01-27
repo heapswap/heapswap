@@ -2474,6 +2474,7 @@ dependencies = [
  "ndarray",
  "num_cpus",
  "ort",
+ "pin-utils",
  "pkg-config",
  "rand 0.8.5",
  "reqwest",

@@ -1,15 +1,15 @@
-use anyhow::Result;
-use arrow_array::array::{FixedSizeListArray, Float32Array, Int32Array};
+
+use arrow_array::array::{FixedSizeListArray, Int32Array};
 use arrow_array::types::Float32Type;
 use arrow_array::{RecordBatch, RecordBatchIterator, RecordBatchReader};
 use arrow_schema::{DataType, Field, Schema};
-use base64::read;
-use dashmap::DashMap;
+
+
 use futures_util::stream::TryStreamExt; // Add this line
-use heapswap::embeddings::EmbeddingSession;
+
 use heapswap::macros::*;
 //use heapswap_macros::sled_zero_copy;
-use std::path::PathBuf;
+
 use std::sync::Arc;
 use vectordb::connection::Database;
 use vectordb::Connection;
@@ -17,7 +17,7 @@ use vectordb::Connection;
 #[test]
 fn read_words() {
 	use std::fs;
-	use std::io::{self, Error};
+	use std::io::{self};
 
 	fn read_words_from_file(file_path: &str) -> io::Result<Vec<String>> {
 		let content = fs::read_to_string(file_path)?;
@@ -38,7 +38,7 @@ fn read_words() {
 	}
 
 	let path = "datasets/english/words-10k.txt";
-	let words = read_words_from_file(path).unwrap();
+	let _words = read_words_from_file(path).unwrap();
 
 	//println!("words: {:?}", words);
 }
@@ -80,12 +80,12 @@ fn test_sled() {
 }
 use {
 byteorder::{BigEndian, LittleEndian},
-zerocopy::{AsBytes, FromBytes, FromZeroes, Unaligned},
+zerocopy::{AsBytes},
 zerocopy::{
-	byteorder::U64, U16, U32,
+	byteorder::U64,
 },
 zerocopy_derive::*,
-sled::{Db, IVec}
+sled::{Db}
 };
 
 #[derive(FromBytes, FromZeroes, AsBytes, Unaligned)]
@@ -120,12 +120,19 @@ fn test_sled_structure() -> sled::Result<()> {
     Ok(())
 }
 
-//#[test]
+/*
+#[test]
 fn test_vector_timing() -> Result<()> {
+		
+	let model_bytes = Arc::new(include_bytes!("../../models/gte-small/model.onnx"));
+	let tokenizer_bytes = include_bytes!("../../models/gte-small/tokenizer.json");
+
+	
+	
 	let session = EmbeddingSession::new(
 		"gte-small",
-		"models/gte-small/model.onnx",
-		"models/gte-small/tokenizer.json",
+		model_bytes,
+		tokenizer_bytes,
 		512,
 		2, //gte-small seems to have diminishing returns after 3 threads
 	);
@@ -168,6 +175,9 @@ fn test_vector_timing() -> Result<()> {
 
 	Ok(())
 }
+
+*/
+
 
 //#[tokio::test]
 pub async fn lance_test() {
@@ -233,7 +243,7 @@ pub async fn lance_test() {
 		.unwrap();
 
 	// Search the index.
-	let results = table
+	let _results = table
 		.search(&[1.0; 128])
 		.execute_stream()
 		.await

@@ -3,7 +3,7 @@ use base64::prelude::*;
 use ndarray::Axis;
 use num_cpus;
 use ort::{
-	Environment, GraphOptimizationLevel, LoggingLevel, Session, SessionBuilder,
+	Environment, GraphOptimizationLevel, LoggingLevel, InMemorySession, SessionBuilder,
 	Value,
 };
 use tokenizers::utils::truncation::*;
@@ -11,8 +11,9 @@ use tokenizers::{Encoding, Tokenizer};
 
 #[allow(dead_code)]
 // holds a runtime for creating sentence embeddings
-pub struct EmbeddingSession {
-	session: Session,
+pub struct EmbeddingSession{
+	session: InMemorySession<'static>,
+	//model_bytes: Arc<[u8]>,
 	tokenizer: Tokenizer,
 	//env: Arc<Environment>,
 	//threads: usize,
@@ -23,8 +24,10 @@ impl EmbeddingSession {
 	// constructor
 	pub fn new(
 		session_name: &str,
-		model_path: &str,
-		tokenizer_path: &str,
+		//model_bytes: Arc<Box<[u8]>>,
+		//model_bytes: Arc<Vec<u8>>,
+		model_bytes: &'static [u8],
+		tokenizer_bytes: &[u8],
 		tokenizer_max_len: usize,
 		threads: i16, // 0 uses all available threads
 	) -> Self {
@@ -56,10 +59,19 @@ impl EmbeddingSession {
 		}
 
 		// Load the model to create the final session
-		let session = session_builder.with_model_from_file(model_path).unwrap();
-
+		// for some reason, ort requires a static lifetime for the model bytes
+		//let model_bytes_boxed: Box<[u8]> = model_bytes.to_vec().into_boxed_slice();
+		//let model_bytes_static: &'static [u8] = Box::leak(model_bytes_boxed);
+		
+		//works for Arc<Vec<u8>>
+		//let model_bytes_ptr = Arc::into_raw(model_bytes) as *const [u8];
+		//let model_bytes_static: &'static [u8] = unsafe { &*model_bytes_ptr };
+		
+		
+		let session = session_builder.with_model_from_memory(model_bytes).unwrap();
+		
 		// Initialize the tokenizer
-		let mut tokenizer = Tokenizer::from_file(tokenizer_path).unwrap();
+		let mut tokenizer = Tokenizer::from_bytes(tokenizer_bytes).unwrap();
 		let _ = tokenizer.with_truncation(Some(TruncationParams {
 			max_length: tokenizer_max_len as usize, // max length is provided by the caller
 			direction: TruncationDirection::Left,   // default value
@@ -70,6 +82,7 @@ impl EmbeddingSession {
 		// Return the EmbeddingSession
 		Self {
 			session: session,
+			//model_bytes: model_bytes,
 			tokenizer: tokenizer,
 			//env: environment,
 			//threads: threads as usize,
