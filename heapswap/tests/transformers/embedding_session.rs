@@ -15,7 +15,7 @@ fn test_vector_timing() -> Result<()> {
 		//model_bytes_static,
 		tokenizer_bytes,
 		512,
-		2, //gte-small seems to have diminishing returns after 3 threads
+		1, //gte-small seems to have diminishing returns after 3 threads
 	);
 
 	let loop_count = 10;
