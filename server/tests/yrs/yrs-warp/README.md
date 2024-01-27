@@ -76,7 +76,7 @@ async fn peer(ws: WebSocket, awareness: AwarenessRef) {
 
 ## y-webrtc and signaling service
 
-Additionally to performing it's role as a [y-websocket](https://docs.yjs.dev/ecosystem/connection-provider/y-websocket) 
+Additionally to performing it's role as a [y-websocket](https://docs.yjs.dev/ecosystem/connection-provider/y-websocket)
 server, `yrs-warp` also provides a signaling server implementation used by [y-webrtc](https://github.com/yjs/y-webrtc)
 clients to exchange information necessary to connect WebRTC peers together and make them subscribe/unsubscribe from specific rooms.
 
@@ -104,7 +104,6 @@ async fn peer(ws: WebSocket, svc: SignalingService) {
   }
 }
 ```
-
 
 ## Sponsors
 

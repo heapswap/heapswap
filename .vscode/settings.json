@@ -1,8 +1,8 @@
 {
-	"rust-analyzer.linkedProjects": [
-		"./heapswap/Cargo.toml",
-		"./heapswap_macros/Cargo.toml",
-		"./heapswap_schemas/Cargo.toml"
-	],
-	"rust-analyzer.showUnlinkedFileNotification": false
+  "rust-analyzer.linkedProjects": [
+    "./heapswap/Cargo.toml",
+    "./heapswap_macros/Cargo.toml",
+    "./heapswap_schemas/Cargo.toml"
+  ],
+  "rust-analyzer.showUnlinkedFileNotification": false
 }

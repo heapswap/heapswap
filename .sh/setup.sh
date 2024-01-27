@@ -9,7 +9,9 @@
 # # for building rocksdb
 # sudo apt-get install libgflags-dev libsnappy-dev zlib1g-dev libbz2-dev liblz4-dev libzstd-dev
 
-sudo apt install -y pkg-config libssl-dev clang jq
+sudo apt install -y pkg-config libssl-dev clang 
+
+npm install --save-dev prettier prettier-plugin-toml
 
 # add rust and json formatter
 cat << 'EOF' > .git/hooks/pre-commit
@@ -24,25 +26,13 @@ if [[ -n "$rust_files" ]]; then
     git add $rust_files
 fi
 
-# Format staged JSON files
-json_files=$(git diff --cached --name-only --diff-filter=ACM ".json")
-if [[ -n "$json_files" ]]; then
-    echo "Running jq on staged JSON files:"
-    echo "$json_files"
-    for file in $json_files; do
-        jq . "$file" > "$file.formatted"
-        mv "$file.formatted" "$file"
-        git add "$file"
-    done
-fi
-
-# Run Prettier for js/ts/jsx/tsx files
-js_files=$(git diff --cached --name-only --diff-filter=ACM ".js" ".ts" ".jsx" ".tsx")
-if [[ -n "$js_files" ]]; then
-	echo "Running prettier on staged JS/TS files:"
-	echo "$js_files"
-	prettier --write "$js_files"
-	git add "$js_files"
+# Run Prettier for all staged files
+all_files=$(git diff --cached --name-only --diff-filter=ACM)
+if [[ -n "$all_files" ]]; then
+    echo "Running prettier on staged files:"
+    echo "$all_files"
+    prettier --write "$all_files"
+    git add "$all_files"
 fi
 
 EOF
