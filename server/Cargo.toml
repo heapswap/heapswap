@@ -25,10 +25,9 @@ tokio-tungstenite = "0.21.0"
 tokio-stream = { version = "0.1.14", features = ["full"] }
 tokio-util = { version = "0.7.10", features = ["full"] }
 
-tracing = "0.1.40"
-tracing-subscriber = { version = "0.3.18", features = ["env-filter"] }
-
 async-trait = "0.1.77"
+async-std = { version = "1.12.0", features = ["attributes"] }
+crossbeam = "0.8.4"
 futures = "0.3.30"
 futures-util = { version = "0.3", default-features = false, features = [
   "sink",
@@ -52,13 +51,15 @@ tikv-jemalloc-ctl = "0.5.4"
 http = "1.0.0"
 url = "2.5.0"
 headers = "0.4.0"
-reqwest = "0.11.23"
+reqwest = { version = "0.11.23", features = ["blocking"] }
 
 tower = { version = "0.4.13", features = ["util"] }
 tower-http = { version = "0.5.1", features = ["fs", "trace"] }
 
 axum = { version = "0.7.4", features = ["ws"] }
 axum-extra = { version = "0.9.2", features = ["typed-header"] }
+
+libp2p = { version = "0.53.2", features = ["async-std", "dns", "kad", "mdns", "noise", "macros", "tcp", "yamux", "full"] }
 
 #crypto 
 x25519-dalek = "2.0.0"
@@ -67,6 +68,7 @@ ed25519-dalek = "2.1.0"
 rsa = "0.9.6"
 rust-argon2 = "2.1.0"
 blake3 = "1.5.0"
+xxhash-rust = { version = "0.8.8", features = ["xxh3", "const_xxh3"] }
 
 # data structures
 dashmap = "5.5.3"
@@ -85,6 +87,8 @@ clap = { version = "4.4.18", features = ["derive", "env"] }
 colored = "2.1.0"
 thiserror = "1.0.56"
 human_bytes = "0.4.3"
+tracing = "0.1.40"
+tracing-subscriber = { version = "0.3.18", features = ["env-filter"] }
 
 # profiling
 memory-stats = "1.1.0"
@@ -133,7 +137,8 @@ nanoid = "0.4.0"
 terny = "0.2.0"
 tempfile = "3.9.0"
 pin-utils = "0.1.0"
-xxhash-rust = { version = "0.8.8", features = ["xxh3", "const_xxh3"] }
+lazy_static = "1.4.0"
+wide = "0.7.15"
 
 [dev-dependencies]
 criterion = { version = "0.5.1", features = ["html_reports"] }

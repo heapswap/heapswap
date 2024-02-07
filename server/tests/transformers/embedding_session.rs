@@ -2,17 +2,52 @@ use heapswap::embeddings::EmbeddingSession;
 use dashmap::DashMap;
 use anyhow::Result;
 use timeit::*;
+use reqwest::blocking::get;
+use std::fs::File;
+use std::fs::read;
+use std::io::copy;
+use std::path::Path;
+use std::sync::Arc;
+use std::fs::create_dir_all;
+
+fn download_from_huggingface(url: &str, dest: &str) -> std::io::Result<()> {
+    let path = Path::new(dest);
+    if !path.exists() {
+        // Create the directories if they don't exist
+        if let Some(parent) = path.parent() {
+            create_dir_all(parent)?;
+        }
+
+        let response = get(format!("{}{}", String::from(url),String::from("?download=true"))).expect("Failed to make request");
+        let mut dest = File::create(dest)?;
+        let mut content = response.bytes().expect("Failed to read response bytes");
+        copy(&mut content.as_ref(), &mut dest)?;
+    }
+    Ok(())
+}
 
 #[test]
 fn test_vector_timing() -> Result<()> {
-    
+    /*
    	let model_bytes = include_bytes!("../../models/gte-small/model.onnx");	
 	let tokenizer_bytes = include_bytes!("../../models/gte-small/tokenizer.json");
-
+	*/
+	
+	let model_url = "https://huggingface.co/Supabase/gte-small/resolve/main/onnx/model_quantized.onnx";
+	let model_dest = "models/gte-small/model.onnx";
+	download_from_huggingface(model_url, model_dest).expect("Failed to download model");
+	let model_vec = read(model_dest).expect("Failed to read model file");
+	let model_bytes = Box::leak(model_vec.into_boxed_slice());
+	
+	let tokenizer_url = "https://huggingface.co/Supabase/gte-small/resolve/main/tokenizer.json";
+	let tokenizer_dest = "models/gte-small/tokenizer.json";
+	download_from_huggingface(tokenizer_url, tokenizer_dest).expect("Failed to download tokenizer");
+	let tokenizer_vec = read(tokenizer_dest).expect("Failed to read tokenizer file");
+	let tokenizer_bytes = Box::leak(tokenizer_vec.into_boxed_slice());
+	 
 	let session = EmbeddingSession::new(
 		"gte-small",
 		model_bytes,
-		//model_bytes_static,
 		tokenizer_bytes,
 		512,
 		1, //gte-small seems to have diminishing returns after 3 threads
