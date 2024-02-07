@@ -1,2 +1,3 @@
 //pub mod kademlia_test;
-pub mod scaling;
+//pub mod hnsw;
+pub mod lance_test;

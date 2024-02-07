@@ -3,6 +3,7 @@ cargo watch \
 	-i "target/*" \
 	-i "dist/*" \
 	-i "data/*" \
+	-i "src/data/*" \
 	-i "src/schemas/*" \
 	-c \
 	-x "test -- --nocapture"

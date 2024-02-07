@@ -123,8 +123,11 @@ sled = "0.34.7"
 byteorder = "1.5.0"
 zerocopy = "0.7.32"
 zerocopy-derive = "0.7.32"
-arrow-schema = "49"
-arrow-array = "49"
+arrow-array = "50.0"
+arrow-data = "50.0"
+arrow-ipc = "50.0"
+arrow-ord = "50.0"
+arrow-schema = "50.0"
 
 # conversion
 base64 = "0.21.7"
@@ -139,6 +142,16 @@ tempfile = "3.9.0"
 pin-utils = "0.1.0"
 lazy_static = "1.4.0"
 wide = "0.7.15"
+nalgebra = "0.32.3"
+hnsw = "0.11.0"
+structopt = "0.3.26"
+space = "0.18.0"
+gnuplot = "0.0.41"
+rand_pcg = "0.3.1"
+bitarray = { version = "0.10.0", features = ["space"] }
+itertools = "0.12.1"
+num-traits = "0.2.17"
+easybench = "1.1.1"
 
 [dev-dependencies]
 criterion = { version = "0.5.1", features = ["html_reports"] }

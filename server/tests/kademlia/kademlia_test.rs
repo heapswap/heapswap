@@ -77,13 +77,25 @@ fn address_to_binary_string(address: [u64; KEY_LENGTH]) -> String {
     address.iter().map(|x| format!("{:064b}", x)).collect::<Vec<String>>().join("")
 }
 
-fn flip_random_bits(address: &mut [u64; KEY_LENGTH], n: usize) {
+fn flip_random_bits(&address: &[u64; KEY_LENGTH], n: usize) -> [u64; KEY_LENGTH]{
     let mut rng = rand::thread_rng();
+    let mut tmp = address.clone();
     for _ in 0..n {
         let index = rng.gen_range(0..KEY_LENGTH);
         let bit = 1 << rng.gen_range(0..64);
-        address[index] ^= bit;
+        tmp[index] ^= bit;
     }
+    tmp
+}
+
+fn flip_first_n_bits(&address: &[u64; KEY_LENGTH], n: usize) -> [u64; KEY_LENGTH]{
+    let mut tmp = address.clone();
+    for i in 0..n {
+        let index = i / 64;
+        let bit = 1 << (i % 64);
+        tmp[index] ^= bit;
+    }
+    tmp
 }
 
 
@@ -103,14 +115,18 @@ fn main() {
 	
 	let mut rng = rand::thread_rng();
     
-    //other_nodes.push(self_node.clone());
+    other_nodes.push(self_node.clone());
     
     
     for i in 0..255 {
+        
+        
+        
         other_nodes.push(Node {
             parent: Some(Rc::new(self_node.clone())),
 			ping: rng.gen::<f64>() * MAX_PING,
-            address: generate_address(),
+            //address: generate_address(),
+            address: flip_random_bits(&self_node.address, 16),
             data: format!("child-{}", i),
         });
     }
@@ -120,6 +136,8 @@ fn main() {
     other_nodes.sort_by(|a, b| xor_distance_metric(self_node.address, a.address).cmp(&xor_distance_metric(self_node.address, b.address)));
             
     
+    
+    // doesn't work
     fn ping_metric(node_a: &Node, node_b: &Node) -> f64 {
         // (MaxPing - Ping) * (MaxDist - Distance)
         
@@ -144,18 +162,19 @@ fn main() {
     for node in &mut other_nodes {
         println!("{:?}\t{}", distance_metric(self_node.address, node.address), address_to_binary_string(node.address));
     }
-	*/
+	*/ 
     
 	  
     // brute force find absolute closest to query address
 	
     // completely random query address
-    let query_address = generate_address();
+    //let query_address = generate_address();
     
     // query address similar to self node address
-    //let mut query_address = self_node.address.clone(); 
-    //flip_random_bits(&mut query_address, 256); // Flip 5 random bits   
-    
+    let mut query_address = self_node.address.clone(); 
+    //flip_random_bits(&mut query_address, 256);   
+    query_address = flip_first_n_bits(&query_address, 64);     
+       
     println!("Query distance from self: {:?}", xor_distance_metric(self_node.address, query_address)); 
         
     let mut query_nodes = other_nodes.clone();

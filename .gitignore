@@ -4,3 +4,4 @@ local_cache
 server/models/*
 node_modules
 models
+data
