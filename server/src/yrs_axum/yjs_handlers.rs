@@ -56,14 +56,20 @@ async fn yjs_socket_handler(
 				*/
 
 	// if room does not exist, create it
-	if !state.get_docs().contains_key(&room_name) {
+	if !state
+		.get_docs()
+		.contains_key(&room_name)
+	{
 		state
 			.get_docs()
 			.insert(room_name.clone(), YrsDoc::new().await);
 	}
 
 	// get the document
-	let yrs_doc_item = state.get_docs().get(&room_name).unwrap();
+	let yrs_doc_item = state
+		.get_docs()
+		.get(&room_name)
+		.unwrap();
 	let yrs_doc = yrs_doc_item.value();
 
 	// create a sink and stream for the websocket
@@ -74,10 +80,15 @@ async fn yjs_socket_handler(
 	// create a broadcast subscription
 	//let bsub = yrs_doc.broadcast.subscribe(sink, stream);
 
-	let bsub = yrs_doc.get_broadcast().subscribe(sink, stream);
+	let bsub = yrs_doc
+		.get_broadcast()
+		.subscribe(sink, stream);
 
 	// wait for the broadcast to finish
-	match bsub.completed().await {
+	match bsub
+		.completed()
+		.await
+	{
 		Ok(_) => println!("broadcasting finished successfully"),
 		Err(e) => {
 			eprintln!("broadcasting finished abruptly: {}", e)

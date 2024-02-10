@@ -5,7 +5,7 @@ use walkdir::WalkDir;
 
 // this function builds the capnp command
 #[allow(dead_code)]
-pub fn build_capnp(input_schema_folder: &str, output_schema_folder: &str) {
+pub fn build_capnp_func(input_schema_folder: &str, output_schema_folder: &str) {
   
   // delete the output folder if it exists
   if fs::metadata(output_schema_folder).is_ok() {

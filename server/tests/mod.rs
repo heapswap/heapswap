@@ -1,3 +1,4 @@
+#![feature(portable_simd)]
 // #[macro_use]
 // extern crate timeit;
 extern crate heapswap;
@@ -10,4 +11,7 @@ extern crate heapswap;
 //pub mod crypto;
 //pub mod protobufs;
 //pub mod libp2p;
-pub mod kademlia;
+//pub mod kademlia;
+//pub mod physics;
+//pub mod polars;
+pub mod gluesql;

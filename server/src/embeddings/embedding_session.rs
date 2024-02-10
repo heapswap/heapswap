@@ -52,8 +52,9 @@ impl EmbeddingSession {
 
 		if threads > 0 {
 			// use the number of threads specified
-			session_builder =
-				session_builder.with_intra_threads(threads).unwrap();
+			session_builder = session_builder
+				.with_intra_threads(threads)
+				.unwrap();
 		}
 
 		// Load the model to create the final session
@@ -65,8 +66,9 @@ impl EmbeddingSession {
 		//let model_bytes_ptr = Arc::into_raw(model_bytes) as *const [u8];
 		//let model_bytes_static: &'static [u8] = unsafe { &*model_bytes_ptr };
 
-		let session =
-			session_builder.with_model_from_memory(model_bytes).unwrap();
+		let session = session_builder
+			.with_model_from_memory(model_bytes)
+			.unwrap();
 
 		// Initialize the tokenizer
 		let mut tokenizer = Tokenizer::from_bytes(tokenizer_bytes).unwrap();
@@ -93,10 +95,15 @@ impl EmbeddingSession {
 		sequence: &str,
 	) -> Result<usize> {
 		// tokenize the sequence
-		let tokenizer_output = self.tokenizer.encode(sequence, true).unwrap();
+		let tokenizer_output = self
+			.tokenizer
+			.encode(sequence, true)
+			.unwrap();
 
 		// return the number of tokens
-		Ok(tokenizer_output.get_ids().len())
+		Ok(tokenizer_output
+			.get_ids()
+			.len())
 	}
 
 	// embed a sequence of text
@@ -118,7 +125,10 @@ impl EmbeddingSession {
 		{
 			ndarray::Array::from_shape_vec(
 				(1, tokenizer_output.len()),
-				func(tokenizer_output).iter().map(|&x| x as i64).collect(),
+				func(tokenizer_output)
+					.iter()
+					.map(|&x| x as i64)
+					.collect(),
 			)
 			.unwrap()
 		}
@@ -139,35 +149,46 @@ impl EmbeddingSession {
 		*/
 
 		// Step 1:	Tokenize the sequence
-		let tokenizer_output = self.tokenizer.encode(sequence, true).unwrap();
+		let tokenizer_output = self
+			.tokenizer
+			.encode(sequence, true)
+			.unwrap();
 
 		// Step 2: run the session
-		let outputs = self.session.run(vec![
-			// input_ids
-			Value::from_array(
-				self.session.allocator(),
-				&create_cow_array(&tokenizer_output, Encoding::get_ids)
-					.into_dyn(),
-			)
-			.unwrap(),
-			// attention_mask
-			Value::from_array(
-				self.session.allocator(),
-				&create_cow_array(
-					&tokenizer_output,
-					Encoding::get_attention_mask,
+		let outputs = self
+			.session
+			.run(vec![
+				// input_ids
+				Value::from_array(
+					self.session
+						.allocator(),
+					&create_cow_array(&tokenizer_output, Encoding::get_ids)
+						.into_dyn(),
 				)
-				.into_dyn(),
-			)
-			.unwrap(),
-			// token_type_ids
-			Value::from_array(
-				self.session.allocator(),
-				&create_cow_array(&tokenizer_output, Encoding::get_type_ids)
+				.unwrap(),
+				// attention_mask
+				Value::from_array(
+					self.session
+						.allocator(),
+					&create_cow_array(
+						&tokenizer_output,
+						Encoding::get_attention_mask,
+					)
 					.into_dyn(),
-			)
-			.unwrap(),
-		])?;
+				)
+				.unwrap(),
+				// token_type_ids
+				Value::from_array(
+					self.session
+						.allocator(),
+					&create_cow_array(
+						&tokenizer_output,
+						Encoding::get_type_ids,
+					)
+					.into_dyn(),
+				)
+				.unwrap(),
+			])?;
 
 		// Step 3: Parse the outputs
 
@@ -198,7 +219,9 @@ impl EmbeddingSession {
 			.collect::<Vec<i8>>() // convert to Vec<i8>
 			.chunks(64) // split into chunks of 64 bits
 			.map(|chunk| {
-				chunk.iter().fold(0, |acc, &bit| (acc << 1) | (bit as i64))
+				chunk
+					.iter()
+					.fold(0, |acc, &bit| (acc << 1) | (bit as i64))
 			}) // pack into i64
 			.collect(); // collect into Vec<i64>
 
@@ -228,7 +251,10 @@ impl EmbeddingSession {
 		// Convert Vec<i64> to Vec<u8>
 		let bytes: Vec<u8> = vector
 			.iter()
-			.flat_map(|&i| i.to_le_bytes().to_vec())
+			.flat_map(|&i| {
+				i.to_le_bytes()
+					.to_vec()
+			})
 			.collect();
 
 		// Encode to base64

@@ -1,4 +1,5 @@
 hard_tabs = true
 #fn_call_style = "Block"
+chain_width = 0
 fn_params_layout = "Vertical"
 max_width = 80

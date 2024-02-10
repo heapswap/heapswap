@@ -29,7 +29,10 @@ fn main() {
         points.push(point);
         values.push(point); // Populate values
     }
-
+    timeit!({
+        let map = Builder::default().build(points.clone(), values.clone());
+    });
+    
     let map = Builder::default().build(points, values);
     let mut search = Search::default();
 

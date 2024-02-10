@@ -2,7 +2,8 @@
   "rust-analyzer.linkedProjects": [
     "server/Cargo.toml",
     "macros/Cargo.toml",
-    "schemas/Cargo.toml"
+    "schemas/Cargo.toml",
+    //"hnswlib/Cargo.toml",
   ],
   "rust-analyzer.showUnlinkedFileNotification": false
 }

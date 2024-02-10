@@ -6,7 +6,7 @@ use filetime::FileTime;
 use walkdir::WalkDir;
 
 mod build_capnp;
-use crate::build_capnp::build_capnp_func;
+use crate::build_capnp::build_capnp::build_capnp_func;
 
 // custom build script
 fn main() {

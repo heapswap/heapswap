@@ -34,10 +34,12 @@ impl YrsDoc {
 	}
 
 	pub fn get_awareness(&self) -> AwarenessRef {
-		self.awareness.clone()
+		self.awareness
+			.clone()
 	}
 
 	pub fn get_broadcast(&self) -> BroadcastRef {
-		self.broadcast.clone()
+		self.broadcast
+			.clone()
 	}
 }

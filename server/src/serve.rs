@@ -11,10 +11,17 @@ pub async fn serve(port: u16) {
 
 	// create the listener
 	let addr = SocketAddr::from(([0, 0, 0, 0], port));
-	let listener = tokio::net::TcpListener::bind(addr).await.unwrap();
+	let listener = tokio::net::TcpListener::bind(addr)
+		.await
+		.unwrap();
 
 	// start the server
-	println!("Listening on {}", listener.local_addr().unwrap());
+	println!(
+		"Listening on {}",
+		listener
+			.local_addr()
+			.unwrap()
+	);
 	axum::serve(listener, router.into_make_service())
 		.await
 		.unwrap();
