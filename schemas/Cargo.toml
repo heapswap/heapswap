@@ -6,11 +6,18 @@ license = "Apache-2.0"
 homepage = "https://heapswap.com"
 documentation = "https://docs.rs/heapswap_schemas"
 description = "Heapswap's Cap'n Proto schemas"
+build = "build/build.rs"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-capnp = "0.19.1"
+capnp = "0.19.2"
+capnpc = "0.19.0"
+walkdir = "2.4.0"
+filetime = "0.2.23"
+pkg-config = "0.3.28"
+
+[build-dependencies]
 capnpc = "0.19.0"
 walkdir = "2.4.0"
 filetime = "0.2.23"
