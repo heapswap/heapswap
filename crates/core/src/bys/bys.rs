@@ -32,6 +32,14 @@ pub fn from_base32(data: &str) -> Result<Bytes, BytesError> {
         .ok_or(BytesError::InvalidBase32)
 }
 
+pub fn from_proto<M: prost::Message>(proto: &M) -> Bytes {
+    let mut buf = Vec::new();
+    proto.encode(&mut buf).expect("Failed to encode proto");
+    Bytes::from(buf)
+}
+
+// to_proto is instead done like T.decode(data).unwrap()
+
 /**
  * Operations
 */
