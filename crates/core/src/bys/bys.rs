@@ -22,7 +22,7 @@ pub fn to_base32(data: &Bytes) -> String {
     base32::encode(Alphabet::Rfc4648Lower { padding: false }, &data)
 }
 
-pub fn from_base32(data: &String) -> Result<Bytes, BytesError> {
+pub fn from_base32(data: &str) -> Result<Bytes, BytesError> {
     base32::decode(Alphabet::Rfc4648Lower { padding: false }, data)
         .map(Bytes::from)
         .ok_or(BytesError::InvalidBase32)

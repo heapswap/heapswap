@@ -1,35 +1,29 @@
 use std::convert::From;
-use std::ops::BitXor;
 
 use bytes::Bytes;
 use derive_getters::Getters;
 use derive_more::{Display, Error};
 use rand::rngs::OsRng;
-use rand::{CryptoRng, RngCore};
-use sha2::{Digest, Sha512};
-use zeroize::{Zeroize, ZeroizeOnDrop};
+use timeit::*;
 
-// curve
-use curve25519_dalek::edwards::{CompressedEdwardsY, EdwardsPoint};
-use curve25519_dalek::montgomery::MontgomeryPoint;
-use curve25519_dalek::scalar::{clamp_integer, Scalar};
-// ed
-use ed25519_dalek::ed25519::signature::Keypair as EdKeypair;
 use ed25519_dalek::{
     Signature, Signer, SigningKey as EdPrivateKey, Verifier, VerifyingKey as EdPublicKey,
 };
-use ed25519_dalek::{KEYPAIR_LENGTH, PUBLIC_KEY_LENGTH, SECRET_KEY_LENGTH, SIGNATURE_LENGTH};
-// x
+use ed25519_dalek::{PUBLIC_KEY_LENGTH, SECRET_KEY_LENGTH, SIGNATURE_LENGTH};
 use x25519_dalek::{
     PublicKey as XPublicKey, SharedSecret as XSharedSecret, StaticSecret as XPrivateKey,
 };
-
-use timeit::*;
 
 use crate::bys;
 use crate::comparison::{hamming, xor};
 use crate::traits::{Byteable, Randomable, Stringable};
 
+use super::utils::{stack_256, unstack_256};
+
+
+/**
+ * Types
+*/
 pub type KeyBytes = [u8; SECRET_KEY_LENGTH];
 
 pub type PrivateKeyBytes = [u8; SECRET_KEY_LENGTH];
@@ -52,10 +46,13 @@ pub type Extended = [u64; 16]; // for future use
 #[derive(Debug, Display, Error)]
 pub enum KeyError {
     InvalidYCoordinate,
+    InvalidSignature,
+    InvalidPublicKey,
+    InvalidPrivateKey,
+    InvalidKeyPair,
     FailedToDecompress,
     FailedToCreateEdPublicKey,
     FailedToCreateEdPrivateKey,
-    InvalidSignature,
 }
 
 /**
@@ -102,22 +99,6 @@ pub trait SharedSecretable {
  * Implementations
 */
 
-fn stack_key_bytes(key: &KeyBytes) -> StackedKey {
-    let mut stacked = [0u64; 4];
-    for i in 0..4 {
-        stacked[i] = u64::from_le_bytes(key[i * 8..(i + 1) * 8].try_into().unwrap());
-    }
-    stacked
-}
-
-fn unstack_key_bytes(stacked: &StackedKey) -> KeyBytes {
-    let mut key = [0u8; 32];
-    for i in 0..4 {
-        key[i * 8..(i + 1) * 8].copy_from_slice(&stacked[i].to_le_bytes());
-    }
-    key
-}
-
 // PublicKey
 
 impl PublicKey {
@@ -127,13 +108,13 @@ impl PublicKey {
 
         let x = XPublicKey::from(ed.to_montgomery().to_bytes());
 
-        let stacked = stack_key_bytes(&ed_bytes);
+        let stacked = stack_256(&ed_bytes);
 
         Ok(PublicKey { ed, x, stacked })
     }
 
     pub fn from_stacked(stacked: &StackedKey) -> Result<Self, KeyError> {
-        let ed_bytes = unstack_key_bytes(stacked);
+        let ed_bytes = unstack_256(stacked);
 
         let ed =
             EdPublicKey::from_bytes(&ed_bytes).map_err(|_| KeyError::FailedToCreateEdPublicKey)?;
@@ -158,6 +139,18 @@ impl Byteable<KeyError> for PublicKey {
     }
 }
 
+impl Stringable<KeyError> for PublicKey {
+    fn to_string(&self) -> String {
+        bys::to_base32(&self.to_bytes())
+    }
+
+    fn from_string(string: &str) -> Result<Self, KeyError> {
+        let bytes = bys::from_base32(string).map_err(|_| KeyError::InvalidPublicKey)?;
+
+        PublicKey::from_bytes(&bytes)
+    }
+}
+
 impl Verifiable for PublicKey {
     fn verify(&self, message: &Bytes, signature: &Signature) -> Result<(), KeyError> {
         self.ed()
@@ -174,13 +167,13 @@ impl PrivateKey {
 
         let x = XPrivateKey::from(ed.to_scalar_bytes());
 
-        let stacked = stack_key_bytes(&ed_bytes);
+        let stacked = stack_256(&ed_bytes);
 
         Ok(PrivateKey { ed, x, stacked })
     }
 
     pub fn from_stacked(stacked: &StackedKey) -> Result<Self, KeyError> {
-        let ed_bytes = unstack_key_bytes(stacked);
+        let ed_bytes = unstack_256(stacked);
 
         let ed = EdPrivateKey::from_bytes(&ed_bytes);
 
@@ -201,6 +194,18 @@ impl Byteable<KeyError> for PrivateKey {
 
     fn from_bytes(bytes: &Bytes) -> Result<Self, KeyError> {
         PrivateKey::new(bytes.as_ref().try_into().unwrap())
+    }
+}
+
+impl Stringable<KeyError> for PrivateKey {
+    fn to_string(&self) -> String {
+        bys::to_base32(&self.to_bytes())
+    }
+
+    fn from_string(string: &str) -> Result<Self, KeyError> {
+        let bytes = bys::from_base32(string).map_err(|_| KeyError::InvalidPrivateKey)?;
+
+        PrivateKey::from_bytes(&bytes)
     }
 }
 
@@ -247,6 +252,18 @@ impl Byteable<KeyError> for KeyPair {
         let private_key = PrivateKey::from_bytes(&bytes.slice(0..SECRET_KEY_LENGTH))?;
 
         KeyPair::new(private_key)
+    }
+}
+
+impl Stringable<KeyError> for KeyPair {
+    fn to_string(&self) -> String {
+        bys::to_base32(&self.to_bytes())
+    }
+
+    fn from_string(string: &str) -> Result<Self, KeyError> {
+        let bytes = bys::from_base32(string).map_err(|_| KeyError::InvalidKeyPair)?;
+
+        KeyPair::from_bytes(&bytes)
     }
 }
 
@@ -297,37 +314,6 @@ fn test_keys() -> Result<(), KeyError> {
     let bob_shared_secret = bob.shared_secret(&alice.public_key());
 
     assert_eq!(alice_shared_secret.as_bytes(), bob_shared_secret.as_bytes());
-
-    /*
-    // timings
-    let alice_bytes: &[u8;32] = &alice.public_key().to_bytes().as_ref().try_into().unwrap();
-    let bob_bytes: &[u8;32] = &bob.public_key().to_bytes().as_ref().try_into().unwrap();
-    let alice_stacked = alice.public_key().stacked();
-    let bob_stacked = bob.public_key().stacked();
-
-    let xor_ms = timeit_loops!(1000, {
-        let _ = xor(alice_bytes, bob_bytes);
-    });
-
-    let ham_ms = timeit_loops!(1000, {
-        let _ = hamming(alice_bytes, bob_bytes);
-    });
-
-    println!("xor_u8_32: {}ns/loop", xor_ms * 100000000.); // 24 ns
-    println!("ham_u8_32: {}ns/loop", ham_ms * 100000000.); // 33 ns
-
-    let xor_ms = timeit_loops!(1000, {
-        let _ = xor(alice_stacked, bob_stacked);
-    });
-
-    let ham_ms = timeit_loops!(1000, {
-        let _ = hamming(alice_stacked, bob_stacked);
-    });
-
-    println!("xor_u64_4: {}ns/loop", xor_ms * 100000000.); // 4 ns (6x faster)
-    println!("ham_u64_4: {}ns/loop", ham_ms * 100000000.); // 5 ns (6x faster)
-
-    */
 
     Ok(())
 }
