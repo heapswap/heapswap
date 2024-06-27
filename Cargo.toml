@@ -178,3 +178,4 @@ derive_more = {version = "0.99.18"}
 zeroize = {version = "1.8.1"}
 derive-getters = {version = "0.4.0"}
 num-bigint = {version = "0.4.5"}
+num-traits = {version ="0.2"}
