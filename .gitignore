@@ -1,0 +1,6 @@
+target
+node_modules
+Cargo.lock
+_storage
+.nx
+bun.lockb

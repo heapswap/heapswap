@@ -1,0 +1,1 @@
+cargo fix --lib --tests --allow-dirty --allow-staged

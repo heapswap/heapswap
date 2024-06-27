@@ -1,0 +1,180 @@
+[workspace]
+resolver = "2"
+members = ["crates/*"]
+
+########################################
+##
+### Dependencies
+##
+########################################
+[workspace.dependencies]
+#
+## Errors
+##
+eyre = { version = "0.6.12" } # Anyhow fork
+thiserror = { version = "1.0.60" } # Derive macro for the std::error::Error trait
+#
+## Crypto
+##
+### Randomness
+rand = { version = "0.8.5" } # Randomness
+### Hashes
+# argon2 = { version = "0.5.3" } # Slow Hash
+blake3 = { version = "1.5.1" } # Fast Hash
+sha2 = {version = "0.10.8"}
+### Ciphers
+chacha20poly1305 = { version = "0.10.1" } # Stream Cipher
+### Keys
+curve25519-dalek = { version = "4.1.2"} # Key generation and conversion
+ed25519-dalek = { version = "2.1.1", features = ["serde", "rand_core"] } # Key signing
+x25519-dalek = { version = "2.0.1", features = ["serde", "static_secrets"] } # Key exchange
+#
+## Compression
+##
+xz2 = { version = "0.1.7" } # Slow, High Ratio
+lz4_flex = { version = "0.11.3" } # Fast, Low Ratio
+
+#
+## CLI
+##
+# clap = { version = "4.5.4", features = [ "derive"] } # Command-Line Argument Parser
+# crossterm = { version = "0.27.0" } # For manipulating terminals
+# termcolor = { version = "1.4.1" } # Write colored text to a terminal
+# tui = { version = "0.19.0" } # Rich terminal user interfaces and dashboards
+# ctrlc = { version = "3.4.4" } # Ctrl-c signal handler
+#
+## Datastructures
+##
+bytes = { version = "1.6.0", features = ["serde"] } # Bytes
+itertools = { version = "0.12.1" } # Iterators
+# range-set-blaze = { version = "0.1.16" } # Integer ranges and sets
+# moka = { version = "0.12.7", features = ["future"] } # Cache
+# maplit = { version = "1.0.2" } # Hashmap
+dashmap = { version = "5.5.3" } # Concurrent Hashmap
+# yrs = { version = "0.18.7" } # CRDTs
+#
+## Encoding
+##
+serde = { version = "1.0.201", features = [
+	"derive"
+] } # Serialization/deserializaton
+serde_with = { version = "3.8.1" } # Specify how to serialize certain fields
+serde_bytes = { version = "0.11.14" } # Optimized handling of `&[u8]` and `Vec<u8>` for Serde
+serde-wasm-bindgen = { version = "0.6.5" } # Convert Rust data types to and from native JavaScript types
+serde_json = { version = "1.0.117" } # Read JSON values
+# json_value_merge = { version = "2.0.0" } # Merge JSON values
+json5 = { version = "0.4.1" } # Parse and serialize JSON5
+bincode = {version = "1.3.3"} # Binary serialization
+base32 = {version= "0.5.0"} # Base32
+# cbor4ii = {version = "0.3.2"} # Concise Binary Object Representation
+#
+## Networking
+##
+reqwest = { version = "0.12.4" } # HTTP client
+
+#
+## Concurrency
+##
+### Tokio
+tokio = { version = "1.37.0", features = ["full"] }
+tokio-util = { version = "0.7.11", features = ["compat"] }
+### Async
+async-stream = { version = "0.3.5" }
+### Futures
+futures = { version = "0.3.30" }
+futures-util = { version = "0.3.30" }
+### Concurrency
+# crossbeam = { version = "0.8.4" }
+# crossbeam-utils = { version = "0.8.19" }
+# parking_lot = { version = "0.12.2" } #  More compact and efficient implementations of the standard synchronization primitives
+# stop-token = { version = "0.7.0" } # Cooperative cancellations (deadlines)
+wg = { version = "0.9.1", features = ["future"] } # Waitgroups
+#
+## Logging/Debugging
+##
+### Tracing
+# tracing = { version = "0.1.40" } # Tracing diagnostics
+# tracing-error = { version = "0.2.0" } # Custom Tracing Errors
+# tracing-appender = { version = "0.2.3" } # Recording for Tracing events
+# tracing-futures = { version = "0.2.5" } # Tracing + Futures
+# tracing-serde = { version = "0.1.3" } # Tracing + Serde
+# tracing-journald = { version = "0.3.0" } # Tracing + JournalD
+# tracing-wasm = { version = "0.2.1" } #  Tracing + Wasm
+# tracing-subscriber = { version = "0.3.18", features = ["env-filter"] } # Tracing + Tokio
+### Non-Tracing
+# console_log = { version = "1.0.0" } # Send messages to the browser console
+# console-subscriber = { version = "0.2.0" } # Tracing-subscriber for tokio
+# console_error_panic_hook = { version = "0.1.7" } # A panic hook for wasm that logs panics to `console.error`
+# backtrace = { version = "0.3.71" } # Acquire a stack trace (backtrace) at runtime
+# bugsalot = { version = "0.2.2" } # Debugging macros
+#
+## Storage
+##
+sea-orm = { version = "0.12.15" } # ORM
+#redb = { version = "2.1.0" } # KV-store
+#rocksdb = { version = "0.22" }
+#
+## Embeddings
+##
+#lancedb = { version = "0.4.20" } # Vector Store
+#ort = { version = "1.16.3", features = [
+#	"load-dynamic",
+#	"half",
+#	"copy-dylibs",
+#	"download-binaries"
+#] } # ONNX Runtime
+#tokenizers = { version = "0.19.1" } # Tokenizers
+#
+## Platform-specific
+##
+### Wasm
+# wee_alloc = { version = "0.4.5" } # Allocater for WASM
+# wasm-bindgen = { version = "0.2.92", features = [
+# 	"serde",
+#	"serde_json",
+#	"serde-serialize"
+# ] } # Interact between JS and Rust.
+wasm-bindgen-futures = { version = "0.4.42" } # Convert between Rust Futures and JavaScript Promises
+wasm-bindgen-struct = { version = "0.1.0" } # Macro for adeclaring wasm-bindgen imports
+### Web
+# web-sys = { version = "0.3.69" } # Bindings for all Web APIs
+# gloo-utils = { version = "0.2.0" } # Convenience crate for common `web_sys` features
+# js-sys = { version = "0.3.69" } # Bindings for all JS global objects and functions in all JS environments like Node.js and browsers
+# stdweb = { version = "0.4.20" } # JS-Rust interoperability
+# tsify = { version = "0.4.5" } # Macros for Typescript
+### Non-Web
+# notify = { version = "6.1.1" } # Cross-platform filesystem notification library
+# directories = { version = "5.0.1" } # Platform-specific directories for common directories
+# glob = { version = "0.3.1" } # Match file paths with Unix shell style patterns
+# tar = { version = "0.4.40" } # Read and write .tar files
+#
+## Utils
+##
+config = { version = "0.14.0" } # Layered configuration system
+lazy_static = { version = "1.4.0" } # Lazily evaluated static variables
+# cfg-if = { version = "1.0.0" } # If-else for cfg macros
+# time = { version = "0.3.36" } # Time
+derive_builder = { version = "0.20.0" } # Macro to implement the builder pattern for arbitrary structs
+if_chain = { version = "1.0.2" } # Macro for writing nested `if let` expressions.
+strum = { version = "0.26.2" } # Macros for working with enums and strings
+strum_macros = { version = "0.26.2" } # Macros for working with enums and strings
+once_cell = { version = "1.19.0" } # Single assignment cells and lazy values
+owning_ref = { version = "0.4.1" } # References that carry their owner with them
+arbitrary = { version = "1.3.2" } # Construct arbitrary instances of a type
+delegate = { version = "0.12.0" } # Macros for method delegation
+either = { version = "1.11.0" } # General purpose sum type with two cases
+flume = { version = "0.11.0" } # Multi-producer, multi-consumer channel
+fn_name = { version = "0.1.0" } #  Macros that produce the name of the function they're invoked within
+semver = { version = "1.0.23" } # Parser and evaluator for Cargo's semantic versioning format (like v0.0.0)
+indent = { version = "0.1.1" } # Functions for indenting multiline strings
+typenum = { version = "1.17.0" } # Type-level numbers evaluated at compile time
+generic-array = { version = "1.0.0" } # Generically lengthed arrays
+ndarray = { version = "0.15.6" } # Ndimensional arrays
+byteorder = { version = "1.5.0" } # Encoding and decoding numbers in either big-endian or little-endian order
+num_cpus = { version = "1.16.0" } # Get the number of cpus
+timeit = { version = "0.1.2" } # Timeit macro
+smallvec = { version= "1.13.2",  features=["write","union","const_generics","const_new"] } # Store small vectors on the stack
+derive_more = {version = "0.99.18"}
+zeroize = {version = "1.8.1"}
+derive-getters = {version = "0.4.0"}
+num-bigint = {version = "0.4.5"}

@@ -1,0 +1,5 @@
+target/*
+dist/*
+data/*
+src/data/*
+src/schemas/*

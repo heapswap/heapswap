@@ -1,0 +1,14 @@
+{
+	"rust-analyzer.linkedProjects": [
+		"Cargo.toml",
+		"crates/core/Cargo.toml",
+		//"crates/browser/Cargo.toml",
+		"crates/server/Cargo.toml"
+	],
+	"rust-analyzer.server.extraEnv": {
+		"CHALK_OVERFLOW_DEPTH": "1000"
+		//"RUSTC_WRAPPER":"sccache",
+		//"RUSTFLAGS": "-Clinker=clang -Clink-arg=-fuse-ld=mold"
+	},
+	"git.ignoreLimitWarning": true
+}

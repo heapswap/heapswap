@@ -1,0 +1,23 @@
+{
+  "name": "root",
+  "private": true,
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "fix": "cargo fix --allow-dirty --allow-staged",
+    "fmt": "bash .sh/fmt.sh",
+    "dev": "concurrently -n server,browser -c magenta,green \"npm run server\" \"npm run browser\"",
+    "core": "bash .sh/run.sh core",
+    "server": "bash .sh/run.sh server",
+    "browser": "cd packages/browser && npm run dev",
+    "build": "bash .sh/build_browser.sh",
+    "test": "bash .sh/test.sh"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2",
+    "lerna": "^8.1.2",
+    "prettier": "2.8.8",
+    "prettier-plugin-toml": "0.3.1"
+  }
+}

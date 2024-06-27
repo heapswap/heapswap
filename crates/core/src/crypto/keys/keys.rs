@@ -1,0 +1,279 @@
+use std::convert::From;
+
+use bytes::Bytes;
+use derive_getters::Getters;
+use derive_more::{Display, Error};
+use rand::rngs::OsRng;
+use rand::{CryptoRng, RngCore};
+use sha2::{Digest, Sha512};
+use zeroize::{Zeroize, ZeroizeOnDrop};
+
+// curve
+use curve25519_dalek::edwards::{CompressedEdwardsY, EdwardsPoint};
+use curve25519_dalek::montgomery::MontgomeryPoint;
+use curve25519_dalek::scalar::{clamp_integer, Scalar};
+// ed
+use ed25519_dalek::ed25519::signature::Keypair as EdKeypair;
+use ed25519_dalek::{
+    Signature, Signer, SigningKey as EdPrivateKey, Verifier, VerifyingKey as EdPublicKey,
+};
+use ed25519_dalek::{KEYPAIR_LENGTH, PUBLIC_KEY_LENGTH, SECRET_KEY_LENGTH, SIGNATURE_LENGTH};
+// x
+use x25519_dalek::{
+    PublicKey as XPublicKey, SharedSecret as XSharedSecret, StaticSecret as XPrivateKey,
+};
+
+use timeit::*;
+
+use crate::bys;
+use crate::traits::{Byteable, Randomable, Stringable};
+
+pub type KeyBytes = [u8; SECRET_KEY_LENGTH];
+
+pub type PrivateKeyBytes = [u8; SECRET_KEY_LENGTH];
+pub type XPrivateKeyBytes = [u8; SECRET_KEY_LENGTH];
+pub type EdPrivateKeyBytes = [u8; SECRET_KEY_LENGTH];
+
+pub type PublicKeyBytes = [u8; PUBLIC_KEY_LENGTH];
+pub type XPublicKeyBytes = [u8; PUBLIC_KEY_LENGTH];
+pub type EdPublicKeyBytes = [u8; PUBLIC_KEY_LENGTH];
+
+pub type SignatureBytes = [u8; SIGNATURE_LENGTH];
+
+pub type Stacked = [u64; 4]; // to be able to do xor more efficiently
+pub type Extended = [u64; 16]; // for future use 
+
+
+/**
+ * Errors
+*/
+
+#[derive(Debug, Display, Error)]
+pub enum KeyError {
+    InvalidYCoordinate,
+    FailedToDecompress,
+    FailedToCreateEdPublicKey,
+    FailedToCreateEdPrivateKey,
+    InvalidSignature,
+}
+
+/**
+ * Structs
+*/
+
+#[derive(Getters)]
+pub struct PrivateKey {
+    ed: EdPrivateKey,
+    x: XPrivateKey,
+	stacked: Stacked,
+}
+
+#[derive(Getters)]
+pub struct PublicKey {
+    ed: EdPublicKey,
+    x: XPublicKey,
+	stacked: Stacked,
+}
+
+#[derive(Getters)]
+pub struct KeyPair {
+    public_key: PublicKey,
+    private_key: PrivateKey,
+}
+
+/**
+ * Traits
+*/
+
+pub trait Signable {
+    fn sign(&self, message: &Bytes) -> Signature;
+}
+
+pub trait Verifiable {
+    fn verify(&self, message: &Bytes, signature: &Signature) -> Result<(), KeyError>;
+}
+
+pub trait SharedSecretable {
+    fn shared_secret(&self, public_key: &PublicKey) -> XSharedSecret;
+}
+
+/**
+ * Implementations
+*/
+
+fn stack_key_bytes(key: &KeyBytes) -> Stacked {
+	let mut stacked = [0u64; 4];
+	for i in 0..4 {
+		stacked[i] = u64::from_le_bytes(key[i*8..(i+1)*8].try_into().unwrap());
+	}
+	stacked
+}
+
+
+// PublicKey   
+
+impl PublicKey {
+    pub fn new(ed_bytes: EdPublicKeyBytes) -> Result<Self, KeyError> {
+
+        let ed =
+            EdPublicKey::from_bytes(&ed_bytes).map_err(|_| KeyError::FailedToCreateEdPublicKey)?;
+
+		let x = XPublicKey::from(ed.to_montgomery().to_bytes());
+			
+		let stacked = stack_key_bytes(&ed_bytes);
+		
+        Ok(PublicKey { ed,
+			x,
+			stacked })
+    }
+	
+}
+
+impl Verifiable for PublicKey {
+    fn verify(&self, message: &Bytes, signature: &Signature) -> Result<(), KeyError> {
+        self.ed()
+            .verify(message.as_ref(), signature)
+            .map_err(|_| KeyError::InvalidSignature)
+    }
+}
+
+impl Byteable<KeyError> for PublicKey {
+	fn to_bytes(&self) -> Bytes {
+		Bytes::copy_from_slice(&self.ed().to_bytes())
+	}
+	
+	fn from_bytes(bytes: &Bytes) -> Result<Self, KeyError> {
+		PublicKey::new(bytes.as_ref().try_into().unwrap())
+	}
+}
+
+// PrivateKey
+
+impl PrivateKey {
+    pub fn new(ed_bytes: EdPrivateKeyBytes) -> Result<Self, KeyError> {
+		
+        let ed = EdPrivateKey::from_bytes(&ed_bytes);
+
+		let x = XPrivateKey::from(ed.to_scalar_bytes());
+		
+		
+		let stacked = stack_key_bytes(&ed_bytes);
+		
+        Ok(PrivateKey {
+			ed,
+			x,
+			stacked
+		 })
+    }
+
+}
+
+impl Byteable<KeyError> for PrivateKey {
+	fn to_bytes(&self) -> Bytes {
+		Bytes::copy_from_slice(&self.ed().to_bytes())
+	}
+	
+	fn from_bytes(bytes: &Bytes) -> Result<Self, KeyError> {
+		PrivateKey::new(bytes.as_ref().try_into().unwrap())
+	}
+}
+
+
+impl Signable for PrivateKey {
+    fn sign(&self, message: &Bytes) -> Signature {
+        self.ed().sign(message.as_ref())
+    }
+}
+
+impl SharedSecretable for PrivateKey {
+    fn shared_secret(&self, public_key: &PublicKey) -> XSharedSecret {
+        self.x().diffie_hellman(&public_key.x())
+    }
+}
+
+impl Randomable<KeyError> for PrivateKey {
+    fn from_random() -> Result<Self, KeyError> {
+        let mut csprng = OsRng;
+        let signing_key = EdPrivateKey::generate(&mut csprng);
+
+        PrivateKey::new(signing_key.to_bytes())
+    }
+}
+
+// KeyPair
+
+impl KeyPair {
+    pub fn new(private_key: PrivateKey) -> Result<Self, KeyError> {
+        let public_key = PublicKey::new(private_key.ed().verifying_key().to_bytes())?;
+
+        Ok(KeyPair {
+            private_key,
+            public_key,
+        })
+    }
+}
+
+impl Byteable<KeyError> for KeyPair {
+	fn to_bytes(&self) -> Bytes {
+		bys::concat(&[self.private_key().to_bytes(), self.public_key().to_bytes()])
+	}
+	
+	fn from_bytes(bytes: &Bytes) -> Result<Self, KeyError> {
+		let private_key = PrivateKey::from_bytes(&bytes.slice(0..SECRET_KEY_LENGTH))?;
+		
+		KeyPair::new(private_key)
+	}
+}
+
+impl Signable for KeyPair {
+    fn sign(&self, message: &Bytes) -> Signature {
+        self.private_key().sign(message)
+    }
+}
+
+impl Verifiable for KeyPair {
+    fn verify(&self, message: &Bytes, signature: &Signature) -> Result<(), KeyError> {
+        self.public_key().verify(message, signature)
+    }
+}
+
+impl SharedSecretable for KeyPair {
+    fn shared_secret(&self, public_key: &PublicKey) -> XSharedSecret {
+        self.private_key().shared_secret(public_key)
+    }
+}
+
+impl Randomable<KeyError> for KeyPair {
+    fn from_random() -> Result<Self, KeyError> {
+        let private_key = PrivateKey::from_random()?;
+
+        KeyPair::new(private_key)
+    }
+}
+
+#[test]
+fn test_keys() -> Result<(), KeyError> {
+
+    let alice = KeyPair::from_random()?;
+    let bob = KeyPair::from_random()?;
+
+	// alice signs a message
+    let message = Bytes::from("Hello, world!");
+    let signature = alice.sign(&message);
+
+	// alice verifies the signature
+    alice.verify(&message, &signature)?;
+
+	// bob verifies the signature with alice's public key
+	let alice_public_key = PublicKey::from_bytes(&alice.public_key().to_bytes())?;	
+	alice_public_key.verify(&message, &signature)?;		
+
+	// compute shared secret
+	let alice_shared_secret = alice.shared_secret(&bob.public_key());
+	let bob_shared_secret = bob.shared_secret(&alice.public_key());
+	
+	assert_eq!(alice_shared_secret.as_bytes(), bob_shared_secret.as_bytes());
+	
+	Ok(())
+	
+}
