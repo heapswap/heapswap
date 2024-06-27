@@ -10,14 +10,6 @@ rustup default nightly
 rustup component add rustfmt
 rustup target add wasm32-unknown-unknown
 
-# add rust and json formatter
-cat <<'EOF' >.git/hooks/pre-commit
-#!/bin/bash
-
-cargo fmt 
-
-prettier --write . 
-
-EOF
-
-chmod +x .git/hooks/pre-commit
+# setup protobufs
+sudo apt-get install protobuf-compiler -y
+cargo install protobuf-codegen

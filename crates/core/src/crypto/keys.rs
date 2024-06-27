@@ -20,7 +20,6 @@ use crate::traits::{Byteable, Randomable, Stringable};
 
 use super::utils::{stack_256, unstack_256};
 
-
 /**
  * Types
 */
@@ -318,16 +317,14 @@ fn test_keys() -> Result<(), KeyError> {
     Ok(())
 }
 
-
 //#[test]
 fn time_key_comparisons() -> Result<(), KeyError> {
     let alice = KeyPair::from_random()?;
     let bob = KeyPair::from_random()?;
 
-    
     // timings
-    let alice_bytes: &[u8;32] = &alice.public_key().to_bytes().as_ref().try_into().unwrap();
-    let bob_bytes: &[u8;32] = &bob.public_key().to_bytes().as_ref().try_into().unwrap();
+    let alice_bytes: &[u8; 32] = &alice.public_key().to_bytes().as_ref().try_into().unwrap();
+    let bob_bytes: &[u8; 32] = &bob.public_key().to_bytes().as_ref().try_into().unwrap();
     let alice_stacked = alice.public_key().stacked();
     let bob_stacked = bob.public_key().stacked();
 

@@ -1,0 +1,16 @@
+syntax = "proto3";
+
+package snazzy.pants;
+
+// Some snazzy new pants!
+message Pants {
+    enum Size {
+        SMALL = 0;
+        MEDIUM = 1;
+        LARGE = 2;
+        EXTRA_LARGE = 3;
+    }
+
+    string color = 1;
+    Size size = 2;
+}

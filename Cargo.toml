@@ -11,8 +11,8 @@ members = ["crates/*"]
 #
 ## Errors
 ##
-eyre = { version = "0.6.12" } # Anyhow fork
-thiserror = { version = "1.0.60" } # Derive macro for the std::error::Error trait
+#eyre = { version = "0.6.12" } # Anyhow fork
+#thiserror = { version = "1.0.60" } # Derive macro for the std::error::Error trait
 #
 ## Crypto
 ##
@@ -21,19 +21,24 @@ rand = { version = "0.8.5" } # Randomness
 ### Hashes
 # argon2 = { version = "0.5.3" } # Slow Hash
 blake3 = { version = "1.5.1" } # Fast Hash
-sha2 = {version = "0.10.8"}
+#sha2 = { version = "0.10.8" }
 ### Ciphers
 chacha20poly1305 = { version = "0.10.1" } # Stream Cipher
 ### Keys
-curve25519-dalek = { version = "4.1.2"} # Key generation and conversion
-ed25519-dalek = { version = "2.1.1", features = ["serde", "rand_core"] } # Key signing
-x25519-dalek = { version = "2.0.1", features = ["serde", "static_secrets"] } # Key exchange
+curve25519-dalek = { version = "4.1.2" } # Key generation and conversion
+ed25519-dalek = { version = "2.1.1", features = [
+	"serde",
+	"rand_core"
+] } # Key signing
+x25519-dalek = { version = "2.0.1", features = [
+	"serde",
+	"static_secrets"
+] } # Key exchange
 #
 ## Compression
 ##
 xz2 = { version = "0.1.7" } # Slow, High Ratio
 lz4_flex = { version = "0.11.3" } # Fast, Low Ratio
-
 #
 ## CLI
 ##
@@ -64,14 +69,32 @@ serde-wasm-bindgen = { version = "0.6.5" } # Convert Rust data types to and from
 serde_json = { version = "1.0.117" } # Read JSON values
 # json_value_merge = { version = "2.0.0" } # Merge JSON values
 json5 = { version = "0.4.1" } # Parse and serialize JSON5
-bincode = {version = "1.3.3"} # Binary serialization
-base32 = {version= "0.5.0"} # Base32
+bincode = { version = "1.3.3" } # Binary serialization
+base32 = { version = "0.5.0" } # Base32
+# Protobufs
+#protobuf = { version = "3.5.0", features = ["with-bytes"] } # Protocol Buffers
+#protobuf_json_mapping = { version = "3.5.0" } # JSON mapping for Protocol Buffers
+#protobuf-codegen = { version = "3.5.0" } # Code generation for Protocol Buffers
+prost = { version = "0.12" } # Tokio/bytes protobufs
+prost-types = { version = "0.12" } # Well-known protobuf types
+prost-build = { version = "0.12.6" }
 # cbor4ii = {version = "0.3.2"} # Concise Binary Object Representation
 #
 ## Networking
 ##
 reqwest = { version = "0.12.4" } # HTTP client
-
+poem = { version = "3.0.1", features = [
+	"server",
+	"websocket",
+	"static-files"
+] } # Web framework
+poem-openapi = { version = "5.0.2", features = [
+	"chrono",
+	"rapidoc",
+	"hostname",
+	"websocket",
+	"static-files"
+] }
 #
 ## Concurrency
 ##
@@ -88,7 +111,7 @@ futures-util = { version = "0.3.30" }
 # crossbeam-utils = { version = "0.8.19" }
 # parking_lot = { version = "0.12.2" } #  More compact and efficient implementations of the standard synchronization primitives
 # stop-token = { version = "0.7.0" } # Cooperative cancellations (deadlines)
-wg = { version = "0.9.1", features = ["future"] } # Waitgroups
+#wg = { version = "0.9.1", features = ["future"] } # Waitgroups
 #
 ## Logging/Debugging
 ##
@@ -173,9 +196,15 @@ ndarray = { version = "0.15.6" } # Ndimensional arrays
 byteorder = { version = "1.5.0" } # Encoding and decoding numbers in either big-endian or little-endian order
 num_cpus = { version = "1.16.0" } # Get the number of cpus
 timeit = { version = "0.1.2" } # Timeit macro
-smallvec = { version= "1.13.2",  features=["write","union","const_generics","const_new"] } # Store small vectors on the stack
-derive_more = {version = "0.99.18"}
-zeroize = {version = "1.8.1"}
-derive-getters = {version = "0.4.0"}
-num-bigint = {version = "0.4.5"}
-num-traits = {version ="0.2"}
+smallvec = { version = "1.13.2", features = [
+	"write",
+	"union",
+	"const_generics",
+	"const_new"
+] } # Store small vectors on the stack
+derive_more = { version = "0.99.18" } # More derive macros
+zeroize = { version = "1.8.1" } # Zeroing memory
+derive-getters = { version = "0.4.0" } # Generate getters for structs
+num-bigint = { version = "0.4.5" } # Bigints
+num-traits = { version = "0.2" } # Traits for numeric types
+chrono = { version = "0.4.38" } # Time

@@ -1,6 +1,16 @@
 [package]
-name = "server"
+name = "heapswap_server"
 version = "0.1.0"
 edition = "2021"
 
 [dependencies]
+# Local
+heapswap_core = { path = "../core" }
+heapswap_protos = { path = "../protos" }
+# Encoding
+prost.workspace = true
+# Networking
+poem.workspace = true
+poem-openapi.workspace = true
+# Concurrency
+tokio.workspace = true

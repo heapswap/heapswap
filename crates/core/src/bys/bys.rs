@@ -1,6 +1,10 @@
 use base32::Alphabet;
-use bytes::Bytes;
+pub use bytes::{Buf, BufMut, Bytes, BytesMut};
 use rand::Rng;
+
+/**
+ * Errors
+*/
 
 pub enum BytesError {
     InvalidBase32,
@@ -41,6 +45,14 @@ pub fn hamming(a: &Bytes, b: &Bytes) -> u32 {
 pub fn random(len: usize) -> Bytes {
     let mut rng = rand::thread_rng();
     let mut vec = vec![0u8; len];
+    rng.fill(vec.as_mut_slice());
+    Bytes::from(vec)
+}
+
+// Generate a random 32 byte id
+pub fn id() -> Bytes {
+    let mut rng = rand::thread_rng();
+    let mut vec = vec![0u8; 32];
     rng.fill(vec.as_mut_slice());
     Bytes::from(vec)
 }

@@ -1,4 +1,3 @@
-
 use bytes::Bytes;
 
 pub trait Byteable<E>: Sized {

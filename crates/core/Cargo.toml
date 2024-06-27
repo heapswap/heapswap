@@ -7,12 +7,11 @@ edition = "2021"
 # Crypto
 rand.workspace = true
 blake3.workspace = true
-sha2.workspace = true
 chacha20poly1305.workspace = true
 curve25519-dalek.workspace = true
 ed25519-dalek.workspace = true
 x25519-dalek.workspace = true
-# Encoding 
+# Encoding
 base32.workspace = true
 # Datastructures
 bytes.workspace = true
@@ -21,7 +20,6 @@ serde.workspace = true
 serde_bytes.workspace = true
 bincode.workspace = true
 # Misc
-eyre.workspace = true
 derive_more.workspace = true
 zeroize.workspace = true
 derive-getters.workspace = true
