@@ -2,41 +2,46 @@ use std::convert::From;
 
 use bytes::Bytes;
 use derive_getters::Getters;
+//use getset::Getters;
 use derive_more::{Display, Error};
 use rand::rngs::OsRng;
+use rand::RngCore;
 use timeit::*;
 
 use ed25519_dalek::{
-    Signature, Signer, SigningKey as EdPrivateKey, Verifier, VerifyingKey as EdPublicKey,
+    Signature, Signer, SigningKey as DalekEdPrivateKey, Verifier, VerifyingKey as DalekEdPublicKey,
 };
 use ed25519_dalek::{PUBLIC_KEY_LENGTH, SECRET_KEY_LENGTH, SIGNATURE_LENGTH};
 use x25519_dalek::{
-    PublicKey as XPublicKey, SharedSecret as XSharedSecret, StaticSecret as XPrivateKey,
+    PublicKey as DalekXPublicKey, SharedSecret as DalekXSharedSecret, StaticSecret as DalekXPrivateKey,
 };
 
 use crate::bys;
 use crate::comparison::{hamming, xor};
-use crate::traits::{Byteable, Randomable, Stringable};
+use crate::traits::*;
 
-use super::utils::{stack_256, unstack_256};
+use crate::u256::*;
 
 /**
  * Types
 */
-pub type KeyBytes = [u8; SECRET_KEY_LENGTH];
+pub type KeyArr = [u8; SECRET_KEY_LENGTH];
 
-pub type PrivateKeyBytes = [u8; SECRET_KEY_LENGTH];
-pub type XPrivateKeyBytes = [u8; SECRET_KEY_LENGTH];
-pub type EdPrivateKeyBytes = [u8; SECRET_KEY_LENGTH];
+pub type PrivateKeyArr = [u8; SECRET_KEY_LENGTH];
+pub type DalekXPrivateKeyArr = [u8; SECRET_KEY_LENGTH];
+pub type DalekEdPrivateKeyArr = [u8; SECRET_KEY_LENGTH];
 
-pub type PublicKeyBytes = [u8; PUBLIC_KEY_LENGTH];
-pub type XPublicKeyBytes = [u8; PUBLIC_KEY_LENGTH];
-pub type EdPublicKeyBytes = [u8; PUBLIC_KEY_LENGTH];
+pub type PublicKeyArr = [u8; PUBLIC_KEY_LENGTH];
+pub type DalekXPublicKeyArr = [u8; PUBLIC_KEY_LENGTH];
+pub type DalekEdPublicKeyArr = [u8; PUBLIC_KEY_LENGTH];
 
 pub type SignatureBytes = [u8; SIGNATURE_LENGTH];
 
-pub type StackedKey = [u64; 4]; // to be able to do xor more efficiently
-pub type Extended = [u64; 16]; // for future use
+pub type EdPublicKey = U256;
+pub type EdPrivateKey = U256;
+
+pub type XPublicKey = U256;
+
 
 /**
  * Errors
@@ -50,8 +55,8 @@ pub enum KeyError {
     InvalidPrivateKey,
     InvalidKeyPair,
     FailedToDecompress,
-    FailedToCreateEdPublicKey,
-    FailedToCreateEdPrivateKey,
+    FailedToCreateDalekEdPublicKey,
+    FailedToCreateDalekEdPrivateKey,
 }
 
 /**
@@ -60,16 +65,16 @@ pub enum KeyError {
 
 #[derive(Getters)]
 pub struct PrivateKey {
-    ed: EdPrivateKey,
-    x: XPrivateKey,
-    stacked: StackedKey,
+    ed: DalekEdPrivateKey,
+    ed_u256: U256,
+    x: DalekXPrivateKey,
 }
 
 #[derive(Getters)]
 pub struct PublicKey {
-    ed: EdPublicKey,
-    x: XPublicKey,
-    stacked: StackedKey,
+    ed: DalekEdPublicKey,
+    ed_u256: U256,
+    x: DalekXPublicKey,
 }
 
 #[derive(Getters)]
@@ -91,7 +96,7 @@ pub trait Verifiable {
 }
 
 pub trait SharedSecretable {
-    fn shared_secret(&self, public_key: &PublicKey) -> XSharedSecret;
+    fn shared_secret(&self, public_key: &PublicKey) -> DalekXSharedSecret;
 }
 
 /**
@@ -101,30 +106,26 @@ pub trait SharedSecretable {
 // PublicKey
 
 impl PublicKey {
-    pub fn new(ed_bytes: EdPublicKeyBytes) -> Result<Self, KeyError> {
+    pub fn new(ed_arr: DalekEdPublicKeyArr) -> Result<Self, KeyError> {
         let ed =
-            EdPublicKey::from_bytes(&ed_bytes).map_err(|_| KeyError::FailedToCreateEdPublicKey)?;
+            DalekEdPublicKey::from_bytes(&ed_arr).map_err(|_| KeyError::FailedToCreateDalekEdPublicKey)?;
 
-        let x = XPublicKey::from(ed.to_montgomery().to_bytes());
+        let x = DalekXPublicKey::from(ed.to_montgomery().to_bytes());
 
-        let stacked = stack_256(&ed_bytes);
+        let ed_u256 = U256::from_arr(&ed_arr).map_err(|_| KeyError::InvalidPublicKey)?;
 
-        Ok(PublicKey { ed, x, stacked })
+        Ok(PublicKey { ed, x, ed_u256 })
     }
 
-    pub fn from_stacked(stacked: &StackedKey) -> Result<Self, KeyError> {
-        let ed_bytes = unstack_256(stacked);
+    pub fn from_ed_u256(ed_u256: U256) -> Result<Self, KeyError> {
+        let ed_arr = U256::to_arr(&ed_u256);
 
         let ed =
-            EdPublicKey::from_bytes(&ed_bytes).map_err(|_| KeyError::FailedToCreateEdPublicKey)?;
+            DalekEdPublicKey::from_bytes(&ed_arr).map_err(|_| KeyError::FailedToCreateDalekEdPublicKey)?;
 
-        let x = XPublicKey::from(ed.to_montgomery().to_bytes());
+        let x = DalekXPublicKey::from(ed.to_montgomery().to_bytes());
 
-        Ok(PublicKey {
-            ed,
-            x,
-            stacked: stacked.clone(),
-        })
+        Ok(PublicKey { ed, x, ed_u256: ed_u256 })
     }
 }
 
@@ -161,28 +162,26 @@ impl Verifiable for PublicKey {
 // PrivateKey
 
 impl PrivateKey {
-    pub fn new(ed_bytes: EdPrivateKeyBytes) -> Result<Self, KeyError> {
-        let ed = EdPrivateKey::from_bytes(&ed_bytes);
+    pub fn new(ed_arr: DalekEdPrivateKeyArr) -> Result<Self, KeyError> {
+        let ed = DalekEdPrivateKey::from_bytes(&ed_arr);
 
-        let x = XPrivateKey::from(ed.to_scalar_bytes());
-
-        let stacked = stack_256(&ed_bytes);
-
-        Ok(PrivateKey { ed, x, stacked })
-    }
-
-    pub fn from_stacked(stacked: &StackedKey) -> Result<Self, KeyError> {
-        let ed_bytes = unstack_256(stacked);
-
-        let ed = EdPrivateKey::from_bytes(&ed_bytes);
-
-        let x = XPrivateKey::from(ed.to_scalar_bytes());
+        let x = DalekXPrivateKey::from(ed.to_scalar_bytes());
 
         Ok(PrivateKey {
             ed,
             x,
-            stacked: stacked.clone(),
+            ed_u256: U256::from_arr(&ed_arr).map_err(|_| KeyError::InvalidPrivateKey)?,
         })
+    }
+
+    pub fn from_ed_u256(ed_u256: U256) -> Result<Self, KeyError> {
+        let ed_arr = ed_u256.to_arr();
+
+        let ed = DalekEdPrivateKey::from_bytes(&ed_arr);
+
+        let x = DalekXPrivateKey::from(ed.to_scalar_bytes());
+
+        Ok(PrivateKey { ed, x, ed_u256 })
     }
 }
 
@@ -215,15 +214,15 @@ impl Signable for PrivateKey {
 }
 
 impl SharedSecretable for PrivateKey {
-    fn shared_secret(&self, public_key: &PublicKey) -> XSharedSecret {
+    fn shared_secret(&self, public_key: &PublicKey) -> DalekXSharedSecret {
         self.x().diffie_hellman(&public_key.x())
     }
 }
 
 impl Randomable<KeyError> for PrivateKey {
-    fn from_random() -> Result<Self, KeyError> {
+    fn random() -> Result<Self, KeyError> {
         let mut csprng = OsRng;
-        let signing_key = EdPrivateKey::generate(&mut csprng);
+        let signing_key = DalekEdPrivateKey::generate(&mut csprng);
 
         PrivateKey::new(signing_key.to_bytes())
     }
@@ -279,14 +278,14 @@ impl Verifiable for KeyPair {
 }
 
 impl SharedSecretable for KeyPair {
-    fn shared_secret(&self, public_key: &PublicKey) -> XSharedSecret {
+    fn shared_secret(&self, public_key: &PublicKey) -> DalekXSharedSecret {
         self.private_key().shared_secret(public_key)
     }
 }
 
 impl Randomable<KeyError> for KeyPair {
-    fn from_random() -> Result<Self, KeyError> {
-        let private_key = PrivateKey::from_random()?;
+    fn random() -> Result<Self, KeyError> {
+        let private_key = PrivateKey::random()?;
 
         KeyPair::new(private_key)
     }
@@ -294,8 +293,8 @@ impl Randomable<KeyError> for KeyPair {
 
 #[test]
 fn test_keys() -> Result<(), KeyError> {
-    let alice = KeyPair::from_random()?;
-    let bob = KeyPair::from_random()?;
+    let alice = KeyPair::random()?;
+    let bob = KeyPair::random()?;
 
     // alice signs a message
     let message = Bytes::from("Hello, world!");
@@ -313,42 +312,6 @@ fn test_keys() -> Result<(), KeyError> {
     let bob_shared_secret = bob.shared_secret(&alice.public_key());
 
     assert_eq!(alice_shared_secret.as_bytes(), bob_shared_secret.as_bytes());
-
-    Ok(())
-}
-
-//#[test]
-fn time_key_comparisons() -> Result<(), KeyError> {
-    let alice = KeyPair::from_random()?;
-    let bob = KeyPair::from_random()?;
-
-    // timings
-    let alice_bytes: &[u8; 32] = &alice.public_key().to_bytes().as_ref().try_into().unwrap();
-    let bob_bytes: &[u8; 32] = &bob.public_key().to_bytes().as_ref().try_into().unwrap();
-    let alice_stacked = alice.public_key().stacked();
-    let bob_stacked = bob.public_key().stacked();
-
-    let xor_ms = timeit_loops!(1000, {
-        let _ = xor(alice_bytes, bob_bytes);
-    });
-
-    let ham_ms = timeit_loops!(1000, {
-        let _ = hamming(alice_bytes, bob_bytes);
-    });
-
-    println!("xor_u8_32: {}ns/loop", xor_ms * 100000000.); // 24 ns
-    println!("ham_u8_32: {}ns/loop", ham_ms * 100000000.); // 33 ns
-
-    let xor_ms = timeit_loops!(1000, {
-        let _ = xor(alice_stacked, bob_stacked);
-    });
-
-    let ham_ms = timeit_loops!(1000, {
-        let _ = hamming(alice_stacked, bob_stacked);
-    });
-
-    println!("xor_u64_4: {}ns/loop", xor_ms * 100000000.); // 4 ns (6x faster)
-    println!("ham_u64_4: {}ns/loop", ham_ms * 100000000.); // 5 ns (6x faster)
 
     Ok(())
 }

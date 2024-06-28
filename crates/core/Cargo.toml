@@ -4,7 +4,11 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
+# Local
+heapswap_protos = { path = "../protos" }
 # Crypto
+crypto-bigint.workspace = true
+num-bigint.workspace = true
 rand.workspace = true
 blake3.workspace = true
 chacha20poly1305.workspace = true
@@ -24,5 +28,6 @@ prost.workspace = true
 derive_more.workspace = true
 zeroize.workspace = true
 derive-getters.workspace = true
+#getset.workspace = true
 timeit.workspace = true
 num-traits.workspace = true

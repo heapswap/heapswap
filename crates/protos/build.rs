@@ -21,7 +21,7 @@ fn find_proto_files(dir: &Path) -> Result<Vec<PathBuf>> {
 }
 
 fn main() -> Result<()> {
-    let src_dir = Path::new("src");
+    let src_dir = Path::new("protos");
 
     let proto_files = find_proto_files(&src_dir).expect("Failed to find proto files");
 
@@ -32,7 +32,7 @@ fn main() -> Result<()> {
 
     Config::new()
         .include_file("lib.rs")
-        .compile_protos(&proto_strs, &["src/"])
+        .compile_protos(&proto_strs, &["protos/"])
         .unwrap();
 
     let out_dir = env::var("OUT_DIR").unwrap();
@@ -41,7 +41,8 @@ fn main() -> Result<()> {
 
     writeln!(debug_file, "OUT_DIR: {}", out_dir)?;
 
-    println!("cargo:rerun-if-changed=src");
+    println!("cargo:rerun-if-changed=./");
+    //println!("cargo:rerun-if-changed=protos/");
 
     Ok(())
 }

@@ -1,9 +1,0 @@
-syntax="proto3";
-
-package fruits;
-
-message Apple {
-	string variety = 1;
-	int32 weight = 2;
-	int32 price = 3;
-}

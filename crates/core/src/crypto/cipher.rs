@@ -8,7 +8,7 @@ use crate::bys;
 
 pub type Plaintext = Bytes;
 pub type Ciphertext = Bytes;
-pub type Key = [u8; 32];
+pub type SharedKey = [u8; 32];
 const NONCE_LENGTH: usize = 12;
 pub type Nonce = [u8; NONCE_LENGTH];
 
@@ -17,7 +17,7 @@ pub struct Cipher {
 }
 
 pub trait Ciphering {
-    fn new(key: Key) -> Self;
+    fn new(key: SharedKey) -> Self;
     fn random() -> Self;
 
     fn encrypt(&self, plaintext: Plaintext) -> Ciphertext;
@@ -25,14 +25,14 @@ pub trait Ciphering {
 }
 
 impl Ciphering for Cipher {
-    fn new(key: Key) -> Self {
+    fn new(key: SharedKey) -> Self {
         Cipher {
             cipher: ChaCha20Poly1305::new(&key.into()),
         }
     }
 
     fn random() -> Self {
-        let key: Key = ChaCha20Poly1305::generate_key(&mut OsRng).into();
+        let key: SharedKey = ChaCha20Poly1305::generate_key(&mut OsRng).into();
         Cipher::new(key)
     }
 
