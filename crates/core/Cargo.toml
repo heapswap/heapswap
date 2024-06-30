@@ -31,3 +31,4 @@ derive-getters.workspace = true
 #getset.workspace = true
 timeit.workspace = true
 num-traits.workspace = true
+once_cell.workspace = true

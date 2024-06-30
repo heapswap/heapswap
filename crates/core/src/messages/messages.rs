@@ -1,16 +1,14 @@
 use bytes::Bytes;
+use crate::u256::*;
+use serde::{Deserialize, Serialize};
 
-struct U256 {
-    u0: u64,
-    u1: u64,
-    u2: u64,
-    u3: u64,
-}
+pub type Key = U256;
+pub type Hash = U256;
+pub type KeyArr = [u8; 32];
+pub type HashArr = [u8; 32];
+pub type IdArr = [u8; 32];
 
-type Key = U256;
-type Hash = U256;
-
-enum Action {
+pub enum Action {
     // REST
     Post = 0,
     Get = 1,
@@ -23,22 +21,33 @@ enum Action {
     Message = 34,
 }
 
-struct Path {
-    signer: Option<Key>,
-    cosigner: Option<Key>,
-    tangent: Option<Hash>,
+#[derive(Serialize, Deserialize)]
+pub struct Field {
+    signer: String,
+    cosigner: String,
+    tangent: String,
 }
 
-struct Request {
-    id: U256,
+impl Field {
+    pub fn new(signer: String, cosigner: String, tangent: String) -> Self {
+        Self {
+            signer,
+            cosigner,
+            tangent,
+        }
+    }
+}
+
+pub struct Request {
+    id: IdArr,
     action: Action,
-    path: Path,
+    path: Field,
     data: Bytes,
 }
 
-struct Response {
-    id: U256,
+pub struct Response {
+    id: IdArr,
     action: Action,
-    path: Path,
+    path: Field,
     data: Bytes,
 }

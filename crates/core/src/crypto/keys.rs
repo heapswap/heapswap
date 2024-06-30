@@ -1,4 +1,5 @@
 use std::convert::From;
+use std::iter::Once;
 
 use bytes::Bytes;
 use derive_getters::Getters;
@@ -15,11 +16,11 @@ use ed25519_dalek::{PUBLIC_KEY_LENGTH, SECRET_KEY_LENGTH, SIGNATURE_LENGTH};
 use x25519_dalek::{
     PublicKey as DalekXPublicKey, SharedSecret as DalekXSharedSecret, StaticSecret as DalekXPrivateKey,
 };
+use once_cell::unsync::OnceCell;
 
 use crate::bys;
 use crate::comparison::{hamming, xor};
 use crate::traits::*;
-
 use crate::u256::*;
 
 /**
@@ -63,18 +64,16 @@ pub enum KeyError {
  * Structs
 */
 
-#[derive(Getters)]
 pub struct PrivateKey {
-    ed: DalekEdPrivateKey,
     ed_u256: U256,
-    x: DalekXPrivateKey,
+    ed: OnceCell<DalekEdPrivateKey>,
+    x: OnceCell<DalekXPrivateKey>,
 }
 
-#[derive(Getters)]
 pub struct PublicKey {
-    ed: DalekEdPublicKey,
     ed_u256: U256,
-    x: DalekXPublicKey,
+    ed: OnceCell<DalekEdPublicKey>,
+    x: OnceCell<DalekXPublicKey>,
 }
 
 #[derive(Getters)]
@@ -86,7 +85,6 @@ pub struct KeyPair {
 /**
  * Traits
 */
-
 pub trait Signable {
     fn sign(&self, message: &Bytes) -> Signature;
 }
@@ -100,48 +98,52 @@ pub trait SharedSecretable {
 }
 
 /**
- * Implementations
+ * PublicKey
 */
-
-// PublicKey
 
 impl PublicKey {
     pub fn new(ed_arr: DalekEdPublicKeyArr) -> Result<Self, KeyError> {
-        let ed =
-            DalekEdPublicKey::from_bytes(&ed_arr).map_err(|_| KeyError::FailedToCreateDalekEdPublicKey)?;
-
-        let x = DalekXPublicKey::from(ed.to_montgomery().to_bytes());
 
         let ed_u256 = U256::from_arr(&ed_arr).map_err(|_| KeyError::InvalidPublicKey)?;
-
-        Ok(PublicKey { ed, x, ed_u256 })
+        
+        Self::from_u256(ed_u256)
     }
 
-    pub fn from_ed_u256(ed_u256: U256) -> Result<Self, KeyError> {
-        let ed_arr = U256::to_arr(&ed_u256);
-
-        let ed =
-            DalekEdPublicKey::from_bytes(&ed_arr).map_err(|_| KeyError::FailedToCreateDalekEdPublicKey)?;
-
-        let x = DalekXPublicKey::from(ed.to_montgomery().to_bytes());
-
-        Ok(PublicKey { ed, x, ed_u256: ed_u256 })
+    pub fn from_u256(ed_u256: U256) -> Result<Self, KeyError> {
+           
+        Ok(PublicKey { ed: OnceCell::new(), x: OnceCell::new(), ed_u256: ed_u256 
+        })
+        
     }
+
+    pub fn ed(&self) -> &DalekEdPublicKey {
+        self.ed.get_or_init(|| {
+            DalekEdPublicKey::from_bytes(&self.ed_u256.to_arr())
+                .expect("Failed to create DalekEdPublicKey")
+        })
+    }
+    
+    pub fn x(&self) -> &DalekXPublicKey {
+        self.x.get_or_init(|| {
+            DalekXPublicKey::from(self.ed().to_montgomery().to_bytes())
+        })
+    }
+    
 }
 
 impl Byteable<KeyError> for PublicKey {
     fn to_bytes(&self) -> Bytes {
-        Bytes::copy_from_slice(&self.ed().to_bytes())
+        self.ed_u256.to_bytes()
     }
 
     fn from_bytes(bytes: &Bytes) -> Result<Self, KeyError> {
-        PublicKey::new(bytes.as_ref().try_into().unwrap())
+        PublicKey::from_u256(U256::from_bytes(bytes).map_err(|_| KeyError::InvalidPublicKey)?)
     }
 }
 
 impl Stringable<KeyError> for PublicKey {
     fn to_string(&self) -> String {
-        bys::to_base32(&self.to_bytes())
+        self.ed_u256.to_string()
     }
 
     fn from_string(string: &str) -> Result<Self, KeyError> {
@@ -159,45 +161,55 @@ impl Verifiable for PublicKey {
     }
 }
 
-// PrivateKey
+/**
+ * PrivateKey
+*/
 
 impl PrivateKey {
     pub fn new(ed_arr: DalekEdPrivateKeyArr) -> Result<Self, KeyError> {
-        let ed = DalekEdPrivateKey::from_bytes(&ed_arr);
+        
+        let ed_u256 = U256::from_arr(&ed_arr).map_err(|_| KeyError::InvalidPrivateKey)?;
+        
+        Self::from_u256(ed_u256)
 
-        let x = DalekXPrivateKey::from(ed.to_scalar_bytes());
+    }
+
+    pub fn from_u256(ed_u256: U256) -> Result<Self, KeyError> {
+        let ed_arr = ed_u256.to_arr();
 
         Ok(PrivateKey {
-            ed,
-            x,
+            ed: OnceCell::new(),
+            x: OnceCell::new(),
             ed_u256: U256::from_arr(&ed_arr).map_err(|_| KeyError::InvalidPrivateKey)?,
         })
     }
-
-    pub fn from_ed_u256(ed_u256: U256) -> Result<Self, KeyError> {
-        let ed_arr = ed_u256.to_arr();
-
-        let ed = DalekEdPrivateKey::from_bytes(&ed_arr);
-
-        let x = DalekXPrivateKey::from(ed.to_scalar_bytes());
-
-        Ok(PrivateKey { ed, x, ed_u256 })
+    
+    pub fn ed(&self) -> &DalekEdPrivateKey {
+        self.ed.get_or_init(|| {
+            DalekEdPrivateKey::from_bytes(&self.ed_u256.to_arr())
+        })
+    }
+    
+    pub fn x(&self) -> &DalekXPrivateKey {
+        self.x.get_or_init(|| {
+            DalekXPrivateKey::from(self.ed().to_scalar_bytes())
+        })
     }
 }
 
 impl Byteable<KeyError> for PrivateKey {
     fn to_bytes(&self) -> Bytes {
-        Bytes::copy_from_slice(&self.ed().to_bytes())
+        self.ed_u256.to_bytes()
     }
 
     fn from_bytes(bytes: &Bytes) -> Result<Self, KeyError> {
-        PrivateKey::new(bytes.as_ref().try_into().unwrap())
+        PrivateKey::from_u256(U256::from_bytes(bytes).map_err(|_| KeyError::InvalidPrivateKey)?)
     }
 }
 
 impl Stringable<KeyError> for PrivateKey {
     fn to_string(&self) -> String {
-        bys::to_base32(&self.to_bytes())
+        self.ed_u256.to_string()
     }
 
     fn from_string(string: &str) -> Result<Self, KeyError> {
@@ -228,8 +240,9 @@ impl Randomable<KeyError> for PrivateKey {
     }
 }
 
-// KeyPair
-
+/**
+ * KeyPair
+*/
 impl KeyPair {
     pub fn new(private_key: PrivateKey) -> Result<Self, KeyError> {
         let public_key = PublicKey::new(private_key.ed().verifying_key().to_bytes())?;
