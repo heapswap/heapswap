@@ -13,10 +13,11 @@ use ed25519_dalek::{
     Signature, Signer, SigningKey as DalekEdPrivateKey, Verifier, VerifyingKey as DalekEdPublicKey,
 };
 use ed25519_dalek::{PUBLIC_KEY_LENGTH, SECRET_KEY_LENGTH, SIGNATURE_LENGTH};
-use x25519_dalek::{
-    PublicKey as DalekXPublicKey, SharedSecret as DalekXSharedSecret, StaticSecret as DalekXPrivateKey,
-};
 use once_cell::unsync::OnceCell;
+use x25519_dalek::{
+    PublicKey as DalekXPublicKey, SharedSecret as DalekXSharedSecret,
+    StaticSecret as DalekXPrivateKey,
+};
 
 use crate::bys;
 use crate::comparison::{hamming, xor};
@@ -28,21 +29,20 @@ use crate::u256::*;
 */
 pub type KeyArr = [u8; SECRET_KEY_LENGTH];
 
-pub type PrivateKeyArr = [u8; SECRET_KEY_LENGTH];
-pub type DalekXPrivateKeyArr = [u8; SECRET_KEY_LENGTH];
-pub type DalekEdPrivateKeyArr = [u8; SECRET_KEY_LENGTH];
+type PrivateKeyArr = [u8; SECRET_KEY_LENGTH];
+type DalekXPrivateKeyArr = [u8; SECRET_KEY_LENGTH];
+type DalekEdPrivateKeyArr = [u8; SECRET_KEY_LENGTH];
 
-pub type PublicKeyArr = [u8; PUBLIC_KEY_LENGTH];
-pub type DalekXPublicKeyArr = [u8; PUBLIC_KEY_LENGTH];
-pub type DalekEdPublicKeyArr = [u8; PUBLIC_KEY_LENGTH];
+type PublicKeyArr = [u8; PUBLIC_KEY_LENGTH];
+type DalekXPublicKeyArr = [u8; PUBLIC_KEY_LENGTH];
+type DalekEdPublicKeyArr = [u8; PUBLIC_KEY_LENGTH];
 
-pub type SignatureBytes = [u8; SIGNATURE_LENGTH];
+type SignatureBytes = [u8; SIGNATURE_LENGTH];
 
-pub type EdPublicKey = U256;
-pub type EdPrivateKey = U256;
+type EdPublicKey = U256;
+type EdPrivateKey = U256;
 
-pub type XPublicKey = U256;
-
+type XPublicKey = U256;
 
 /**
  * Errors
@@ -63,20 +63,21 @@ pub enum KeyError {
 /**
  * Structs
 */
-
+#[derive(Clone)]
 pub struct PrivateKey {
     ed_u256: U256,
     ed: OnceCell<DalekEdPrivateKey>,
     x: OnceCell<DalekXPrivateKey>,
 }
 
+#[derive(Clone)]
 pub struct PublicKey {
     ed_u256: U256,
     ed: OnceCell<DalekEdPublicKey>,
     x: OnceCell<DalekXPublicKey>,
 }
 
-#[derive(Getters)]
+#[derive(Getters, Clone)]
 pub struct KeyPair {
     public_key: PublicKey,
     private_key: PrivateKey,
@@ -103,17 +104,17 @@ pub trait SharedSecretable {
 
 impl PublicKey {
     pub fn new(ed_arr: DalekEdPublicKeyArr) -> Result<Self, KeyError> {
-
         let ed_u256 = U256::from_arr(&ed_arr).map_err(|_| KeyError::InvalidPublicKey)?;
-        
+
         Self::from_u256(ed_u256)
     }
 
     pub fn from_u256(ed_u256: U256) -> Result<Self, KeyError> {
-           
-        Ok(PublicKey { ed: OnceCell::new(), x: OnceCell::new(), ed_u256: ed_u256 
+        Ok(PublicKey {
+            ed: OnceCell::new(),
+            x: OnceCell::new(),
+            ed_u256: ed_u256,
         })
-        
     }
 
     pub fn ed(&self) -> &DalekEdPublicKey {
@@ -122,13 +123,19 @@ impl PublicKey {
                 .expect("Failed to create DalekEdPublicKey")
         })
     }
-    
+
     pub fn x(&self) -> &DalekXPublicKey {
-        self.x.get_or_init(|| {
-            DalekXPublicKey::from(self.ed().to_montgomery().to_bytes())
-        })
+        self.x
+            .get_or_init(|| DalekXPublicKey::from(self.ed().to_montgomery().to_bytes()))
     }
     
+    pub fn to_u256(&self) -> U256 {
+        self.ed_u256.clone()
+    }
+    
+    pub fn as_u256(&self) -> &U256 {
+        &self.ed_u256
+    }
 }
 
 impl Byteable<KeyError> for PublicKey {
@@ -153,6 +160,16 @@ impl Stringable<KeyError> for PublicKey {
     }
 }
 
+impl Arrable<KeyArr, KeyError> for PublicKey {
+    fn to_arr(&self) -> KeyArr {
+        self.ed_u256.to_arr()
+    }
+
+    fn from_arr(arr: &KeyArr) -> Result<Self, KeyError> {
+        PublicKey::new(arr.clone())
+    }
+}
+
 impl Verifiable for PublicKey {
     fn verify(&self, message: &Bytes, signature: &Signature) -> Result<(), KeyError> {
         self.ed()
@@ -167,11 +184,9 @@ impl Verifiable for PublicKey {
 
 impl PrivateKey {
     pub fn new(ed_arr: DalekEdPrivateKeyArr) -> Result<Self, KeyError> {
-        
         let ed_u256 = U256::from_arr(&ed_arr).map_err(|_| KeyError::InvalidPrivateKey)?;
-        
-        Self::from_u256(ed_u256)
 
+        Self::from_u256(ed_u256)
     }
 
     pub fn from_u256(ed_u256: U256) -> Result<Self, KeyError> {
@@ -183,17 +198,19 @@ impl PrivateKey {
             ed_u256: U256::from_arr(&ed_arr).map_err(|_| KeyError::InvalidPrivateKey)?,
         })
     }
-    
+
     pub fn ed(&self) -> &DalekEdPrivateKey {
-        self.ed.get_or_init(|| {
-            DalekEdPrivateKey::from_bytes(&self.ed_u256.to_arr())
-        })
+        self.ed
+            .get_or_init(|| DalekEdPrivateKey::from_bytes(&self.ed_u256.to_arr()))
+    }
+
+    pub fn x(&self) -> &DalekXPrivateKey {
+        self.x
+            .get_or_init(|| DalekXPrivateKey::from(self.ed().to_scalar_bytes()))
     }
     
-    pub fn x(&self) -> &DalekXPrivateKey {
-        self.x.get_or_init(|| {
-            DalekXPrivateKey::from(self.ed().to_scalar_bytes())
-        })
+    pub fn to_u256(&self) -> U256 {
+        self.ed_u256.clone()
     }
 }
 
@@ -216,6 +233,16 @@ impl Stringable<KeyError> for PrivateKey {
         let bytes = bys::from_base32(string).map_err(|_| KeyError::InvalidPrivateKey)?;
 
         PrivateKey::from_bytes(&bytes)
+    }
+}
+
+impl Arrable<KeyArr, KeyError> for PrivateKey {
+    fn to_arr(&self) -> KeyArr {
+        self.ed_u256.to_arr()
+    }
+
+    fn from_arr(arr: &KeyArr) -> Result<Self, KeyError> {
+        PrivateKey::new(arr.clone())
     }
 }
 

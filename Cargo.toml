@@ -16,8 +16,8 @@ members = ["crates/*"]
 #
 ## Crypto
 ##
-crypto-bigint = {version = "0.5.5", features = ["rand","serde"]}
-num-bigint = {version = "0.4.6", features = ["rand","serde"]}
+crypto-bigint = { version = "0.5.5", features = ["rand", "serde"] }
+num-bigint = { version = "0.4.6", features = ["rand", "serde"] }
 ### Randomness
 rand = { version = "0.8.5" } # Randomness
 ### Hashes
@@ -36,7 +36,7 @@ x25519-dalek = { version = "2.0.1", features = [
 	"serde",
 	"static_secrets"
 ] } # Key exchange
-snow = {version = "0.9.6"}
+snow = { version = "0.9.6" }
 #
 ## Compression
 ##
@@ -54,12 +54,13 @@ lz4_flex = { version = "0.11.3" } # Fast, Low Ratio
 ## Datastructures
 ##
 bytes = { version = "1.6.0", features = ["serde"] } # Bytes
-itertools = { version = "0.12.1" } # Iterators
+itertools = { version = "0.13.0" } # Iterators
 # range-set-blaze = { version = "0.1.16" } # Integer ranges and sets
 # moka = { version = "0.12.7", features = ["future"] } # Cache
 # maplit = { version = "1.0.2" } # Hashmap
-dashmap = { version = "5.5.3" } # Concurrent Hashmap
+dashmap = { version = "6.0.1" } # Concurrent Hashmap
 # yrs = { version = "0.18.7" } # CRDTs
+priority-queue = { version = "2.0.3" }
 #
 ## Encoding
 ##
@@ -99,7 +100,7 @@ poem-openapi = { version = "5.0.2", features = [
 	"static-files"
 ] }
 #poem-grpc = "0.4.1"
-yamux = {version ="0.13.3"}
+yamux = { version = "0.13.3" }
 #
 ## Concurrency
 ##

@@ -19,6 +19,7 @@ x25519-dalek.workspace = true
 base32.workspace = true
 # Datastructures
 bytes.workspace = true
+priority-queue.workspace = true
 # Serialization
 serde.workspace = true
 serde_bytes.workspace = true

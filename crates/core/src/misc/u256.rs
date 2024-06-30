@@ -3,13 +3,13 @@ use crate::{
     traits::{Arrable, Byteable, Randomable, Stringable},
 };
 use bytes::Bytes;
-use rand::RngCore;
-use std::cmp::Ordering;
-use serde::{Serialize, Deserialize};
-use std::fmt;
-use std::{sync::Mutex, collections::HashMap};
 use once_cell::sync::Lazy;
 use once_cell::unsync::OnceCell;
+use rand::RngCore;
+use serde::{Deserialize, Serialize};
+use std::{cmp::Ordering, ops::BitXor};
+use std::fmt;
+use std::{collections::HashMap, sync::Mutex};
 
 #[derive(Debug, PartialEq)]
 pub enum U256Error {
@@ -46,10 +46,8 @@ fn unpack_arr(arr: &Arr256) -> (u64, u64, u64, u64) {
     )
 }
 
-
 impl U256 {
     pub fn new(u0: u64, u1: u64, u2: u64, u3: u64) -> Self {
-
         U256 {
             u0,
             u1,
@@ -62,14 +60,14 @@ impl U256 {
 
 impl Arrable<Arr256, U256Error> for U256 {
     fn to_arr(&self) -> Arr256 {
-        self.arr.get_or_init(|| {
-            pack_arr(&self.u0, &self.u1, &self.u2, &self.u3)
-        }).clone()
+        self.arr
+            .get_or_init(|| pack_arr(&self.u0, &self.u1, &self.u2, &self.u3))
+            .clone()
     }
 
     fn from_arr(arr: &Arr256) -> Result<Self, U256Error> {
         let (u0, u1, u2, u3) = unpack_arr(arr);
-        
+
         Ok(U256 {
             u0,
             u1,
@@ -141,19 +139,35 @@ impl PartialEq for U256 {
 
 impl Eq for U256 {}
 
+/**
+ * Xor
+*/
 pub fn xor256(a: &U256, b: &U256) -> U256 {
     U256 {
         u0: a.u0 ^ b.u0,
         u1: a.u1 ^ b.u1,
         u2: a.u2 ^ b.u2,
         u3: a.u3 ^ b.u3,
-        arr: OnceCell::new() 
+        arr: OnceCell::new(),
     }
 }
 
+impl BitXor for U256 {
+    type Output = Self;
+
+    fn bitxor(self, rhs: Self) -> Self {
+        xor256(&self, &rhs)
+    }
+}
+
+/**
+ * Hamming
+*/
 pub fn hamming256(a: &U256, b: &U256) -> u32 {
     (a.u0 ^ b.u0).count_ones()
         + (a.u1 ^ b.u1).count_ones()
         + (a.u2 ^ b.u2).count_ones()
         + (a.u3 ^ b.u3).count_ones()
 }
+
+

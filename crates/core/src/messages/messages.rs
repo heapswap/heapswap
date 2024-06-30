@@ -1,5 +1,5 @@
-use bytes::Bytes;
 use crate::u256::*;
+use bytes::Bytes;
 use serde::{Deserialize, Serialize};
 
 pub type Key = U256;

@@ -16,11 +16,8 @@ where
 // Generic Hamming distance function for arrays of any size and integer type
 pub fn hamming<T, const N: usize>(a: &[T; N], b: &[T; N]) -> u32
 where
-    T: PrimInt + BitXor<Output = T>, // Ensure T supports XOR and is a primitive integer
+    T: PrimInt + BitXor<Output = T> + BitXor // Ensure T supports XOR and is a primitive integer
 {
-    let mut result = 0u32;
-    for i in 0..N {
-        result += (a[i] ^ b[i]).count_ones();
-    }
-    result
+    a.iter().zip(b.iter()).map(|(&a, &b)| (a ^ b).count_ones()).sum()
 }
+
