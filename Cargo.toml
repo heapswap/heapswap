@@ -36,7 +36,7 @@ x25519-dalek = { version = "2.0.1", features = [
 	"serde",
 	"static_secrets"
 ] } # Key exchange
-snow = { version = "0.9.6" }
+snow = { version = "0.9.6" } # Networking encryption
 #
 ## Compression
 ##
@@ -58,7 +58,7 @@ itertools = { version = "0.13.0" } # Iterators
 # range-set-blaze = { version = "0.1.16" } # Integer ranges and sets
 # moka = { version = "0.12.7", features = ["future"] } # Cache
 # maplit = { version = "1.0.2" } # Hashmap
-dashmap = { version = "6.0.1" } # Concurrent Hashmap
+dashmap = { version = "6.0.1", features = ["serde"]} # Concurrent Hashmap
 # yrs = { version = "0.18.7" } # CRDTs
 priority-queue = { version = "2.0.3" }
 #
@@ -86,7 +86,8 @@ prost-build = { version = "0.12.6" }
 #
 ## Networking
 ##
-reqwest = { version = "0.12.4" } # HTTP client
+reqwest = { version = "0.12.5" } # HTTP client
+reqwest-websocket = { version = "0.4.0" } # Websocket support for reqwest
 poem = { version = "3.0.1", features = [
 	"server",
 	"websocket",
@@ -99,8 +100,14 @@ poem-openapi = { version = "5.0.2", features = [
 	"websocket",
 	"static-files"
 ] }
-#poem-grpc = "0.4.1"
-yamux = { version = "0.13.3" }
+poem-grpc = { version = "0.4.1" }
+poem-grpc-build = { version = "0.4.0" }
+yamux = { version = "0.13.3" } # Multiplexing
+#
+## Libp2p
+##
+libp2p = {version = "0.53.2"}
+
 #
 ## Concurrency
 ##
@@ -122,14 +129,14 @@ futures-util = { version = "0.3.30" }
 ## Logging/Debugging
 ##
 ### Tracing
-# tracing = { version = "0.1.40" } # Tracing diagnostics
+tracing = { version = "0.1.40" } # Tracing diagnostics
 # tracing-error = { version = "0.2.0" } # Custom Tracing Errors
 # tracing-appender = { version = "0.2.3" } # Recording for Tracing events
 # tracing-futures = { version = "0.2.5" } # Tracing + Futures
 # tracing-serde = { version = "0.1.3" } # Tracing + Serde
 # tracing-journald = { version = "0.3.0" } # Tracing + JournalD
 # tracing-wasm = { version = "0.2.1" } #  Tracing + Wasm
-# tracing-subscriber = { version = "0.3.18", features = ["env-filter"] } # Tracing + Tokio
+tracing-subscriber = { version = "0.3.18", features = ["env-filter"] } # Tracing + Tokio
 ### Non-Tracing
 # console_log = { version = "1.0.0" } # Send messages to the browser console
 # console-subscriber = { version = "0.2.0" } # Tracing-subscriber for tokio
@@ -185,8 +192,10 @@ lazy_static = { version = "1.4.0" } # Lazily evaluated static variables
 # time = { version = "0.3.36" } # Time
 derive_builder = { version = "0.20.0" } # Macro to implement the builder pattern for arbitrary structs
 if_chain = { version = "1.0.2" } # Macro for writing nested `if let` expressions.
-strum = { version = "0.26.2" } # Macros for working with enums and strings
-strum_macros = { version = "0.26.2" } # Macros for working with enums and strings
+strum = { version = "0.26.2", features = [
+	"derive"
+] } # Macros for working with enums and strings
+#strum_macros = { version = "0.26.2" } # Macros for working with enums and strings
 once_cell = { version = "1.19.0" } # Single assignment cells and lazy values
 owning_ref = { version = "0.4.1" } # References that carry their owner with them
 arbitrary = { version = "1.3.2" } # Construct arbitrary instances of a type
@@ -214,4 +223,4 @@ derive-getters = { version = "0.4.0" } # Generate getters for structs
 #getset = {version = "0.1.2"}
 #num-bigint = { version = "0.4.5" } # Bigints
 num-traits = { version = "0.2" } # Traits for numeric types
-chrono = { version = "0.4.38" } # Time
+chrono = { version = "0.4.38", features = ["serde"] } # Time

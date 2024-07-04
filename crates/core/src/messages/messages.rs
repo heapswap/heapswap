@@ -8,46 +8,99 @@ pub type KeyArr = [u8; 32];
 pub type HashArr = [u8; 32];
 pub type IdArr = [u8; 32];
 
+/**
+ * Action
+*/
 pub enum Action {
-    // REST
-    Post = 0,
-    Get = 1,
-    Delete = 2,
-    Response = 3,
+	// System
+	Ping = 0,
+	Pong = 1,
 
-    // Pubsub
-    Subscribe = 32,
-    Unsubscribe = 33,
-    Message = 34,
+	// DHT
+	NearestNodesByDist = 21,
+	NearestNodesByPing = 22,
+
+	// REST
+	Post = 40,
+	Get = 41,
+	Delete = 42,
+	Response = 43,
+
+	// Pubsub
+	Subscribe = 62,
+	Unsubscribe = 63,
+	Message = 64,
 }
+
+/**
+ * Field
+*/
+
+type FieldType = Option<U256>;
 
 #[derive(Serialize, Deserialize)]
 pub struct Field {
-    signer: String,
-    cosigner: String,
-    tangent: String,
+	signer: FieldType,
+	cosigner: FieldType,
+	tangent: FieldType,
 }
 
 impl Field {
-    pub fn new(signer: String, cosigner: String, tangent: String) -> Self {
-        Self {
-            signer,
-            cosigner,
-            tangent,
-        }
-    }
+	pub fn new(
+		signer: FieldType,
+		cosigner: FieldType,
+		tangent: FieldType,
+	) -> Self {
+		Self {
+			signer,
+			cosigner,
+			tangent,
+		}
+	}
 }
 
-pub struct Request {
-    id: IdArr,
-    action: Action,
-    path: Field,
-    data: Bytes,
+/**
+ * Request/Response
+*/
+#[derive(Serialize, Deserialize)]
+pub struct Request<T> {
+	action: T,
+	path: Field,
+	data: RequestData,
 }
 
-pub struct Response {
-    id: IdArr,
-    action: Action,
-    path: Field,
-    data: Bytes,
+impl Request<Action> {
+	pub fn new(action: Action, path: Field, data: RequestData) -> Self {
+		Self { action, path, data }
+	}
 }
+
+#[derive(Serialize, Deserialize)]
+pub struct Response<T> {
+	action: T,
+	path: Field,
+	data: ResponseData,
+}
+
+impl Response<Action> {
+	pub fn new(action: Action, path: Field, data: ResponseData) -> Self {
+		Self { action, path, data }
+	}
+}
+
+/**
+ * Request/Response Data
+*/
+
+#[derive(Serialize, Deserialize)]
+pub enum RequestData {
+	None,
+	Bool(bool),
+	Bytes(Bytes),
+	Hash(Hash),
+	Key(Key),
+	Timestamp(chrono::DateTime<chrono::Utc>),
+}
+pub type ResponseData = RequestData;
+
+pub type Service<I, O> = (Action, Request<I>, Response<O>);

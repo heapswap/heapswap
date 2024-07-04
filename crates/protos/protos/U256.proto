@@ -1,0 +1,10 @@
+syntax = "proto3";
+
+package U256;
+
+message U256{
+	uint64 u0 = 1;
+	uint64 u1 = 2;
+	uint64 u2 = 3;
+	uint64 u3 = 4;
+}

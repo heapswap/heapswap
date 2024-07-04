@@ -15,3 +15,4 @@ prost-types.workspace = true
 [build-dependencies]
 #protobuf-codegen.workspace = true
 prost-build.workspace = true
+poem-grpc-build.workspace = true

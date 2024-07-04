@@ -5,19 +5,19 @@ package crypto;
 /**
  * Keys (256-bit)
 */
-message Key {
+
+message PublicKey {
 	uint64 u0 = 1;
 	uint64 u1 = 2;
 	uint64 u2 = 3;
 	uint64 u3 = 4;
 }
 
-message PublicKey {
-    Key key = 1;
-}
-
 message PrivateKey {
-	Key key = 1;
+	uint64 u0 = 1;
+	uint64 u1 = 2;
+	uint64 u2 = 3;
+	uint64 u3 = 4;
 }
 
 message KeyPair {
