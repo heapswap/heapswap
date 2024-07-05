@@ -103,4 +103,4 @@ pub enum RequestData {
 }
 pub type ResponseData = RequestData;
 
-pub type Service<I, O> = (Action, Request<I>, Response<O>);
+//pub type Service<I, O> = (Action, Request<I>, Response<O>);

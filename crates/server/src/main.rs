@@ -4,12 +4,14 @@
 #![allow(unused_braces)]
 
 use std::net::Ipv4Addr;
-
+//use crypto_bigint::{Encoding, U256};
 use heapswap_core::crypto::keys::{KeyPair, PublicKey};
-use heapswap_core::ham_dht::{HamDHT, LocalNode, Node};
+//use heapswap_core::ham_dht::{KadDHT, LocalNode, Node};
+use heapswap_core::kad_dht::{KadDHT, LocalNode, Node};
+use heapswap_core::U256;
 //use heapswap_protos::hello;
 use futures_util::{SinkExt, StreamExt};
-use heapswap_core::{bys, messages::*, traits::*, u256::*};
+use heapswap_core::{bys, messages::*, traits::*};
 use once_cell::sync::Lazy;
 use poem::{
 	error::ResponseError,
@@ -27,20 +29,12 @@ pub enum FieldError {
 	InvalidBase32,
 	InvalidLength,
 
-	#[strum(serialize = "Invalid Signer Base32")]
-	InvalidSignerBase32,
-	#[strum(serialize = "Invalid Signer Length")]
-	InvalidSignerLength,
-
-	#[strum(serialize = "Invalid Cosigner Base32")]
-	InvalidCosignerBase32,
-	#[strum(serialize = "Invalid Cosigner Length")]
-	InvalidCosignerLength,
-
-	#[strum(serialize = "Invalid Tangent Base32")]
-	InvalidTangentBase32,
-	#[strum(serialize = "Invalid Tangent Length")]
-	InvalidTangentLength,
+	#[strum(serialize = "Invalid Signer")]
+	InvalidSigner,
+	#[strum(serialize = "Invalid Cosigner")]
+	InvalidCosigner,
+	#[strum(serialize = "Invalid Tangent")]
+	InvalidTangent,
 }
 
 impl std::error::Error for FieldError {}
@@ -78,21 +72,13 @@ fn validate_field(field_enum: FieldEnum, field: &str) -> Result<Option<U256>> {
 		return Ok(None);
 	}
 
-	let field = bys::from_base32(&field).map_err(|_| match field_enum {
-		FieldEnum::Signer => FieldError::InvalidSignerBase32,
-		FieldEnum::Cosigner => FieldError::InvalidCosignerBase32,
-		FieldEnum::Tangent => FieldError::InvalidTangentBase32,
+	let field = U256::from_base32(&field).map_err(|_| match field_enum {
+		FieldEnum::Signer => FieldError::InvalidSigner,
+		FieldEnum::Cosigner => FieldError::InvalidCosigner,
+		FieldEnum::Tangent => FieldError::InvalidTangent,
 	})?;
 
-	if field.len() != 32 {
-		return Err(match field_enum {
-			FieldEnum::Signer => FieldError::InvalidSignerLength.into(),
-			FieldEnum::Cosigner => FieldError::InvalidCosignerLength.into(),
-			FieldEnum::Tangent => FieldError::InvalidTangentLength.into(),
-		});
-	}
-
-	Ok(Some(U256::from_bytes(&field).unwrap()))
+	Ok(Some(field))
 }
 
 type GetHandlerError = FieldError;
@@ -120,7 +106,7 @@ async fn index() -> Result<Json<IndexResponse>> {
 	let local_node = DHT.read().await.local_node().clone();
 	Ok(Json(IndexResponse {
 		node: local_node.node().clone(),
-		public_key: local_node.key_pair().public_key().as_u256().clone(),
+		public_key: local_node.key_pair().public_key().u256().clone(),
 	}))
 }
 
@@ -146,7 +132,7 @@ async fn main_ws_handler(ws: WebSocket) -> impl IntoResponse {
 	})
 }
 
-static DHT: Lazy<RwLock<HamDHT>> = Lazy::new(|| {
+static DHT: Lazy<RwLock<KadDHT>> = Lazy::new(|| {
 	let dummy_node = Node {
 		ipv4: Ipv4Addr::new(127, 0, 0, 1),
 		ipv4_port: 1234,
@@ -155,7 +141,7 @@ static DHT: Lazy<RwLock<HamDHT>> = Lazy::new(|| {
 	};
 
 	let local_node = LocalNode::new(dummy_node, KeyPair::random().unwrap());
-	RwLock::new(HamDHT::new(local_node, 32, 32))
+	RwLock::new(KadDHT::new(local_node))
 });
 
 #[tokio::main]

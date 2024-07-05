@@ -7,9 +7,12 @@ edition = "2021"
 # Local
 heapswap_core = { path = "../core" }
 heapswap_protos = { path = "../protos" }
+# Crypto
+crypto-bigint.workspace = true
 # Encoding
 prost.workspace = true
 serde.workspace = true
+serde_json.workspace = true
 bytes.workspace = true
 # Networking
 poem.workspace = true

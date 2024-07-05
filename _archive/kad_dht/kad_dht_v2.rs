@@ -1,6 +1,5 @@
 use crate::crypto::keys::KeyPair;
 use crate::{bys::*, misc::*, traits::*};
-use crypto_bigint::{Random, U256};
 use dashmap::DashMap;
 use getset::{CopyGetters, Getters, MutGetters, Setters};
 use rand::rngs::OsRng;
@@ -16,14 +15,14 @@ const K: usize = 20; // max number of nodes in the buckets
 const D: usize = 256; // number of bits in the key
 
 #[derive(Clone, Getters)]
-struct Bucket {
+pub struct Bucket {
 	#[getset(get = "pub")]
 	k: usize, // max number of nodes in the bucket
 	#[getset(get = "pub")]
 	remote_nodes: Vec<Arc<RemoteNode>>,
 }
 
-pub trait DHTStore {
+pub trait DHTStore: Send + Sync {
 	fn get(&self, key: U256) -> Option<Bytes>;
 	fn set(&self, key: U256, value: Bytes);
 }
@@ -52,7 +51,7 @@ impl DHTStore for MemoryStore {
 }
 
 #[derive(Getters)]
-struct KadDHT {
+pub struct KadDHT {
 	#[getset(get = "pub")]
 	local_node: Arc<LocalNode>,
 	#[getset(get = "pub")]
@@ -64,7 +63,7 @@ struct KadDHT {
 }
 
 #[derive(Clone, Getters)]
-struct NearRemoteNode {
+pub struct NearRemoteNode {
 	#[getset(get = "pub")]
 	distance: usize,
 	#[getset(get = "pub")]

@@ -1,8 +1,8 @@
 use bytes::Bytes;
 
 // Able to be randomly generated
-pub trait Randomable<E>: Sized {
-	fn random() -> Result<Self, E>;
+pub trait Randomable: Sized {
+	fn random() -> Self;
 }
 
 // Able to be converted to and from an array

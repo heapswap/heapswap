@@ -16,7 +16,7 @@ members = ["crates/*"]
 #
 ## Crypto
 ##
-crypto-bigint = { version = "0.5.5", features = ["rand", "serde"] }
+crypto-bigint = { version = "0.5.5", features = ["rand", "serde", "alloc"] }
 num-bigint = { version = "0.4.6", features = ["rand", "serde"] }
 ### Randomness
 rand = { version = "0.8.5" } # Randomness
@@ -70,7 +70,7 @@ serde = { version = "1.0.201", features = [
 serde_with = { version = "3.8.1" } # Specify how to serialize certain fields
 serde_bytes = { version = "0.11.14" } # Optimized handling of `&[u8]` and `Vec<u8>` for Serde
 serde-wasm-bindgen = { version = "0.6.5" } # Convert Rust data types to and from native JavaScript types
-serde_json = { version = "1.0.117" } # Read JSON values
+serde_json = { version = "1.0.117", features = ["alloc"] } # Read JSON values
 # json_value_merge = { version = "2.0.0" } # Merge JSON values
 json5 = { version = "0.4.1" } # Parse and serialize JSON5
 bincode = { version = "1.3.3" } # Binary serialization
@@ -225,3 +225,4 @@ getset = { version = "0.1.2" }
 #num-bigint = { version = "0.4.5" } # Bigints
 num-traits = { version = "0.2" } # Traits for numeric types
 chrono = { version = "0.4.38", features = ["serde"] } # Time
+ordered-float = {version = "4.2.1"}

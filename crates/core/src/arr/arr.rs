@@ -58,7 +58,7 @@ pub fn concat(data: &[&Arr]) -> Vrr {
 	data.iter().flat_map(|x| x.iter()).copied().collect()
 }
 
-// Generic XOR function for arrays of any size and integer type
+// Generic XOR function
 pub fn xor<T, const N: usize>(a: &[T; N], b: &[T; N]) -> [T; N]
 where
 	T: PrimInt + BitXor<Output = T>, // Ensure T supports XOR and is a primitive integer
@@ -70,7 +70,7 @@ where
 	result
 }
 
-// Generic Hamming distance function for arrays of any size and integer type
+// Generic Hamming distance function
 pub fn hamming<T, const N: usize>(a: &[T; N], b: &[T; N]) -> u32
 where
 	T: PrimInt + BitXor<Output = T> + BitXor, // Ensure T supports XOR and is a primitive integer
@@ -79,4 +79,43 @@ where
 		.zip(b.iter())
 		.map(|(&a, &b)| (a ^ b).count_ones())
 		.sum()
+}
+
+// Generic Inverse Hamming distance function
+pub fn inverse_hamming<T, const N: usize>(a: &[T; N], b: &[T; N]) -> u32
+where
+	T: PrimInt + BitXor<Output = T> + BitXor, // Ensure T supports XOR and is a primitive integer
+{
+	a.iter()
+		.zip(b.iter())
+		.map(|(&a, &b)| (a ^ b).count_zeros())
+		.sum()
+}
+
+// Generic Andcount distance function
+pub fn andcount<T, const N: usize>(a: &[T; N], b: &[T; N]) -> u32
+where
+	T: PrimInt + BitXor<Output = T> + BitXor, // Ensure T supports XOR and is a primitive integer
+{
+	a.iter()
+		.zip(b.iter())
+		.map(|(&a, &b)| (a & b).count_ones())
+		.sum()
+}
+
+pub fn orcount<T, const N: usize>(a: &[T; N], b: &[T; N]) -> u32
+where
+	T: PrimInt + BitXor<Output = T> + BitXor, // Ensure T supports XOR and is a primitive integer
+{
+	a.iter()
+		.zip(b.iter())
+		.map(|(&a, &b)| (a | b).count_ones())
+		.sum()
+}
+
+pub fn popcount<T, const N: usize>(a: &[T; N]) -> u32
+where
+	T: PrimInt + BitXor<Output = T> + BitXor, // Ensure T supports XOR and is a primitive integer
+{
+	a.iter().map(|&a| a.count_ones()).sum()
 }
