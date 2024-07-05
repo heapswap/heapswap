@@ -8,3 +8,5 @@ pub mod crypto;
 pub mod messages;
 mod misc;
 pub use misc::*;
+
+pub mod kad_dht;

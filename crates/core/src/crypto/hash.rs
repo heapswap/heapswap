@@ -1,9 +1,9 @@
 use crate::{
 	bys,
 	traits::{Arrable, Byteable, Stringable},
-	u256::*,
 };
 use bytes::Bytes;
+use crypto_bigint::{Encoding, U256};
 
 type Hash = U256;
 
@@ -19,7 +19,7 @@ pub trait Hashing {
 
 impl Hashing for Hash {
 	fn hash(data: Bytes) -> Hash {
-		Hash::from_arr(&blake3::hash(&data).into()).unwrap()
+		Hash::from_le_bytes(blake3::hash(data.as_ref()).into())
 	}
 
 	fn verify(&self, data: Bytes) -> bool {

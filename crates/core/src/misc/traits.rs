@@ -23,6 +23,12 @@ pub trait Stringable<E>: Sized {
 	fn from_string(string: &str) -> Result<Self, E>;
 }
 
+// Able to be converted to and from a base32 string
+pub trait Base32able<E>: Sized {
+	fn to_base32(&self) -> String;
+	fn from_base32(string: &str) -> Result<Self, E>;
+}
+
 // Able to be converted to and from a proto
 pub trait Protoable<T, E>: Sized {
 	fn to_proto(&self) -> T;
