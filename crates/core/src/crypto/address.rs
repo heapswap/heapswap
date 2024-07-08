@@ -33,7 +33,7 @@ pub struct Address {
 	packed: OnceCell<PackedAddress>,
 	unpacked: OnceCell<UnpackedAddress>,
 }
- 
+
 /**
  * Serialization - display as string
 */
@@ -91,7 +91,7 @@ impl Address {
 			unpacked: OnceCell::new(),
 		}
 	}
-	
+
 	pub fn popcnt(&self) -> u32 {
 		*self.popcnt.get_or_init(|| popcount(self.packed()))
 	}
@@ -103,8 +103,6 @@ impl Address {
 	pub fn seed(&self) -> &SeedAddress {
 		&self.seed
 	}
-	
-
 
 	pub fn unpacked(&self) -> &UnpackedAddress {
 		self.unpacked.get_or_init(|| {
@@ -145,7 +143,6 @@ impl Address {
 
 	// takes 9ns on release, 64 nodes should take ~.6ms
 	pub fn jaccard(&self, other: &Address) -> f64 {
-		
 		let intersection = andcount(self.packed(), other.packed()) as f64;
 		let union = self.popcnt() as f64 + other.popcnt() as f64 - intersection;
 
@@ -261,11 +258,9 @@ impl Stringable<AddressError> for Address {
 
 #[test]
 fn test_address() -> Result<(), AddressError> {
-	
 	let a = Address::random();
 	let b = Address::random();
-	
-	
+
 	// time the jaccard distance calculation
 	let s = timeit::timeit_loops!(1000, {
 		let i = a.jaccard(&b);
@@ -273,13 +268,13 @@ fn test_address() -> Result<(), AddressError> {
 	});
 
 	println!("Jaccard: {:?}ns/loop", s * NS as f64);
-	 
+
 	//const TEST_ADDRESS_COUNT: usize = 10_000_000;
 	const TEST_ADDRESS_COUNT: usize = 10_000;
 
 	// generate random addresses
 	let addresses: Vec<Address> =
-		(0..TEST_ADDRESS_COUNT).map(|_| Address::random()).collect();  
+		(0..TEST_ADDRESS_COUNT).map(|_| Address::random()).collect();
 
 	let query = Address::random();
 
@@ -290,7 +285,6 @@ fn test_address() -> Result<(), AddressError> {
 		.map(|address| (address, address.jaccard(&query)))
 		.collect::<Vec<_>>();
 
-	
 	let mut nearest_nodes = Vec::with_capacity(NEAREST_N);
 
 	for _ in 0..NEAREST_N {
@@ -303,18 +297,14 @@ fn test_address() -> Result<(), AddressError> {
 				nearest_distance_index = i;
 			}
 		}
-		
-		nearest_nodes.push(address_distances.remove(nearest_distance_index));		
+
+		nearest_nodes.push(address_distances.remove(nearest_distance_index));
 	}
-	
-	
 
 	// print the nearest addresses and their jaccard distances
 	for (address, distance) in nearest_nodes {
 		println!("{}: {}", address.to_string(), distance);
 	}
-
-
 
 	Ok(())
 }

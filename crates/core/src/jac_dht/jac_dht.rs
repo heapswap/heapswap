@@ -5,13 +5,13 @@ use crate::crypto::address::Address;
 use crate::crypto::keys::KeyPair;
 use crate::misc::traits::*;
 use crate::{crypto::keys::KeyArr, u256::*};
+use getset::{CopyGetters, Getters};
+use ordered_float::OrderedFloat;
 use priority_queue::PriorityQueue;
+use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::net::Ipv4Addr;
 use std::sync::Arc;
-use serde::{Deserialize, Serialize};
-use getset::{CopyGetters, Getters};
-use ordered_float::OrderedFloat;
 
 const K: u32 = 32;
 
@@ -19,7 +19,6 @@ enum JacDHTError {
 	InvalidKeyArr,
 	InvalidKeyPair,
 }
-
 
 #[derive(Clone, Getters)]
 pub struct JacDHT {
@@ -48,9 +47,7 @@ pub struct NearestNodeResult {
 }
 
 impl JacDHT {
-	pub fn new(
-		local_node: LocalNode,
-	) -> JacDHT {
+	pub fn new(local_node: LocalNode) -> JacDHT {
 		JacDHT {
 			max_dist_nodes: K,
 			max_ping_nodes: K,
@@ -93,8 +90,10 @@ impl JacDHT {
 		let key_arr = remote_node.public_key().to_arr();
 
 		// Modify remote_nodes_by_dist
-		self.remote_nodes_by_dist
-			.change_priority(&key_arr, OrderedFloat(*remote_node.dist_to_self()));
+		self.remote_nodes_by_dist.change_priority(
+			&key_arr,
+			OrderedFloat(*remote_node.dist_to_self()),
+		);
 
 		// Modify remote_nodes
 		self.remote_nodes.insert(key_arr, remote_node);
@@ -268,7 +267,7 @@ impl JacDHT {
 
 		None
 	}
-	
+
 	pub fn try_remove_node(&mut self, key_arr: &KeyArr) -> Option<RemoteNode> {
 		let removed = self.remote_nodes.remove(key_arr);
 		if removed.is_some() {
@@ -277,8 +276,6 @@ impl JacDHT {
 		}
 		removed
 	}
-	
-	
 
 	/**
 	 * Nearest Nodes
@@ -322,16 +319,18 @@ impl JacDHT {
 		&self,
 		key_address: &Address,
 	) -> Option<NearestNodeResult> {
-
 		let nearest_node =
 			self.remote_nodes.iter().min_by_key(|(_, remote_node)| {
-				OrderedFloat(remote_node.public_key().address().jaccard(key_address))
+				OrderedFloat(
+					remote_node.public_key().address().jaccard(key_address),
+				)
 			});
 
 		match nearest_node {
 			//Some(key) => {
 			Some((_, nearest_node)) => {
-				let dist = nearest_node.public_key().address().jaccard(key_address);
+				let dist =
+					nearest_node.public_key().address().jaccard(key_address);
 				Some(NearestNodeResult {
 					nearest_node: nearest_node.clone(),
 					dist,
@@ -342,25 +341,15 @@ impl JacDHT {
 	}
 }
 
-
-
 #[test]
 fn test_jac_dht() -> Result<(), Box<dyn std::error::Error>> {
+	let dummy_node: Node =
+		Node::new(Ipv4Addr::new(127, 0, 0, 1), 1234, None, None);
 
-	let dummy_node: Node = Node::new(
-		Ipv4Addr::new(127, 0, 0, 1),
-		1234,
-		None,
-		None,
-	);
- 
 	const DUMMY_NODE_COUNT: usize = 128;
 	let mut dummy_nodes = Vec::with_capacity(DUMMY_NODE_COUNT);
-	
-	let local_node = LocalNode::new(
-		dummy_node.clone(),
-		KeyPair::random(),
-	);
+
+	let local_node = LocalNode::new(dummy_node.clone(), KeyPair::random());
 
 	// create remote nodes
 	for _ in 0..DUMMY_NODE_COUNT {
@@ -380,39 +369,46 @@ fn test_jac_dht() -> Result<(), Box<dyn std::error::Error>> {
 	for node in dummy_nodes.iter() {
 		dht.try_add_node(node.clone());
 	}
- 
 
 	const TRIALS: usize = 10;
 
-	for _ in 0..TRIALS{
-
+	for _ in 0..TRIALS {
 		// find nearest nodes to a random key
 		let key = Address::random();
 
 		// print the key distance
-		println!("{:.5} - key distance to self", dht.local_node().dist_to_address(&key));
+		println!(
+			"{:.5} - key distance to self",
+			dht.local_node().dist_to_address(&key)
+		);
 
 		let nearest_nodes = dht.nearest_node_by_dist(&key);
 
 		// print the nearest node's public key
 		if let Some(nearest_node) = nearest_nodes {
-			println!("{:.5} - {}", nearest_node.dist, nearest_node.nearest_node.public_key().to_string());
+			println!(
+				"{:.5} - {}",
+				nearest_node.dist,
+				nearest_node.nearest_node.public_key().to_string()
+			);
 		}
-		
 	}
 
 	let key = Address::random();
-	
-	
+
 	// time the nearest node calculation
 	let s = timeit::timeit_loops!(1000, {
 		let nearest_node = dht.nearest_node_by_dist(&key);
 		core::hint::black_box(&nearest_node);
 	});
-	
+
 	println!("Nearest Node: {:?}ns/loop", s * NS as f64);
 
-	println!("Node counts {}/{}", dht.remote_nodes_by_dist.len(), dht.remote_nodes_by_ping.len());
+	println!(
+		"Node counts {}/{}",
+		dht.remote_nodes_by_dist.len(),
+		dht.remote_nodes_by_ping.len()
+	);
 
 	Ok(())
 }

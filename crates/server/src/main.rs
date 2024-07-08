@@ -2,163 +2,150 @@
 #![allow(unused_imports)]
 #![allow(unused_import_braces)]
 #![allow(unused_braces)]
+#![allow(unused_variables)]
 
-use std::net::Ipv4Addr;
-//use crypto_bigint::{Encoding, U256};
-use heapswap_core::crypto::keys::{KeyPair, PublicKey};
-//use heapswap_core::ham_dht::{KadDHT, LocalNode, Node};
-use heapswap_core::kad_dht::{KadDHT, LocalNode, Node};
-use heapswap_core::U256;
-//use heapswap_protos::hello;
-use futures_util::{SinkExt, StreamExt};
-use heapswap_core::{bys, messages::*, traits::*};
-use once_cell::sync::Lazy;
-use poem::{
-	error::ResponseError,
-	web::websocket::{Message, WebSocket},
-	Result,
+use axum::extract::State;
+use axum::Json;
+use futures::StreamExt;
+use heapswap_core::{bys, networking::subfield::*};
+use heapswap_server::swarm::*;
+
+use libp2p::swarm::handler::multi;
+use libp2p::swarm::SwarmEvent;
+use libp2p::Swarm;
+use libp2p::{
+	identity::ed25519::Keypair, request_response::ProtocolSupport,
+	StreamProtocol,
 };
-use serde::{Deserialize, Serialize};
-use tokio::sync::RwLock;
+use tokio::net::TcpListener;
 
-//use heapswap_protos::hello::HelloWorldService;
-//use std::fmt::{Formatter};
+use std::error::Error;
+use std::net::SocketAddr;
+use std::ops::Sub;
+use std::sync::Arc;
 
-#[derive(Debug, strum::Display)]
-pub enum FieldError {
-	InvalidBase32,
-	InvalidLength,
+use tokio::select;
+use tokio::sync::{Mutex, MutexGuard, RwLock};
+use tokio::time::Duration;
+//use tokio::stream::StreamExt;
+//use std::task::{Context, Poll, Waker};
+use futures::Stream;
+//use libp2p::swarm::SwarmEvent;
+//use tokio::sync::MutexGuard;
+use futures::task::{Context, Poll, Waker};
+use std::future::Future;
+use std::pin::Pin;
+use tokio::task::yield_now;
 
-	#[strum(serialize = "Invalid Signer")]
-	InvalidSigner,
-	#[strum(serialize = "Invalid Cosigner")]
-	InvalidCosigner,
-	#[strum(serialize = "Invalid Tangent")]
-	InvalidTangent,
+use axum::{http::StatusCode, response::Html, routing::get, Router};
+
+#[derive(Clone)]
+struct AppState {
+	counter: Arc<Mutex<i32>>,
+	swarm: Arc<Mutex<Swarm<SubfieldBehaviour>>>,
 }
 
-impl std::error::Error for FieldError {}
-
-impl ResponseError for FieldError {
-	fn status(&self) -> StatusCode {
-		/*
-		match self {
-			FieldError::InvalidBase32 => StatusCode::BAD_REQUEST,
-			FieldError::InvalidLength => StatusCode::BAD_REQUEST,
-			// Map other variants to appropriate status codes
-		}
-		*/
-		StatusCode::BAD_REQUEST
-	}
+async fn increment_counter(State(state): State<AppState>) -> Html<String> {
+	let mut counter = state.counter.lock().await;
+	*counter += 1;
+	Html(format!("Counter: {}", counter))
 }
 
-use poem::{self, http::StatusCode, IntoResponse, Response as PoemResponse};
-use poem::{
-	get, handler,
-	listener::TcpListener,
-	web::{Json, Path},
-	Route, Server,
-};
-
-enum FieldEnum {
-	Signer,
-	Cosigner,
-	Tangent,
+async fn get_counter(State(state): State<AppState>) -> Html<String> {
+	let counter = state.counter.lock().await;
+	Html(format!("Counter: {}", counter))
 }
 
-// Updated validate_field function with an additional parameter for field_enum
-fn validate_field(field_enum: FieldEnum, field: &str) -> Result<Option<U256>> {
-	if field == "_" {
-		return Ok(None);
-	}
+async fn get_swarm(State(state): State<AppState>) -> Json<Vec<String>> {
+	let multiaddrs = state
+		.swarm
+		.lock()
+		.await
+		.listeners()
+		.into_iter()
+		.map(|addr| addr.to_string())
+		.collect::<Vec<_>>();
 
-	let field = U256::from_base32(&field).map_err(|_| match field_enum {
-		FieldEnum::Signer => FieldError::InvalidSigner,
-		FieldEnum::Cosigner => FieldError::InvalidCosigner,
-		FieldEnum::Tangent => FieldError::InvalidTangent,
-	})?;
-
-	Ok(Some(field))
+	Json(multiaddrs)
 }
-
-type GetHandlerError = FieldError;
-
-#[derive(Debug, strum::Display)]
-enum IndexError {
-	#[strum(serialize = "Local Node Not Initialized")]
-	LocalNodeNotInitialized,
-}
-
-impl ResponseError for IndexError {
-	fn status(&self) -> StatusCode {
-		StatusCode::BAD_REQUEST
-	}
-}
-
-#[derive(Serialize, Deserialize)]
-struct IndexResponse {
-	node: Node,
-	public_key: U256,
-}
-
-#[handler]
-async fn index() -> Result<Json<IndexResponse>> {
-	let local_node = DHT.read().await.local_node().clone();
-	Ok(Json(IndexResponse {
-		node: local_node.node().clone(),
-		public_key: local_node.key_pair().public_key().u256().clone(),
-	}))
-}
-
-#[handler]
-fn main_get_handler(
-	Path((signer, cosigner, tangent)): Path<(String, String, String)>,
-) -> Result<Json<Field>> {
-	let signer = validate_field(FieldEnum::Tangent, signer.as_str())?;
-	let cosigner = validate_field(FieldEnum::Cosigner, cosigner.as_str())?;
-	let tangent = validate_field(FieldEnum::Tangent, tangent.as_str())?;
-
-	let field = Field::new(signer, cosigner, tangent);
-
-	Ok(Json(field))
-}
-
-#[handler]
-async fn main_ws_handler(ws: WebSocket) -> impl IntoResponse {
-	ws.on_upgrade(|mut socket| async move {
-		if let Some(Ok(Message::Text(text))) = socket.next().await {
-			let _ = socket.send(Message::Text(text)).await;
-		}
-	})
-}
-
-static DHT: Lazy<RwLock<KadDHT>> = Lazy::new(|| {
-	let dummy_node = Node {
-		ipv4: Ipv4Addr::new(127, 0, 0, 1),
-		ipv4_port: 1234,
-		ipv6: None,
-		ipv6_port: None,
-	};
-
-	let local_node = LocalNode::new(dummy_node, KeyPair::random().unwrap());
-	RwLock::new(KadDHT::new(local_node))
-});
 
 #[tokio::main]
-async fn main() -> Result<(), std::io::Error> {
-	let app = Route::new()
-		.at("/", get(index))
-		.at("/:signer/:cosigner/:tangent", get(main_get_handler))
-		.at("/ws", get(main_ws_handler));
+async fn main() -> Result<(), Box<dyn Error>> {
+	//let keypair = Keypair::generate();
 
-	let port = std::env::var("PORT").unwrap_or("3000".to_string());
-	let address = std::env::var("ADDRESS").unwrap_or("0.0.0.0".to_string());
-	let listening_address = format!("{}:{}", address, port);
-	let localhost_address = format!("http://localhost:{}", port);
+	let swarm = Arc::new(Mutex::new(create_tokio_swarm(SwarmConfig {
+		listen_addresses: vec!["/ip4/0.0.0.0/tcp/0".to_string()],
+		is_server: true,
+		//keypair,
+	})?));
 
-	println!("Listening on {}", localhost_address);
-	Server::new(TcpListener::bind(listening_address))
-		.name("heapswap-server")
-		.run(app)
+	//let mut interval = tokio::time::interval(Duration::from_secs(5));
+
+	let swarm_clone = swarm.clone();
+
+	let axum_handle = tokio::spawn(async move {
+		// Create shared state
+		let state = AppState {
+			counter: Arc::new(Mutex::new(0)),
+			swarm: swarm_clone,
+		};
+
+		// Build our application with routes that have access to the shared state
+		let app = Router::new()
+			.route("/increment", get(increment_counter))
+			// Clone the Arc again to use in the second closure
+			.route("/get", get(get_counter))
+			.route("/bootstrap", get(get_swarm))
+			// .layer(TraceLayer::new_for_http()); // Uncomment if TraceLayer is used
+			.with_state(state);
+
+		// Run it with hyper
+		let port = 3000;
+		let addr = format!("127.0.0.1:{}", port);
+		let listener = TcpListener::bind(&addr).await.unwrap();
+
+		tracing::debug!("axum listening on {}", listener.local_addr().unwrap());
+
+		axum::serve(
+			listener,
+			app.into_make_service_with_connect_info::<SocketAddr>(),
+		)
 		.await
+		.unwrap();
+	});
+
+	let swarm_clone = swarm.clone();
+	let event_handle = tokio::spawn(async move {
+		loop {
+			let event = {
+				let mut lock = swarm_clone.lock().await;
+				poll_swarm(&mut lock).await
+			};
+
+			if let Some(event) = event {
+				let mut lock = swarm_clone.lock().await;
+				swarm_handle_subfield_event(&mut *lock, event);
+			}
+
+			yield_now().await;
+		}
+	});
+
+	let _ = tokio::try_join!(axum_handle, event_handle).map(|_| ());
+
+	Ok(())
+}
+
+async fn poll_swarm(
+	swarm: &mut Swarm<SubfieldBehaviour>,
+) -> Option<SwarmEvent<SubfieldBehaviourEvent>> {
+	let mut pinned_swarm = Pin::new(swarm);
+
+	match pinned_swarm
+		.poll_next_unpin(&mut Context::from_waker(&futures::task::noop_waker()))
+	{
+		Poll::Ready(Some(event)) => Some(event),
+		Poll::Ready(None) => None,
+		Poll::Pending => None,
+	}
 }

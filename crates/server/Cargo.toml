@@ -14,13 +14,35 @@ prost.workspace = true
 serde.workspace = true
 serde_json.workspace = true
 bytes.workspace = true
+bincode.workspace = true
 # Networking
-poem.workspace = true
-poem-openapi.workspace = true
+reqwest.workspace = true
+reqwest-websocket.workspace = true
+#poem.workspace = true
+#poem-openapi.workspace = true
+headers.workspace = true
+axum.workspace = true
+axum-extra.workspace = true
+tower.workspace = true
+tower-http.workspace = true
+tokio-tungstenite.workspace = true
 snow.workspace = true
 yamux.workspace = true
 # Libp2p
-#libp2p = {workspace=true, features= ["gossipsub", "identify", "kad", "ping", "request-response", "dns", "mdns", "tcp", "noise", "yamux", "tokio", "macros" ]}
+libp2p = { workspace = true, features = [
+	"gossipsub",
+	"identify",
+	"kad",
+	"ping",
+	"request-response",
+	"dns",
+	"mdns",
+	"tcp",
+	"noise",
+	"yamux",
+	"tokio",
+	"macros"
+] }
 # Concurrency
 tokio.workspace = true
 futures.workspace = true
@@ -33,3 +55,10 @@ timeit.workspace = true
 strum.workspace = true
 lazy_static.workspace = true
 once_cell.workspace = true
+eyre.workspace = true
+#[[bin]]
+#name = "example-websockets"
+#path = "src/main.rs"
+#[[bin]]
+#name = "example-client"
+#path = "src/client.rs"

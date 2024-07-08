@@ -10,6 +10,10 @@ use rand::RngCore;
 use serde::{Deserialize, Serialize};
 use timeit::*;
 
+use super::address::*;
+use crate::arr::{hamming, xor};
+use crate::bys;
+use crate::traits::*;
 use ed25519_dalek::{
 	Signature, Signer, SigningKey as DalekEdPrivateKey, Verifier,
 	VerifyingKey as DalekEdPublicKey,
@@ -20,10 +24,6 @@ use x25519_dalek::{
 	PublicKey as DalekXPublicKey, SharedSecret as DalekXSharedSecret,
 	StaticSecret as DalekXPrivateKey,
 };
-use super::address::*;
-use crate::arr::{hamming, xor};
-use crate::bys;
-use crate::traits::*;
 
 /**
  * Types
@@ -117,8 +117,8 @@ pub trait SharedSecretable {
 
 impl PublicKey {
 	pub fn new(ed_arr: DalekEdPublicKeyArr) -> Result<Self, KeyError> {
-		let address =
-			Address::from_arr(&ed_arr).map_err(|_| KeyError::InvalidPublicKey)?;
+		let address = Address::from_arr(&ed_arr)
+			.map_err(|_| KeyError::InvalidPublicKey)?;
 
 		Self::from_address(address)
 	}
@@ -201,8 +201,8 @@ impl Verifiable for PublicKey {
 
 impl PrivateKey {
 	pub fn new(ed_arr: DalekEdPrivateKeyArr) -> Result<Self, KeyError> {
-		let address =
-			Address::from_arr(&ed_arr).map_err(|_| KeyError::InvalidPrivateKey)?;
+		let address = Address::from_arr(&ed_arr)
+			.map_err(|_| KeyError::InvalidPrivateKey)?;
 
 		Self::from_address(address)
 	}
@@ -216,8 +216,9 @@ impl PrivateKey {
 	}
 
 	pub fn ed(&self) -> &DalekEdPrivateKey {
-		self.ed
-			.get_or_init(|| DalekEdPrivateKey::from_bytes(&self.address.to_arr()))
+		self.ed.get_or_init(|| {
+			DalekEdPrivateKey::from_bytes(&self.address.to_arr())
+		})
 	}
 
 	pub fn x(&self) -> &DalekXPrivateKey {
