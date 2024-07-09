@@ -5,7 +5,7 @@
 # Build the wasm bundle
 cd crates/browser
 #wasm-pack build --target web --out-dir static
-wasm-pack build --target web
+wasm-pack build --target web --dev
 mkdir -p browser-test/src/wasm
 cp -r pkg/* browser-test/src/wasm
 cd -

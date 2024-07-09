@@ -1,4 +1,3 @@
-//use tokio_with_wasm::alias as tokio;
 use futures::task::{Context, Poll, Waker};
 use futures::{Stream, StreamExt};
 use libp2p::{
@@ -15,6 +14,7 @@ use std::pin::Pin;
 use std::sync::Arc;
 use tokio::sync::Mutex;
 use tokio::task::yield_now;
+use tokio_with_wasm::alias as tokio;
 
 pub type ThreadsafeSubfieldSwarm = Arc<Mutex<Swarm<SubfieldBehaviour>>>;
 
@@ -140,7 +140,8 @@ pub fn swarm_handle_subfield_event(
 	}
 }
 
-// due to the swarm needing to be wrapped in a mutex for use with axum, we need to poll the swarm instead of using the swarm.next() method
+// due to the swarm needing to be wrapped in a mutex for use with axum,
+// we need to poll the swarm instead of using the swarm.next() method
 async fn poll_swarm(
 	swarm: &mut Swarm<SubfieldBehaviour>,
 ) -> Option<SwarmEvent<SubfieldBehaviourEvent>> {

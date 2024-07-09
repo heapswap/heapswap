@@ -1,3 +1,4 @@
+use futures::TryFutureExt;
 use libp2p::{
 	core::{muxing::StreamMuxerBox, transport, upgrade},
 	identity::Keypair,
@@ -26,7 +27,7 @@ pub struct SwarmConfig {
 }
 
 #[cfg(not(target_arch = "wasm32"))]
-pub fn create_swarm(
+pub async fn create_swarm(
 	swarm_config: SwarmConfig,
 ) -> Result<Swarm<SubfieldBehaviour>, Box<dyn Error>> {
 	use tokio::time::Duration;
@@ -40,6 +41,11 @@ pub fn create_swarm(
 		noise::Config::new,
 		yamux::Config::default,
 	)?
+	.with_websocket(
+		(libp2p::tls::Config::new, libp2p::noise::Config::new),
+		libp2p::yamux::Config::default,
+	)
+	.await?
 	.with_behaviour(|key| Ok(SubfieldBehaviour::new(key)))?
 	.with_swarm_config(|c| {
 		c.with_idle_connection_timeout(Duration::from_secs(60))
@@ -47,14 +53,16 @@ pub fn create_swarm(
 	.build();
 
 	for addr in swarm_config.listen_addresses {
-		swarm.listen_on(addr.parse()?)?;
+		swarm.listen_on(addr.parse::<Multiaddr>()?)?;
 	}
 
 	Ok(swarm)
 }
 
+
+
 #[cfg(target_arch = "wasm32")]
-pub fn create_swarm(
+pub async fn create_swarm(
 	swarm_config: SwarmConfig,
 ) -> Result<Swarm<SubfieldBehaviour>, Box<dyn Error>> {
 	use std::time::Duration;
@@ -67,7 +75,10 @@ pub fn create_swarm(
 		//Ok(libp2p::webtransport_websys::Transport::new(libp2p::webtransport_websys::Config::new(&key)))
 		Ok(libp2p::websocket_websys::Transport::default()
 			.upgrade(upgrade::Version::V1)
-			.authenticate(noise::Config::new(&key).unwrap())
+			.authenticate(
+				noise::Config::new(&key)
+					.map_err(|_| "Failed to authenticate with keypair")?,
+			)
 			.multiplex(yamux::Config::default())
 			.boxed())
 	})?
@@ -77,8 +88,22 @@ pub fn create_swarm(
 	})
 	.build();
 
+	tracing::debug!("Successfully created swarm");
+
 	for addr in swarm_config.bootstrap_urls {
-		swarm.dial(addr.parse::<Multiaddr>()?)?;
+		match swarm.dial(
+			addr.parse::<Multiaddr>()
+				.map_err(|_| "Failed to parse bootstrap URL")?,
+		) {
+			Ok(_) => {
+				tracing::debug!(
+					"Successfully dialed bootstrap URL: {:?}",
+					addr
+				);
+			}
+			//Err(e) => eprintln!("Failed to dial bootstrap URL: {:?}", e),
+			Err(_) => {}
+		}
 	}
 
 	Ok(swarm)

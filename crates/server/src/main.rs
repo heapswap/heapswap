@@ -53,7 +53,7 @@ async fn get_bootstrap(State(state): State<AppState>) -> Json<Vec<String>> {
 			// Check if the address is not local
 			!addr.iter().any(|proto| match proto {
 				Protocol::Ip4(ip) => {
-					ip.is_loopback() // || ip.is_private()
+					ip.is_loopback() || ip.is_private()
 				}
 				Protocol::Ip6(ip) => {
 					ip.is_loopback()
@@ -70,16 +70,24 @@ async fn get_bootstrap(State(state): State<AppState>) -> Json<Vec<String>> {
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error>> {
+	// Setup tracing subscriber
+	tracing_subscriber::fmt()
+		.with_max_level(tracing::Level::INFO)
+		.init();
+
 	let keypair = Keypair::generate();
 
-	let swarm: ThreadsafeSubfieldSwarm =
-		Arc::new(Mutex::new(create_swarm(SwarmConfig {
+	let swarm: ThreadsafeSubfieldSwarm = Arc::new(Mutex::new(
+		create_swarm(SwarmConfig {
 			keypair: keypair.clone().into(),
 			listen_addresses: vec![
-				"/ip4/0.0.0.0/tcp/0".to_string(),
-				"/ip6/::/tcp/0".to_string(),
+				"/ip4/0.0.0.0/tcp/0/ws".to_string(),
+				"/ip6/::/tcp/0/ws".to_string(),
+				//"/ip4/0.0.0.0/ws".to_string(),
 			],
-		})?));
+		})
+		.await?,
+	));
 
 	// Create shared state
 	let state = AppState {

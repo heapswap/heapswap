@@ -9,7 +9,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
 	let swarm = Arc::new(Mutex::new(create_swarm(SwarmConfig {
 		listen_addresses: vec!["/ip4/0.0.0.0/tcp/0".to_string()],
 		is_server: true,
-	})?));
+	}).await?));
 	let swarm_clone = Arc::clone(&swarm);
 
 	// Create a Gossipsub topic
@@ -130,7 +130,7 @@ async fn test_swarm() -> Result<(), Box<dyn Error>> {
 		let swarm = Arc::new(Mutex::new(create_swarm(SwarmConfig {
 			listen_addresses: vec!["/ip4/0.0.0.0/tcp/0".to_string()],
 			is_server: true,
-		})?));
+		}).await?));
 		let swarm_clone = Arc::clone(&swarm);
 
 		// Create a Gossipsub topic

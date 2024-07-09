@@ -1,4 +1,5 @@
-src/wasm
+wasm
+browser-test/src/wasm
 
 # Logs
 logs

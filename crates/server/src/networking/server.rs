@@ -1,21 +1,40 @@
-use std::net::SocketAddr;
-use tower_http::cors::{Any, CorsLayer};
 use axum::Router;
+use http::{Method, Request, Response};
+use std::net::SocketAddr;
 use tokio::net::TcpListener;
 use tokio::time::Duration;
-use http::{Request, Response, Method, header};
+use tower_http::cors::{Any, CorsLayer};
+
+/*
+async fn add_security_headers(request: Request, next: Next) -> Response {
+
+	let response = next.run(request).await;
+	response.headers.insert(
+		"Cross-Origin-Opener-Policy",
+		"same-origin".parse().unwrap(),
+	);
+	response.headers.insert(
+		"Cross-Origin-Embedder-Policy",
+		"require-corp".parse().unwrap(),
+	);
+	response.headers
+}
+*/
 
 pub fn spawn_axum_loop(
 	app: Router,
 	mut port: i32,
 ) -> tokio::task::JoinHandle<()> {
 	tokio::spawn(async move {
-		
 		let cors = CorsLayer::new()
 			// allow `GET` and `POST` when accessing the resource
 			.allow_methods([Method::GET, Method::POST])
 			// allow requests from any origin
+			//.allow_credentials(
 			.allow_origin(Any);
+
+		let app = app.layer(cors);
+		//.layer(axum::middleware::from_fn(add_security_headers));
 
 		loop {
 			let addr = format!("127.0.0.1:{}", port);

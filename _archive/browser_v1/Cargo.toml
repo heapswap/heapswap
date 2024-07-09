@@ -15,7 +15,7 @@ rand.workspace = true
 eyre.workspace = true
 # Concurrency
 tokio = { workspace = true, features = ["rt"] }
-tokio_with_wasm = { workspace = true, features = ["rt"] }
+tokio_with_wasm = { workspace = true, features = ["full"] }
 # Wasm
 wasm-bindgen.workspace = true
 libp2p = { workspace = true, features = [

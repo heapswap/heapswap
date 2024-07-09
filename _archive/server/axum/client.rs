@@ -154,7 +154,7 @@ fn process_message(msg: Message, who: usize) -> ControlFlow<(), ()> {
 		}
 
 		Message::Frame(_) => {
-			unreachable!("This is never supposed to happen")
+			//unreachable!("This is never supposed to happen")
 		}
 	}
 	ControlFlow::Continue(())
