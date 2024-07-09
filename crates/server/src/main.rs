@@ -3,13 +3,13 @@
 #![allow(unused_import_braces)]
 #![allow(unused_braces)]
 #![allow(unused_variables)]
-
 use axum::extract::State;
 use axum::Json;
 use futures::StreamExt;
-use heapswap_core::{bys, networking::subfield::*};
-use heapswap_server::swarm::*;
+use heapswap_core::{bys, networking::*};
+use heapswap_server::networking::*;
 
+use libp2p::multiaddr::Protocol;
 use libp2p::swarm::handler::multi;
 use libp2p::swarm::SwarmEvent;
 use libp2p::Swarm;
@@ -20,49 +20,48 @@ use libp2p::{
 use tokio::net::TcpListener;
 
 use std::error::Error;
+use std::net::IpAddr;
 use std::net::SocketAddr;
 use std::ops::Sub;
 use std::sync::Arc;
 
+use futures::task::{Context, Poll, Waker};
+use futures::Stream;
+use std::future::Future;
+use std::net::{Ipv4Addr, Ipv6Addr};
+use std::pin::Pin;
 use tokio::select;
 use tokio::sync::{Mutex, MutexGuard, RwLock};
-use tokio::time::Duration;
-//use tokio::stream::StreamExt;
-//use std::task::{Context, Poll, Waker};
-use futures::Stream;
-//use libp2p::swarm::SwarmEvent;
-//use tokio::sync::MutexGuard;
-use futures::task::{Context, Poll, Waker};
-use std::future::Future;
-use std::pin::Pin;
 use tokio::task::yield_now;
+use tokio::time::Duration;
 
 use axum::{http::StatusCode, response::Html, routing::get, Router};
 
 #[derive(Clone)]
 struct AppState {
-	counter: Arc<Mutex<i32>>,
-	swarm: Arc<Mutex<Swarm<SubfieldBehaviour>>>,
+	swarm: ThreadsafeSubfieldSwarm,
 }
 
-async fn increment_counter(State(state): State<AppState>) -> Html<String> {
-	let mut counter = state.counter.lock().await;
-	*counter += 1;
-	Html(format!("Counter: {}", counter))
-}
-
-async fn get_counter(State(state): State<AppState>) -> Html<String> {
-	let counter = state.counter.lock().await;
-	Html(format!("Counter: {}", counter))
-}
-
-async fn get_swarm(State(state): State<AppState>) -> Json<Vec<String>> {
+async fn get_bootstrap(State(state): State<AppState>) -> Json<Vec<String>> {
 	let multiaddrs = state
 		.swarm
 		.lock()
 		.await
 		.listeners()
 		.into_iter()
+		.filter(|addr| {
+			// Check if the address is not local
+			!addr.iter().any(|proto| match proto {
+				Protocol::Ip4(ip) => {
+					ip.is_loopback() // || ip.is_private()
+				}
+				Protocol::Ip6(ip) => {
+					ip.is_loopback()
+						|| ip.segments().starts_with(&[0xfd00, 0x0])
+				}
+				_ => false,
+			})
+		})
 		.map(|addr| addr.to_string())
 		.collect::<Vec<_>>();
 
@@ -71,81 +70,31 @@ async fn get_swarm(State(state): State<AppState>) -> Json<Vec<String>> {
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error>> {
-	//let keypair = Keypair::generate();
+	let keypair = Keypair::generate();
 
-	let swarm = Arc::new(Mutex::new(create_tokio_swarm(SwarmConfig {
-		listen_addresses: vec!["/ip4/0.0.0.0/tcp/0".to_string()],
-		is_server: true,
-		//keypair,
-	})?));
+	let swarm: ThreadsafeSubfieldSwarm =
+		Arc::new(Mutex::new(create_swarm(SwarmConfig {
+			keypair: keypair.clone().into(),
+			listen_addresses: vec![
+				"/ip4/0.0.0.0/tcp/0".to_string(),
+				"/ip6/::/tcp/0".to_string(),
+			],
+		})?));
 
-	//let mut interval = tokio::time::interval(Duration::from_secs(5));
+	// Create shared state
+	let state = AppState {
+		swarm: swarm.clone(),
+	};
 
-	let swarm_clone = swarm.clone();
+	let app = Router::new()
+		.route("/bootstrap", get(get_bootstrap))
+		.with_state(state);
 
-	let axum_handle = tokio::spawn(async move {
-		// Create shared state
-		let state = AppState {
-			counter: Arc::new(Mutex::new(0)),
-			swarm: swarm_clone,
-		};
+	let axum_handle = spawn_axum_loop(app, 3000);
 
-		// Build our application with routes that have access to the shared state
-		let app = Router::new()
-			.route("/increment", get(increment_counter))
-			// Clone the Arc again to use in the second closure
-			.route("/get", get(get_counter))
-			.route("/bootstrap", get(get_swarm))
-			// .layer(TraceLayer::new_for_http()); // Uncomment if TraceLayer is used
-			.with_state(state);
+	let swarm_handle = spawn_swarm_loop(swarm.clone());
 
-		// Run it with hyper
-		let port = 3000;
-		let addr = format!("127.0.0.1:{}", port);
-		let listener = TcpListener::bind(&addr).await.unwrap();
-
-		tracing::debug!("axum listening on {}", listener.local_addr().unwrap());
-
-		axum::serve(
-			listener,
-			app.into_make_service_with_connect_info::<SocketAddr>(),
-		)
-		.await
-		.unwrap();
-	});
-
-	let swarm_clone = swarm.clone();
-	let event_handle = tokio::spawn(async move {
-		loop {
-			let event = {
-				let mut lock = swarm_clone.lock().await;
-				poll_swarm(&mut lock).await
-			};
-
-			if let Some(event) = event {
-				let mut lock = swarm_clone.lock().await;
-				swarm_handle_subfield_event(&mut *lock, event);
-			}
-
-			yield_now().await;
-		}
-	});
-
-	let _ = tokio::try_join!(axum_handle, event_handle).map(|_| ());
+	let _ = tokio::try_join!(axum_handle, swarm_handle).map(|_| ());
 
 	Ok(())
-}
-
-async fn poll_swarm(
-	swarm: &mut Swarm<SubfieldBehaviour>,
-) -> Option<SwarmEvent<SubfieldBehaviourEvent>> {
-	let mut pinned_swarm = Pin::new(swarm);
-
-	match pinned_swarm
-		.poll_next_unpin(&mut Context::from_waker(&futures::task::noop_waker()))
-	{
-		Poll::Ready(Some(event)) => Some(event),
-		Poll::Ready(None) => None,
-		Poll::Pending => None,
-	}
 }

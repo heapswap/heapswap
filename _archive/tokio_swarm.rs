@@ -50,20 +50,8 @@ pub fn create_tokio_swarm(
 			yamux::Config::default,
 		)?
 		.with_behaviour(|key| {
-			Ok(SubfieldBehaviour {
-				subfield: request_response::cbor::Behaviour::new(
-					[(
-						StreamProtocol::new("/subfield/1.0.0"),
-						ProtocolSupport::Full,
-					)],
-					request_response::Config::default(),
-				),
-				mdns: mdns::tokio::Behaviour::new(
-					mdns::Config::default(),
-					key.public().to_peer_id(),
-				)?,
-			})
-		})?
+			Ok(SubfieldBehaviour::new(key))
+			})?
 		.with_swarm_config(|c| {
 			c.with_idle_connection_timeout(Duration::from_secs(60))
 		})

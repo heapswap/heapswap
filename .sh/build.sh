@@ -11,7 +11,7 @@ then
     -i "src/data/*" \
     -i "src/schemas/*" \
     -c \
-    -x "run"
+    -x "build"
 else
   cargo watch \
     -i "target/*" \
@@ -19,7 +19,6 @@ else
     -i "data/*" \
     -i "src/data/*" \
     -i "src/schemas/*" \
-    -i "crates/browser/browser-test" \
     -c \
-    -x "run --bin heapswap_$PACKAGE_NAME"
+    -x "build --bin heapswap_$PACKAGE_NAME"
 fi

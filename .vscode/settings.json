@@ -2,10 +2,12 @@
 	"rust-analyzer.linkedProjects": [
 		"Cargo.toml",
 		"crates/core/Cargo.toml",
-		//"crates/browser/Cargo.toml",
+		"crates/browser/Cargo.toml",
+		//{ "root": "crates/browser", "target": "wasm32-unknown-unknown" },
 		"crates/server/Cargo.toml",
 		"crates/protos/Cargo.toml"
 	],
+	//"rust-analyzer.cargo.target": "wasm32-unknown-unknown",
 	"rust-analyzer.server.extraEnv": {
 		//"CHALK_OVERFLOW_DEPTH": "1000"
 		//"RUSTC_WRAPPER":"sccache",

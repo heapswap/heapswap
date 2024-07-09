@@ -18,25 +18,12 @@ x25519-dalek.workspace = true
 # Concurrency
 futures.workspace = true
 futures-util.workspace = true
-tokio = { workspace = true, features = ["sync", "macros", "rt"] }
+tokio = { workspace = true, features = ["rt"] }
+tokio_with_wasm = { workspace = true, features = ["full"] }
 # Networking
 snow.workspace = true
-reqwest.workspace = true
-reqwest-websocket.workspace = true
-libp2p = { workspace = true, features = [
-	#"gossipsub",
-	#"identify",
-	#"kad",
-	#"ping",
-	"request-response",
-	"cbor",
-	#"dns",
-	"mdns",
-	#"tcp",
-	#"noise",
-	#"yamux",
-	"macros"
-] }
+#reqwest.workspace = true
+#reqwest-websocket.workspace = true
 # Encoding
 base32.workspace = true
 # Datastructures
@@ -61,3 +48,44 @@ strum.workspace = true
 ordered-float.workspace = true
 lazy_static.workspace = true
 eyre.workspace = true
+wasm-bindgen.workspace = true
+
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+libp2p = { workspace = true, features = [
+	#"gossipsub",
+	#"identify",
+	#"kad",
+	#"ping",
+	"request-response",
+	"cbor",
+	#"dns",
+	#"mdns",
+	#"tcp",
+	"noise",
+	"yamux",
+	"macros",
+	"ed25519",
+	"wasm-bindgen",
+	"websocket-websys",
+	#"webtransport-websys"
+
+] }
+
+#libp2p-websocket-websys.workspace = true
+[target.'cfg(not(target_arch = "wasm32"))'.dependencies]
+libp2p = { workspace = true, features = [
+	#"gossipsub",
+	#"identify",
+	#"kad",
+	#"ping",
+	"request-response",
+	"cbor",
+	#"dns",
+	"mdns",
+	"tcp",
+	"noise",
+	"yamux",
+	"macros",
+	"ed25519",
+	"tokio"
+] }

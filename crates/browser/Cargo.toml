@@ -1,0 +1,52 @@
+[package]
+name = "heapswap_browser"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+# Local
+heapswap_core = { path = "../core" }
+# Misc
+futures.workspace = true
+rand.workspace = true
+eyre.workspace = true
+# Concurrency
+tokio = { workspace = true, features = ["rt"] }
+tokio_with_wasm = { workspace = true, features = ["rt"] }
+# Wasm
+wasm-bindgen.workspace = true
+libp2p = { workspace = true, features = [
+	"ed25519",
+	#"macros",
+	#"ping",
+	#"request-response",
+	#"cbor",
+	#"wasm-bindgen"
+
+] }
+#libp2p-webrtc-websys.workspace = true
+tracing.workspace = true
+tracing-wasm.workspace = true
+wasm-bindgen-futures.workspace = true
+js-sys.workspace = true
+lazy_static.workspace = true
+once_cell.workspace = true
+getset.workspace = true
+
+[dependencies.web-sys]
+workspace = true
+features = [
+	'Document',
+	'Element',
+	'HtmlElement',
+	'Node',
+	'Headers',
+	'Request',
+	'RequestInit',
+	'RequestMode',
+	'Response',
+	'Window',
+]

@@ -6,3 +6,5 @@ _storage
 bun.lockb
 debug_info.txt
 scratch.txt
+crates/browser/static
+pkg

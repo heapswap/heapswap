@@ -1,10 +1,22 @@
+//use tokio_with_wasm::alias as tokio;
+use futures::task::{Context, Poll, Waker};
+use futures::{Stream, StreamExt};
 use libp2p::{
-	mdns, request_response,
-	request_response::cbor::Behaviour,
+	identity::Keypair,
+	request_response::{self, cbor::Behaviour},
 	swarm::{NetworkBehaviour, SwarmEvent},
-	Swarm,
+	StreamProtocol, Swarm,
 };
+#[cfg(not(target_arch = "wasm32"))]
+use libp2p::{mdns, noise, tcp, yamux};
 use serde::{Deserialize, Serialize};
+use std::future::Future;
+use std::pin::Pin;
+use std::sync::Arc;
+use tokio::sync::Mutex;
+use tokio::task::yield_now;
+
+pub type ThreadsafeSubfieldSwarm = Arc<Mutex<Swarm<SubfieldBehaviour>>>;
 
 /*
 #[derive(Debug, Serialize, Deserialize)]
@@ -30,6 +42,28 @@ pub struct SubfieldBehaviour {
 	pub subfield: Behaviour<SubfieldRequest, SubfieldResponse>,
 	#[cfg(not(target_arch = "wasm32"))]
 	pub mdns: mdns::tokio::Behaviour,
+}
+
+impl SubfieldBehaviour {
+	pub fn new(key: &Keypair) -> Self {
+		let subfield = Behaviour::new(
+			[(
+				StreamProtocol::new("/subfield/1.0.0"),
+				request_response::ProtocolSupport::Full,
+			)],
+			request_response::Config::default(),
+		);
+
+		SubfieldBehaviour {
+			subfield,
+			#[cfg(not(target_arch = "wasm32"))]
+			mdns: mdns::tokio::Behaviour::new(
+				mdns::Config::default(),
+				key.public().to_peer_id(),
+			)
+			.unwrap(),
+		}
+	}
 }
 
 pub fn swarm_handle_subfield_event(
@@ -70,10 +104,6 @@ pub fn swarm_handle_subfield_event(
 				peer_id, num_established
 			);
 		}
-		/*
-			mDNS
-		*/
-		#[cfg(not(target_arch = "wasm32"))]
 		SwarmEvent::ConnectionClosed {
 			peer_id,
 			cause,
@@ -86,6 +116,10 @@ pub fn swarm_handle_subfield_event(
 				peer_id, num_established
 			);
 		}
+		/*
+			mDNS
+		*/
+		#[cfg(not(target_arch = "wasm32"))]
 		SwarmEvent::Behaviour(SubfieldBehaviourEvent::Mdns(
 			mdns::Event::Discovered(list),
 		)) => {
@@ -104,4 +138,38 @@ pub fn swarm_handle_subfield_event(
 		}
 		_ => {}
 	}
+}
+
+// due to the swarm needing to be wrapped in a mutex for use with axum, we need to poll the swarm instead of using the swarm.next() method
+async fn poll_swarm(
+	swarm: &mut Swarm<SubfieldBehaviour>,
+) -> Option<SwarmEvent<SubfieldBehaviourEvent>> {
+	match swarm
+		.poll_next_unpin(&mut Context::from_waker(&futures::task::noop_waker()))
+	{
+		Poll::Ready(Some(event)) => Some(event),
+		Poll::Ready(None) => None,
+		Poll::Pending => None,
+	}
+}
+
+// spawn a tokio task that will poll the swarm and handle events
+pub fn spawn_swarm_loop(
+	swarm: ThreadsafeSubfieldSwarm,
+) -> tokio::task::JoinHandle<()> {
+	tokio::spawn(async move {
+		loop {
+			let event = {
+				let mut lock = swarm.lock().await;
+				poll_swarm(&mut lock).await
+			};
+
+			if let Some(event) = event {
+				let mut lock = swarm.lock().await;
+				swarm_handle_subfield_event(&mut *lock, event);
+			}
+
+			yield_now().await;
+		}
+	})
 }
