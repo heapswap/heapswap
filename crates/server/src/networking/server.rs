@@ -21,10 +21,7 @@ async fn add_security_headers(request: Request, next: Next) -> Response {
 }
 */
 
-pub fn spawn_axum_loop(
-	app: Router,
-	mut port: i32,
-) -> tokio::task::JoinHandle<()> {
+pub fn spawn_axum_loop(app: Router, port: i32) -> tokio::task::JoinHandle<()> {
 	tokio::spawn(async move {
 		let cors = CorsLayer::new()
 			// allow `GET` and `POST` when accessing the resource
@@ -57,8 +54,10 @@ pub fn spawn_axum_loop(
 					}
 				}
 				Err(_) => {
-					port += 1; // Try the next port
-					tokio::time::sleep(Duration::from_millis(100)).await;
+					//port += 1; // Try the next port
+					//tokio::time::sleep(Duration::from_millis(100)).await;
+					eprintln!("Failed to bind to port {}", port);
+					break;
 				}
 			}
 		}

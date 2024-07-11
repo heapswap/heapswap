@@ -9,7 +9,6 @@ function App() {
 
 	useEffect(() => {
 		const fetchBootstrapAddrs = async () => {
-      
 			// initalize the wasm runtime
 			await init();
 
@@ -30,10 +29,10 @@ function App() {
 			// start the main loop
 			console.log("entering main loop (js)");
 			//hs.main();
-      
-      hs.connect()
-      
-      hs.create_unordered_list_of_connected_multiaddrs()
+
+			hs.connect();
+
+			hs.create_unordered_list_of_connected_multiaddrs();
 		};
 
 		fetchBootstrapAddrs();
@@ -53,8 +52,8 @@ function App() {
 					<li>Loading...</li>
 				)}
 			</ul>
-      <h1>Connected Addresses</h1>
-      <div id="connected-addresses"></div>
+			<h1>Connected Addresses</h1>
+			<div id="connected-addresses"></div>
 		</>
 	);
 }

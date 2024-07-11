@@ -20,6 +20,7 @@ crypto-bigint = { version = "0.5.5", features = ["rand", "serde", "alloc"] }
 num-bigint = { version = "0.4.6", features = ["rand", "serde"] }
 ### Randomness
 rand = { version = "0.8.5" } # Randomness
+getrandom = { version = "0.2.15", features = ["js"] }
 ### Hashes
 # argon2 = { version = "0.5.3" } # Slow Hash
 blake3 = { version = "1.5.1" } # Fast Hash
@@ -86,7 +87,7 @@ prost-build = { version = "0.12.6" }
 #
 ## Networking
 ##
-reqwest = { version = "0.12.5" } # HTTP client
+reqwest = { version = "0.12.5", features = ["json"] } # HTTP client
 reqwest-websocket = { version = "0.4.0" } # Websocket support for reqwest
 #poem = { version = "3.0.1", features = [
 #	"server",
@@ -117,7 +118,7 @@ tower = { version = "0.4", features = ["util"] }
 tower-http = { version = "0.5.0", features = ["fs", "trace", "cors"] }
 http = { version = "1.1.0" }
 tokio-tungstenite = { version = "0.23.1" }
-tokio_tungstenite_wasm = { verison = "0.3.1" }
+#tokio_tungstenite_wasm = { verison = "0.3.1" }
 yamux = { version = "0.13.3" } # Multiplexing
 #
 ## Libp2p
@@ -190,12 +191,15 @@ wasm-bindgen = { version = "0.2.92", features = [
 ] } # Interact between JS and Rust.
 wasm-bindgen-futures = { version = "0.4.42" } # Convert between Rust Futures and JavaScript Promises
 wasm-bindgen-struct = { version = "0.1.0" } # Macro for adeclaring wasm-bindgen imports
+wasm-bindgen-rayon = {version = "1.2.1"}
+rayon = {version = "1.10.0"}
 #libp2p-webrtc-websys = {version = "0.3.0-alpha.1"}
 libp2p-websocket-websys = { version = "0.3.2" }
 ### Web
 web-sys = { version = "0.3.69" } # Bindings for all Web APIs
 gloo-utils = { version = "0.2.0" } # Convenience crate for common `web_sys` features
 js-sys = { version = "0.3.69" } # Bindings for all JS global objects and functions in all JS environments like Node.js and browsers
+console_error_panic_hook = { version = "0.1.7" }
 stdweb = { version = "0.4.20" } # JS-Rust interoperability
 tsify = { version = "0.4.5" } # Macros for Typescript
 ### Non-Web
@@ -245,3 +249,4 @@ getset = { version = "0.1.2" }
 num-traits = { version = "0.2" } # Traits for numeric types
 chrono = { version = "0.4.38", features = ["serde"] } # Time
 ordered-float = { version = "4.2.1" }
+#num-traits = {version = "0.2.19"}

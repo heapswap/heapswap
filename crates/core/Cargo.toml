@@ -46,50 +46,47 @@ chrono.workspace = true
 strum.workspace = true
 ordered-float.workspace = true
 lazy_static.workspace = true
-eyre.workspace = true
+#eyre.workspace = true
 wasm-bindgen.workspace = true
 tracing.workspace = true
-
-[target.'cfg(target_arch = "wasm32")'.dependencies]
-libp2p = { workspace = true, features = [
-	#"gossipsub",
-	#"identify",
-	#"kad",
-	#"ping",
-	"request-response",
-	"cbor",
-	#"dns",
-	#"mdns",
-	#"tcp",
-	"noise",
-	"yamux",
-	"macros",
-	"ed25519",
-	"wasm-bindgen",
-	"websocket-websys",
-	#"webtransport-websys"
-
-] }
-tracing-wasm.workspace = true
-
-#libp2p-websocket-websys.workspace = true
-[target.'cfg(not(target_arch = "wasm32"))'.dependencies]
-libp2p = { workspace = true, features = [
-	#"gossipsub",
-	#"identify",
-	#"kad",
-	#"ping",
-	"request-response",
-	"cbor",
-	#"dns",
-	"mdns",
-	"tcp",
-	"noise",
-	"yamux",
-	"macros",
-	"ed25519",
-	"tokio",
-	"websocket",
-	"tls"
-] }
-tokio = { workspace = true, features = ["full"] }
+#[target.'cfg(target_arch = "wasm32")'.dependencies]
+#libp2p = { workspace = true, features = [
+#	#"gossipsub",
+#	#"identify",
+#	#"kad",
+#	#"ping",
+#	"request-response",
+#	"cbor",
+#	#"dns",
+#	#"mdns",
+#	#"tcp",
+#	"noise",
+#	"yamux",
+#	"macros",
+#	"ed25519",
+#	"wasm-bindgen",
+#	"websocket-websys",
+#	#"webtransport-websys"
+#] }
+#tracing-wasm.workspace = true
+##libp2p-websocket-websys.workspace = true
+#[target.'cfg(not(target_arch = "wasm32"))'.dependencies]
+#libp2p = { workspace = true, features = [
+#	#"gossipsub",
+#	#"identify",
+#	#"kad",
+#	#"ping",
+#	"request-response",
+#	"cbor",
+#	#"dns",
+#	"mdns",
+#	"tcp",
+#	"noise",
+#	"yamux",
+#	"macros",
+#	"ed25519",
+#	"tokio",
+#	"websocket",
+#	"tls"
+#] }
+#tokio = { workspace = true, features = ["full"] }

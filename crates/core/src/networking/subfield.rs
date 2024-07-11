@@ -170,7 +170,7 @@ pub fn spawn_swarm_loop(
 				swarm_handle_subfield_event(&mut *lock, event);
 			}
 
-			yield_now().await;
+			let _ = yield_now().await;
 		}
 	})
 }

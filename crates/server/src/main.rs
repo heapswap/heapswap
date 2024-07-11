@@ -52,9 +52,7 @@ async fn get_bootstrap(State(state): State<AppState>) -> Json<Vec<String>> {
 		.filter(|addr| {
 			// Check if the address is not local
 			!addr.iter().any(|proto| match proto {
-				Protocol::Ip4(ip) => {
-					ip.is_loopback() || ip.is_private()
-				}
+				Protocol::Ip4(ip) => ip.is_loopback() || ip.is_private(),
 				Protocol::Ip6(ip) => {
 					ip.is_loopback()
 						|| ip.segments().starts_with(&[0xfd00, 0x0])

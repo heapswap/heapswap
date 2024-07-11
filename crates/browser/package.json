@@ -1,0 +1,13 @@
+{
+	"name": "browser",
+	"module": "index.ts",
+	"type": "module",
+	"dependencies": {},
+	"devDependencies": {
+		"@types/bun": "latest",
+		"kahn": "file:../../../kahn"
+	},
+	"peerDependencies": {
+		"typescript": "^5.0.0"
+	}
+}

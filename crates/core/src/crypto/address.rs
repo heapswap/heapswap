@@ -106,7 +106,7 @@ impl Address {
 
 	pub fn unpacked(&self) -> &UnpackedAddress {
 		self.unpacked.get_or_init(|| {
-			[self.seed, Hash::hash(&self.seed).to_arr()]
+			[self.seed, super::hash::hash(&self.seed).to_arr()]
 				.concat()
 				.try_into()
 				.unwrap()
