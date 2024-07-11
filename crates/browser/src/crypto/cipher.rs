@@ -1,5 +1,5 @@
-use super::u256::*;
 use crate::arr;
+use crate::u256::*;
 use chacha20poly1305::{
 	aead::{Aead, AeadCore, KeyInit, OsRng},
 	ChaCha20Poly1305,
@@ -51,8 +51,8 @@ impl Cipher {
 	 * Randomable
 		*/
 
-	#[wasm_bindgen]
-	pub fn randomKey() -> SharedKey {
+	#[wasm_bindgen(js_name = randomSecret)]
+	pub fn random_secret() -> SharedKey {
 		SharedKey::new(U256::random().unpacked()).unwrap()
 	}
 

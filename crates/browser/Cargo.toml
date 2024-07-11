@@ -21,6 +21,7 @@ ed25519-dalek.workspace = true
 x25519-dalek.workspace = true
 # Encoding
 base32.workspace = true
+serde.workspace = true
 # Async
 futures.workspace = true
 # Wasm
@@ -41,8 +42,8 @@ getset.workspace = true
 num-traits.workspace = true
 #derive_more.workspace = true
 strum.workspace = true
+ordered-float.workspace = true
+priority-queue.workspace = true
 
 [dev-dependencies]
 timeit.workspace = true
-
-

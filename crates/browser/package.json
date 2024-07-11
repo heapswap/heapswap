@@ -1,11 +1,14 @@
 {
-	"name": "browser",
+	"name": "heapswap",
+	"version": "0.0.1",
 	"module": "index.ts",
 	"type": "module",
+	"scripts": {
+		"build": "bash ../../.sh/browser-build.sh"
+	},
 	"dependencies": {},
 	"devDependencies": {
-		"@types/bun": "latest",
-		"kahn": "file:../../../kahn"
+		"@types/bun": "latest"
 	},
 	"peerDependencies": {
 		"typescript": "^5.0.0"

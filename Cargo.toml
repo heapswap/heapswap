@@ -191,8 +191,8 @@ wasm-bindgen = { version = "0.2.92", features = [
 ] } # Interact between JS and Rust.
 wasm-bindgen-futures = { version = "0.4.42" } # Convert between Rust Futures and JavaScript Promises
 wasm-bindgen-struct = { version = "0.1.0" } # Macro for adeclaring wasm-bindgen imports
-wasm-bindgen-rayon = {version = "1.2.1"}
-rayon = {version = "1.10.0"}
+wasm-bindgen-rayon = { version = "1.2.1" }
+rayon = { version = "1.10.0" }
 #libp2p-webrtc-websys = {version = "0.3.0-alpha.1"}
 libp2p-websocket-websys = { version = "0.3.2" }
 ### Web

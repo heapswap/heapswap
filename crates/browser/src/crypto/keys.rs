@@ -23,8 +23,8 @@ use x25519_dalek::{
 	StaticSecret as DalekXPrivateKey,
 };
 
-use super::u256::{self, *};
 use crate::arr;
+use crate::u256::*;
 
 /**
  * Types
@@ -49,7 +49,8 @@ pub type EdPrivateKey = Uint8Array;
 pub type XPublicKey = Uint8Array;
 pub type XPrivateKey = Uint8Array;
 
-pub type SharedSecret = Uint8Array;
+//pub type SharedSecret = Uint8Array;
+pub type SharedSecret = U256;
 
 /**
  * Errors
@@ -67,7 +68,6 @@ pub enum KeyError {
 	FailedToCreateDalekEdPublicKey,
 	FailedToCreateDalekEdPrivateKey,
 }
-
 
 /**
  * Structs
@@ -93,8 +93,8 @@ pub struct PublicKey {
 #[wasm_bindgen]
 #[derive(Clone, Getters)]
 pub struct Keypair {
-	public_key: PublicKey,
 	private_key: PrivateKey,
+	public_key: PublicKey,
 }
 
 /**
@@ -138,13 +138,13 @@ impl PublicKey {
 	}
 
 	#[wasm_bindgen]
-	pub fn edwards(&self) -> Uint8Array {
-		Uint8Array::from(self.u256.unpacked().as_ref())
+	pub fn edwards(&self) -> U256 {
+		U256::new(self.u256.unpacked().as_ref()).unwrap()
 	}
 
 	#[wasm_bindgen]
-	pub fn montgomery(&self) -> Uint8Array {
-		Uint8Array::from(self.x().as_bytes().as_ref())
+	pub fn montgomery(&self) -> U256 {
+		U256::new(self.x().as_bytes().as_ref()).unwrap()
 	}
 
 	/**
@@ -169,30 +169,35 @@ impl PublicKey {
 		}
 	}
 
+	#[wasm_bindgen]
+	pub fn jaccard(&self, public_key: &PublicKey) -> f64 {
+		self.u256().jaccard(&public_key.u256())
+	}
+
 	/**
 	 * Conversions
 		*/
-	#[wasm_bindgen]
-	pub fn toString(&self) -> String {
-		self.u256.toString()
+	#[wasm_bindgen(js_name = toString)]
+	pub fn to_string(&self) -> String {
+		self.u256.to_string()
 	}
 
-	#[wasm_bindgen]
-	pub fn fromString(string: &str) -> Result<PublicKey, KeyError> {
-		let u256 =
-			U256::fromString(string).map_err(|_| KeyError::InvalidPublicKey)?;
+	#[wasm_bindgen(js_name = fromString)]
+	pub fn from_string(string: &str) -> Result<PublicKey, KeyError> {
+		let u256 = U256::from_string(string)
+			.map_err(|_| KeyError::InvalidPublicKey)?;
 		Ok(PublicKey::from_u256(u256))
 	}
 
-	#[wasm_bindgen]
-	pub fn toBytes(&self) -> Uint8Array {
-		self.u256.toBytes()
+	#[wasm_bindgen(js_name = toBytes)]
+	pub fn to_bytes(&self) -> Uint8Array {
+		self.u256.to_bytes()
 	}
 
-	#[wasm_bindgen]
-	pub fn fromBytes(bytes: &Uint8Array) -> Result<PublicKey, KeyError> {
+	#[wasm_bindgen(js_name = fromBytes)]
+	pub fn from_bytes(bytes: &Uint8Array) -> Result<PublicKey, KeyError> {
 		let u256 =
-			U256::fromBytes(bytes).map_err(|_| KeyError::InvalidPublicKey)?;
+			U256::from_bytes(bytes).map_err(|_| KeyError::InvalidPublicKey)?;
 		Ok(PublicKey::from_u256(u256))
 	}
 }
@@ -238,17 +243,17 @@ impl PrivateKey {
 	}
 
 	#[wasm_bindgen]
-	pub fn edwards(&self) -> Uint8Array {
-		Uint8Array::from(self.u256.unpacked().as_ref())
+	pub fn edwards(&self) -> U256 {
+		U256::new(self.u256.unpacked().as_ref()).unwrap()
 	}
 
 	#[wasm_bindgen]
-	pub fn montgomery(&self) -> Uint8Array {
-		Uint8Array::from(self.x().to_bytes().as_ref())
+	pub fn montgomery(&self) -> U256 {
+		U256::new(self.x().to_bytes().as_ref()).unwrap()
 	}
 
-	#[wasm_bindgen]
-	pub fn getPublicKey(&self) -> PublicKey {
+	#[wasm_bindgen(js_name = publicKey, getter)]
+	pub fn public_key(&self) -> PublicKey {
 		let public_key = self.ed().verifying_key().to_bytes();
 		PublicKey::new(Uint8Array::from(public_key.as_ref())).unwrap()
 	}
@@ -267,36 +272,34 @@ impl PrivateKey {
 	}
 
 	#[wasm_bindgen]
-	pub fn sharedSecret(&self, public_key: &PublicKey) -> SharedSecret {
-		Uint8Array::from(
-			self.x().diffie_hellman(&public_key.x()).as_bytes().as_ref(),
-		)
+	pub fn shared_secret(&self, public_key: &PublicKey) -> SharedSecret {
+		U256::new(self.x().diffie_hellman(&public_key.x()).as_bytes()).unwrap()
 	}
 
 	/**
 	 * Conversions
 		*/
 	#[wasm_bindgen]
-	pub fn toString(&self) -> String {
-		self.u256.toString()
+	pub fn to_string(&self) -> String {
+		self.u256.to_string()
 	}
 
 	#[wasm_bindgen]
-	pub fn fromString(string: &str) -> Result<PrivateKey, KeyError> {
-		let u256 = U256::fromString(string)
+	pub fn from_string(string: &str) -> Result<PrivateKey, KeyError> {
+		let u256 = U256::from_string(string)
 			.map_err(|_| KeyError::InvalidPrivateKey)?;
 		Ok(PrivateKey::from_u256(u256))
 	}
 
 	#[wasm_bindgen]
-	pub fn toBytes(&self) -> Uint8Array {
-		self.u256.toBytes()
+	pub fn to_bytes(&self) -> Uint8Array {
+		self.u256.to_bytes()
 	}
 
-	#[wasm_bindgen]
-	pub fn fromBytes(bytes: &Uint8Array) -> Result<PrivateKey, KeyError> {
+	#[wasm_bindgen(js_name = fromBytes)]
+	pub fn from_bytes(bytes: &Uint8Array) -> Result<PrivateKey, KeyError> {
 		let u256 =
-			U256::fromBytes(bytes).map_err(|_| KeyError::InvalidPrivateKey)?;
+			U256::from_bytes(bytes).map_err(|_| KeyError::InvalidPrivateKey)?;
 		Ok(PrivateKey::from_u256(u256))
 	}
 }
@@ -305,7 +308,7 @@ impl PrivateKey {
 impl Keypair {
 	#[wasm_bindgen(constructor)]
 	pub fn new(private_key: PrivateKey) -> Result<Keypair, KeyError> {
-		let public_key = private_key.getPublicKey();
+		let public_key = private_key.public_key();
 
 		Ok(Keypair {
 			private_key,
@@ -322,13 +325,13 @@ impl Keypair {
 	/**
 	 * Getters
 		*/
-	#[wasm_bindgen]
-	pub fn publicKey(&self) -> PublicKey {
+	#[wasm_bindgen(js_name = publicKey, getter)]
+	pub fn public_key(&self) -> PublicKey {
 		self.public_key.clone()
 	}
 
-	#[wasm_bindgen]
-	pub fn privateKey(&self) -> PrivateKey {
+	#[wasm_bindgen(js_name = privateKey, getter)]
+	pub fn private_key(&self) -> PrivateKey {
 		self.private_key.clone()
 	}
 
@@ -337,7 +340,7 @@ impl Keypair {
 		*/
 	#[wasm_bindgen]
 	pub fn sign(&self, message: &Uint8Array) -> Signature {
-		self.privateKey().sign(message)
+		self.private_key().sign(message)
 	}
 
 	#[wasm_bindgen]
@@ -346,14 +349,13 @@ impl Keypair {
 		message: &Uint8Array,
 		signature: &Signature,
 	) -> Result<bool, KeyError> {
-		self.publicKey().verify(message, signature)
+		self.public_key().verify(message, signature)
 	}
 
-	#[wasm_bindgen]
-	pub fn sharedSecret(&self, public_key: &PublicKey) -> SharedSecret {
-		self.privateKey().sharedSecret(public_key)
+	#[wasm_bindgen(js_name = sharedSecret)]
+	pub fn shared_secret(&self, public_key: &PublicKey) -> SharedSecret {
+		self.private_key().shared_secret(public_key)
 	}
-	
 
 	#[wasm_bindgen]
 	pub fn vanity(prefix: &str) -> Result<Keypair, KeyError> {
@@ -364,14 +366,24 @@ impl Keypair {
 		let mut counter = 0;
 		loop {
 			counter += 1;
-			
+
 			let private_key = DalekEdPrivateKey::generate(&mut OsRng);
-			
-			let public_key_string = arr::to_base32(&private_key.verifying_key().to_bytes());
-			
+
+			let public_key_string =
+				arr::to_base32(&private_key.verifying_key().to_bytes());
+
 			if public_key_string.starts_with(prefix) {
-				tracing::info!("Found vanity keypair after {} iterations", counter);
-				return Ok(Keypair::new(PrivateKey::new(Uint8Array::from(private_key.to_bytes().as_ref())).unwrap()).unwrap());
+				//tracing::info!(
+				//	"Found vanity keypair after {} iterations",
+				//	counter
+				//);
+				return Ok(Keypair::new(
+					PrivateKey::new(Uint8Array::from(
+						private_key.to_bytes().as_ref(),
+					))
+					.unwrap(),
+				)
+				.unwrap());
 			}
 		}
 	}
@@ -380,12 +392,12 @@ impl Keypair {
 	 * Conversions
 		*/
 	#[wasm_bindgen]
-	pub fn toString(&self) -> String {
-		self.privateKey().toString() + &self.publicKey().toString()
+	pub fn to_string(&self) -> String {
+		self.private_key().to_string() + &self.public_key().to_string()
 	}
 
 	#[wasm_bindgen]
-	pub fn fromString(string: &str) -> Result<Keypair, KeyError> {
+	pub fn from_string(string: &str) -> Result<Keypair, KeyError> {
 		let string_bytes =
 			arr::from_base32(string).map_err(|_| KeyError::InvalidKeypair)?;
 
@@ -403,14 +415,14 @@ impl Keypair {
 	}
 
 	#[wasm_bindgen]
-	pub fn toBytes(&self) -> Uint8Array {
-		let mut bytes = self.privateKey().toBytes().to_vec();
-		bytes.extend(self.publicKey().toBytes().to_vec());
+	pub fn to_bytes(&self) -> Uint8Array {
+		let mut bytes = self.private_key().to_bytes().to_vec();
+		bytes.extend(self.public_key().to_bytes().to_vec());
 		Uint8Array::from(bytes.as_slice())
 	}
 
-	#[wasm_bindgen]
-	pub fn fromBytes(bytes: &Uint8Array) -> Result<Keypair, KeyError> {
+	#[wasm_bindgen(js_name = fromBytes)]
+	pub fn from_bytes(bytes: &Uint8Array) -> Result<Keypair, KeyError> {
 		let bytes = bytes.to_vec();
 		let private_key = PrivateKey::from_u256(
 			U256::new(&bytes[..SECRET_KEY_LENGTH])

@@ -1,7 +1,7 @@
 use wasm_bindgen::prelude::*;
 //use js_sys::Uint8Array;
-use super::u256::*;
 use crate::arr;
+use crate::u256::*;
 use getset::Getters;
 
 pub type Hash = U256;
@@ -12,7 +12,7 @@ pub fn hash(data: &str) -> Hash {
 	U256::new(&arr).unwrap()
 }
 
-#[wasm_bindgen]
-pub fn verify(data: &str, data_hash: Hash) -> bool {
+#[wasm_bindgen(js_name = verifyHash)]
+pub fn verify_hash(data: &str, data_hash: Hash) -> bool {
 	hash(data) == data_hash
 }
