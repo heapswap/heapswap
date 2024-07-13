@@ -1,6 +1,8 @@
-import init from "./pkg/heapswap_core.js"
-export * from "./pkg/heapswap_core.js"
+import init from "./pkg/heapswap_core"
+export * from "./pkg/heapswap_core"
 export { init }
+
+await init()
 
 const encoder = new TextEncoder()
 export const fromString = (str: string) => encoder.encode(str)

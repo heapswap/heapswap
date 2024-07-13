@@ -231,7 +231,8 @@ impl PrivateKey {
 		}
 	}
 
-	fn random() -> Self {
+	#[wasm_bindgen]
+	pub fn random() -> Self {
 		Self::from_u256(U256::random())
 	}
 

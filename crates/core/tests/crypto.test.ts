@@ -1,7 +1,6 @@
 import * as hs from "../index.ts"
 import { expect, test } from "bun:test"
 
-await hs.init()
 
 test("hash", async () => {
 	const hash = hs.hash("hello")

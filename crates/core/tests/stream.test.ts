@@ -1,8 +1,9 @@
 import * as hs from "../index.ts"
 import { expect, test } from "bun:test"
 
-await hs.init()
-
 test("websocket", async () => {
-	hs.echo()
+	
+	let ws = new WebSocket("wss://echo.websocket.org")
+	
+	hs.echo_ws(ws)
 })

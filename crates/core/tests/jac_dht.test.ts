@@ -1,8 +1,5 @@
-import init from "../pkg/heapswap_browser.js"
-import * as hs from "../pkg/heapswap_browser.js"
+import * as hs from "../pkg/heapswap_core"
 import { expect, test } from "bun:test"
-
-await init()
 
 test("nodes", async () => {
 	const localKeypair = hs.Keypair.random()

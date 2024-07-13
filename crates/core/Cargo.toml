@@ -25,7 +25,9 @@ base32.workspace = true
 serde.workspace = true
 # Async
 futures.workspace = true
+tokio = {workspace = true, features = ["sync"]}
 # Networking
+bytes.workspace = true
 yamux.workspace = true
 # Wasm
 wasm-bindgen.workspace = true

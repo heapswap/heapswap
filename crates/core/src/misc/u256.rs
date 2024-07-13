@@ -30,6 +30,7 @@ pub struct U256 {
 	unpacked: [u8; UNPACKED_LENGTH],
 	packed: OnceCell<[u64; EXTENDED_PACKED_LENGTH]>,
 	popcount: OnceCell<u32>,
+	string: OnceCell<String>,
 }
 
 impl Serialize for U256 {
@@ -82,6 +83,7 @@ impl U256 {
 			unpacked,
 			packed: OnceCell::new(),
 			popcount: OnceCell::new(),
+			string: OnceCell::new(),
 		})
 	}
 
@@ -169,14 +171,22 @@ impl U256 {
 		*/
 	#[wasm_bindgen(js_name = toString)]
 	pub fn to_string(&self) -> String {
-		arr::to_base32(self.unpacked())
+		self.string
+			.get_or_init(|| arr::to_base32(self.unpacked()))
+			.clone()
 	}
 
 	#[wasm_bindgen(js_name = fromString)]
 	pub fn from_string(string: &str) -> Result<U256, U256Error> {
-		let unpacked =
-			arr::from_base32(string).map_err(|_| U256Error::InvalidBase32)?;
-		U256::new(unpacked.as_slice())
+		let unpacked: [u8;32] =
+			arr::from_base32(string).map_err(|_| U256Error::InvalidBase32)?.try_into().map_err(|_| U256Error::InvalidLength)?;
+			
+		Ok(U256 {
+			unpacked,
+			packed: OnceCell::new(),
+			popcount: OnceCell::new(),
+			string: OnceCell::from(string.to_string()),
+		})
 	}
 
 	/*

@@ -1,6 +1,6 @@
-import init from "./wasm/heapswap_browser.js"
-import * as _heapswap from "./wasm/heapswap_browser.js"
-export * from "./wasm/heapswap_browser.js"
+import init from "./wasm/heapswap_core.js"
+import * as _heapswap from "./wasm/heapswap_core.js"
+export * from "./wasm/heapswap_core.js"
 
 enum LogLevel {
 	Error = "Error",
