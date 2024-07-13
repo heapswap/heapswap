@@ -1,5 +1,5 @@
-import init from "./pkg/heapswap_browser.js"
-export * from "./pkg/heapswap_browser.js"
+import init from "./pkg/heapswap_core.js"
+export * from "./pkg/heapswap_core.js"
 export { init }
 
 const encoder = new TextEncoder()

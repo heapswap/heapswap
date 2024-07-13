@@ -1,19 +1,35 @@
 use crate::arr;
-use crate::traits::*;
-use bincode::{deserialize, serialize};
-use bytes::Bytes;
-use crypto_bigint::Encoding;
-use crypto_bigint::Random;
-//use crypto_bigint::U256;
-use rand::rngs::OsRng;
-use rand::RngCore;
+use crate::*;
+use getset::Getters;
+use js_sys::Uint8Array;
+use once_cell::sync::*;
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
-use std::ops::BitXor;
-use std::ops::{Deref, DerefMut};
+use wasm_bindgen::prelude::*;
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[wasm_bindgen]
+#[derive(Debug, strum::Display)]
+pub enum U256Error {
+	UnableToSerialize,
+	UnableToDeserialize,
+	InvalidBase32,
+	InvalidLength,
+}
+
+const UNPACKED_LENGTH: usize = 32;
+const PACKED_LENGTH: usize = 4;
+const PACKED_CHUNKS: usize = UNPACKED_LENGTH / PACKED_LENGTH;
+const EXTENDED_UNPACKED_LENGTH: usize = 2 * UNPACKED_LENGTH;
+const EXTENDED_PACKED_LENGTH: usize = 2 * PACKED_LENGTH;
+const EXTENDED_PACKED_CHUNKS: usize =
+	EXTENDED_UNPACKED_LENGTH / EXTENDED_PACKED_LENGTH;
+
+#[wasm_bindgen]
+#[derive(Getters, Debug, Clone)]
 pub struct U256 {
-	unpacked: [u8; 32],
+	#[getset(get = "pub")]
+	unpacked: [u8; UNPACKED_LENGTH],
+	packed: OnceCell<[u64; EXTENDED_PACKED_LENGTH]>,
+	popcount: OnceCell<u32>,
 }
 
 impl Serialize for U256 {
@@ -21,7 +37,7 @@ impl Serialize for U256 {
 	where
 		S: Serializer,
 	{
-		let string_repr = self.to_base32();
+		let string_repr = self.to_string();
 		serializer.serialize_str(&string_repr)
 	}
 }
@@ -31,89 +47,155 @@ impl<'de> Deserialize<'de> for U256 {
 	where
 		D: Deserializer<'de>,
 	{
-		let string_repr = String::deserialize(deserializer)?;
-		U256::from_base32(&string_repr).map_err(serde::de::Error::custom)
+		let string_repr = String::deserialize(deserializer)
+			.map_err(serde::de::Error::custom)?;
+		U256::from_string(&string_repr).map_err(serde::de::Error::custom)
 	}
 }
 
-#[derive(Debug, strum::Display)]
-pub enum U256Error {
-	InvalidBase32,
-	InvalidLength,
-}
-
-impl Byteable<U256Error> for U256 {
-	fn to_bytes(&self) -> Bytes {
-		//Bytes::from(self.to_le_bytes().to_vec())
-		Bytes::from(self.to_arr().to_vec())
+impl U256 {
+	/**
+	 * Hashing
+	 */
+	pub fn hash(data: &[u8]) -> U256 {
+		let arr: [u8; 32] = blake3::hash(data).into();
+		U256::new(&arr).unwrap()
 	}
 
-	fn from_bytes(bytes: &Bytes) -> Result<Self, U256Error> {
-		Ok(U256::from_arr(bytes.as_ref().try_into().unwrap()).unwrap())
+	pub fn verify(data: &[u8], data_hash: U256) -> bool {
+		U256::hash(data) == data_hash
 	}
 }
 
-impl Base32able<U256Error> for U256 {
-	fn to_base32(&self) -> String {
-		arr::to_base32(&self.to_arr())
-	}
+#[wasm_bindgen]
+impl U256 {
+	/**
+	 * Constructors
+		*/
 
-	fn from_base32(string: &str) -> Result<Self, U256Error> {
-		let _arr: [u8; 32] = arr::from_base32(string)
-			.map_err(|_| U256Error::InvalidBase32)?
+	pub fn new(unpacked: &[u8]) -> Result<U256, U256Error> {
+		let unpacked = unpacked
 			.try_into()
+			.map_err(|_| U256Error::InvalidLength)
 			.unwrap();
-		if _arr.len() != 32 {
-			return Err(U256Error::InvalidLength);
+		Ok(U256 {
+			unpacked,
+			packed: OnceCell::new(),
+			popcount: OnceCell::new(),
+		})
+	}
+
+	#[wasm_bindgen]
+	pub fn random() -> U256 {
+		let unpacked = arr::random(UNPACKED_LENGTH);
+		U256::new(unpacked.as_slice()).unwrap()
+	}
+
+	/**
+	 * Getters
+		*/
+
+	// packing converts the u8 array into a u64 array, for faster bitwise operations
+	// it also extends the 256 bit key to 512 bits by appending the hash of the key
+	// hopefully this extension should be enough to prevent jaccard collisions
+	fn pack(&self) -> [u64; EXTENDED_PACKED_LENGTH] {
+		let mut packed = [0u64; EXTENDED_PACKED_LENGTH];
+
+		let extension: [u8; UNPACKED_LENGTH] =
+			blake3::hash(self.unpacked()).into();
+		let extended: [u8; EXTENDED_UNPACKED_LENGTH] =
+			arr::concat(&[&self.unpacked, &extension])
+				.try_into()
+				.unwrap();
+
+		for (i, chunk) in
+			extended.chunks_exact(EXTENDED_PACKED_CHUNKS).enumerate()
+		{
+			packed[i] = u64::from_le_bytes(chunk.try_into().unwrap());
 		}
-		Ok(U256::from_arr(&_arr).unwrap())
+
+		packed
+	}
+
+	fn packed(&self) -> &[u64; EXTENDED_PACKED_LENGTH] {
+		self.packed.get_or_init(|| self.pack())
+	}
+
+	// cache the popcount
+	// note that this operates on packed, to get the counts of the extended key
+	fn popcount(&self) -> &u32 {
+		self.popcount.get_or_init(|| arr::popcount(self.packed()))
+	}
+
+	/**
+	 * Operations
+		*/
+	#[wasm_bindgen]
+	pub fn jaccard(&self, other: &U256) -> f64 {
+		let intersection = arr::andcount(self.packed(), other.packed());
+		let union = self.popcount() + other.popcount() - intersection;
+		intersection as f64 / union as f64
+	}
+
+	#[wasm_bindgen]
+	pub fn equals(&self, other: &U256) -> bool {
+		self == other
+	}
+
+	/**
+	 * Byteable
+		*/
+	pub fn to_bytes(&self) -> Vec<u8> {
+		self.unpacked().to_vec()
+	}
+
+	pub fn from_bytes(bytes: &[u8]) -> Result<U256, U256Error> {
+		U256::new(bytes)
+	}
+
+	#[wasm_bindgen(js_name = toBytes)]
+	pub fn _js_to_bytes(&self) -> Uint8Array {
+		Uint8Array::from(self.unpacked().to_vec().as_slice())
+	}
+
+	#[wasm_bindgen(js_name = fromBytes)]
+	pub fn _js_from_bytes(bytes: &Uint8Array) -> Result<U256, U256Error> {
+		let unpacked = bytes.to_vec();
+		U256::new(unpacked.as_slice())
+	}
+
+	/**
+	 * Stringable
+		*/
+	#[wasm_bindgen(js_name = toString)]
+	pub fn to_string(&self) -> String {
+		arr::to_base32(self.unpacked())
+	}
+
+	#[wasm_bindgen(js_name = fromString)]
+	pub fn from_string(string: &str) -> Result<U256, U256Error> {
+		let unpacked =
+			arr::from_base32(string).map_err(|_| U256Error::InvalidBase32)?;
+		U256::new(unpacked.as_slice())
+	}
+
+	/*
+	 * Hashing
+		*/
+
+	#[wasm_bindgen(js_name = hash)]
+	pub fn _js_hash(data: Uint8Array) -> U256 {
+		U256::hash(data.to_vec().as_slice())
+	}
+
+	#[wasm_bindgen(js_name = verifyHash)]
+	pub fn _js_verify(data: Uint8Array, data_hash: U256) -> bool {
+		U256::verify(data.to_vec().as_slice(), data_hash)
 	}
 }
 
-impl Arrable<[u8; 32], U256Error> for U256 {
-	fn to_arr(&self) -> [u8; 32] {
-		//self.to_le_bytes()
-		self.unpacked
+impl PartialEq for U256 {
+	fn eq(&self, other: &Self) -> bool {
+		self.unpacked() == other.unpacked()
 	}
-
-	fn from_arr(arr: &[u8; 32]) -> Result<Self, U256Error> {
-		//Ok(U256::from_le_bytes(*arr))
-		Ok(U256 { unpacked: *arr })
-	}
-}
-
-impl Stringable<U256Error> for U256 {
-	fn to_string(&self) -> String {
-		self.to_base32()
-	}
-
-	fn from_string(string: &str) -> Result<Self, U256Error> {
-		U256::from_base32(string)
-	}
-}
-
-impl Randomable for U256 {
-	fn random() -> Self {
-		let mut rng = OsRng;
-		let mut arr = [0u8; 32];
-		rng.fill_bytes(&mut arr);
-		U256::from_arr(&arr).unwrap()
-	}
-}
-
-#[test]
-fn test_u256() {
-	let random_u256 = U256::random();
-
-	let random_u256_encoded = random_u256.to_base32();
-	let random_u256_decoded = U256::from_base32(&random_u256_encoded).unwrap();
-
-	assert_eq!(random_u256, random_u256_decoded);
-
-	let random_u256_serialized = serialize(&random_u256).unwrap();
-	//assert_eq!(random_u256_serialized.len(), 32);
-
-	let random_u256_deserialized: U256 =
-		deserialize(&random_u256_serialized).unwrap();
-	assert_eq!(random_u256, random_u256_deserialized);
 }

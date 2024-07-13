@@ -20,6 +20,8 @@ pub fn echo() {
 			.send(Message::Text(String::from("test 2")))
 			.await
 			.unwrap();
+		
+		write.close().await.unwrap();
 	});
 
 	spawn_local(async move {

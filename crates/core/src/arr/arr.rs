@@ -1,13 +1,14 @@
 use base32::Alphabet;
 use num_traits::PrimInt;
 use rand::{Rng, RngCore};
-use std::convert::TryInto;
+//use std::convert::TryInto;
 use std::ops::BitXor;
 
 /**
  * Errors
 */
 
+#[derive(Debug)]
 pub enum ArrError {
 	InvalidBase32,
 }
@@ -118,4 +119,15 @@ where
 	T: PrimInt + BitXor<Output = T> + BitXor, // Ensure T supports XOR and is a primitive integer
 {
 	a.iter().map(|&a| a.count_ones()).sum()
+}
+
+// jaccard distance
+pub fn jaccard<T, const N: usize>(a: &[T; N], b: &[T; N]) -> f64
+where
+	T: PrimInt + BitXor<Output = T> + BitXor, // Ensure T supports XOR and is a primitive integer
+{
+	let intersection = andcount(a, b);
+	let union = popcount(a) + popcount(b) - intersection;
+
+	intersection as f64 / union as f64
 }

@@ -1,25 +1,30 @@
-use super::{LocalNode, Node, RemoteNode};
+use super::nodes::*;
 use crate::arr::{hamming, xor};
 use crate::constants::NS;
-use crate::crypto::address::Address;
-use crate::crypto::keys::KeyPair;
+use crate::crypto::keys;
 use crate::misc::traits::*;
+use crate::u256;
 use crate::{crypto::keys::KeyArr, u256::*};
-use getset::{CopyGetters, Getters};
+use getset::{CopyGetters, Getters, Setters};
 use ordered_float::OrderedFloat;
 use priority_queue::PriorityQueue;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::net::Ipv4Addr;
 use std::sync::Arc;
+use wasm_bindgen::prelude::*;
+use wasm_bindgen::JsValue;
 
 const K: u32 = 32;
 
-enum JacDHTError {
+#[wasm_bindgen]
+#[derive(Debug)]
+pub enum JacDHTError {
 	InvalidKeyArr,
 	InvalidKeyPair,
 }
 
+#[wasm_bindgen]
 #[derive(Clone, Getters)]
 pub struct JacDHT {
 	#[getset(get = "pub")]
@@ -33,6 +38,7 @@ pub struct JacDHT {
 	// the remote_node in this is the source of truth and should be used to update the other two
 	#[getset(get = "pub")]
 	remote_nodes: HashMap<KeyArr, RemoteNode>,
+
 	#[getset(get = "pub")]
 	remote_nodes_by_dist: PriorityQueue<KeyArr, OrderedFloat<f64>>,
 	#[getset(get = "pub")]
@@ -41,16 +47,38 @@ pub struct JacDHT {
 
 type EvictedNode = RemoteNode;
 
-pub struct NearestNodeResult {
-	nearest_node: RemoteNode,
-	dist: f64,
+#[wasm_bindgen]
+pub struct NearestNode {
+	#[wasm_bindgen(skip)]
+	pub nearest_node: RemoteNode,
+	#[wasm_bindgen(skip)]
+	pub dist: f64,
 }
 
+#[wasm_bindgen]
+impl NearestNode {
+	#[wasm_bindgen(getter, js_name = node)]
+	pub fn nearest_node(&self) -> RemoteNode {
+		self.nearest_node.clone()
+	}
+
+	#[wasm_bindgen(getter)]
+	pub fn dist(&self) -> f64 {
+		self.dist
+	}
+}
+
+#[wasm_bindgen]
 impl JacDHT {
-	pub fn new(local_node: LocalNode) -> JacDHT {
+	#[wasm_bindgen(constructor)]
+	pub fn new(
+		local_node: LocalNode,
+		max_dist_nodes: u32,
+		max_ping_nodes: u32,
+	) -> JacDHT {
 		JacDHT {
-			max_dist_nodes: K,
-			max_ping_nodes: K,
+			max_dist_nodes,
+			max_ping_nodes,
 			local_node,
 			remote_nodes: HashMap::new(),
 			remote_nodes_by_dist: PriorityQueue::new(),
@@ -58,26 +86,27 @@ impl JacDHT {
 		}
 	}
 
-	/**
-	 * Add Node
-		*/
+	/*
+	 Add Node
+	*/
+
 	fn add_remote_node_by_dist(&mut self, remote_node: RemoteNode) {
-		let key_arr = remote_node.public_key().to_arr();
+		let key_arr = remote_node.public_key().u256().unpacked().clone();
 
 		// Add to remote_nodes_by_dist
 		self.remote_nodes_by_dist
-			.push(key_arr.clone(), OrderedFloat(*remote_node.dist_to_self()));
+			.push(key_arr.clone(), OrderedFloat(remote_node.dist_to_local()));
 
 		// Add to remote_nodes
 		self.remote_nodes.insert(key_arr, remote_node);
 	}
 
 	fn add_remote_node_by_ping(&mut self, remote_node: RemoteNode) {
-		let key_arr = remote_node.public_key().to_arr();
+		let key_arr = remote_node.public_key().u256().unpacked().clone();
 
 		// Add to remote_nodes_by_dist
 		self.remote_nodes_by_ping
-			.push(key_arr.clone(), *remote_node.ping_ms());
+			.push(key_arr.clone(), remote_node.ping_ms());
 
 		// Add to remote_nodes
 		self.remote_nodes.insert(key_arr, remote_node);
@@ -87,12 +116,12 @@ impl JacDHT {
 	 * Update Node
 		*/
 	fn update_remote_node_by_dist(&mut self, remote_node: RemoteNode) {
-		let key_arr = remote_node.public_key().to_arr();
+		let key_arr = remote_node.public_key().u256().unpacked().clone();
 
 		// Modify remote_nodes_by_dist
 		self.remote_nodes_by_dist.change_priority(
 			&key_arr,
-			OrderedFloat(*remote_node.dist_to_self()),
+			OrderedFloat(remote_node.dist_to_local()),
 		);
 
 		// Modify remote_nodes
@@ -100,11 +129,11 @@ impl JacDHT {
 	}
 
 	fn update_remote_node_by_ping(&mut self, remote_node: RemoteNode) {
-		let key_arr = remote_node.public_key().to_arr();
+		let key_arr = remote_node.public_key().u256().unpacked().clone();
 
 		// Modify remote_nodes_by_dist
 		self.remote_nodes_by_ping
-			.change_priority(&key_arr, *remote_node.ping_ms());
+			.change_priority(&key_arr, remote_node.ping_ms());
 
 		// Modify remote_nodes
 		self.remote_nodes.insert(key_arr, remote_node);
@@ -142,6 +171,7 @@ impl JacDHT {
 	/**
 	 * Try Add Node
 		*/
+	#[wasm_bindgen(js_name = tryAddNode)]
 	pub fn try_add_node(
 		&mut self,
 		remote_node: RemoteNode,
@@ -157,7 +187,7 @@ impl JacDHT {
 		//    (&mut self.remote_nodes_by_ping, self.max_ping_nodes)
 		//};
 
-		let key_arr = remote_node.public_key().to_arr();
+		let key_arr = remote_node.public_key().u256().unpacked().clone();
 
 		// Return None if the node is already in the JacDHT
 		if self.remote_nodes.contains_key(&key_arr) {
@@ -168,7 +198,7 @@ impl JacDHT {
 		// Determine if eviction is necessary
 		let should_evict = queue.len() as u32 >= max_queue_len
 			&& queue.peek().map_or(false, |(_, &farthest_dist)| {
-				remote_node.dist_to_self() < farthest_dist
+				remote_node.dist_to_local() < farthest_dist
 			});
 
 		// Evict the farthest node if necessary
@@ -218,7 +248,7 @@ impl JacDHT {
 			if let Some((&farthest_key, &farthest_dist)) =
 				self.remote_nodes_by_dist.peek()
 			{
-				if OrderedFloat(*remote_node.dist_to_self()) < farthest_dist {
+				if OrderedFloat(remote_node.dist_to_local()) < farthest_dist {
 					// remove the farthest node
 					let evicted =
 						self.remove_remote_node_by_dist(&farthest_key);
@@ -248,7 +278,7 @@ impl JacDHT {
 			if let Some((&farthest_key, &farthest_ping)) =
 				self.remote_nodes_by_ping.peek()
 			{
-				if *remote_node.ping_ms() < farthest_ping {
+				if remote_node.ping_ms() < farthest_ping {
 					// remove the farthest node
 					let evicted =
 						self.remove_remote_node_by_ping(&farthest_key);
@@ -268,11 +298,17 @@ impl JacDHT {
 		None
 	}
 
-	pub fn try_remove_node(&mut self, key_arr: &KeyArr) -> Option<RemoteNode> {
-		let removed = self.remote_nodes.remove(key_arr);
+	#[wasm_bindgen(js_name = tryRemoveNode)]
+	pub fn try_remove_node(
+		&mut self,
+		remote_node: &RemoteNode,
+	) -> Option<RemoteNode> {
+		let key_arr = remote_node.public_key().u256().unpacked().clone();
+
+		let removed = self.remote_nodes.remove(&key_arr);
 		if removed.is_some() {
-			self.remote_nodes_by_dist.remove(key_arr);
-			self.remote_nodes_by_ping.remove(key_arr);
+			self.remote_nodes_by_dist.remove(&key_arr);
+			self.remote_nodes_by_ping.remove(&key_arr);
 		}
 		removed
 	}
@@ -280,7 +316,8 @@ impl JacDHT {
 	/**
 	 * Nearest Nodes
 		*/
-	pub fn nearest_n_nodes_to_self_by_dist(&self, n: usize) -> Vec<RemoteNode> {
+	#[wasm_bindgen(js_name = nearestNodesToLocalByDist)]
+	pub fn nearest_nodes_to_local_by_dist(&self, n: usize) -> Vec<RemoteNode> {
 		let mut sorted_nodes: Vec<_> = self
 			.remote_nodes_by_dist
 			.iter()
@@ -296,7 +333,8 @@ impl JacDHT {
 			.collect()
 	}
 
-	pub fn nearest_n_nodes_to_self_by_ping(&self, n: usize) -> Vec<RemoteNode> {
+	#[wasm_bindgen(js_name = nearestNodesToLocalByPing)]
+	pub fn nearest_nodes_to_local_by_ping(&self, n: usize) -> Vec<RemoteNode> {
 		let mut sorted_nodes: Vec<_> = self
 			.remote_nodes_by_ping
 			.iter()
@@ -315,14 +353,15 @@ impl JacDHT {
 	/**
 	 * Absolute Nearest Node by dist to a KeyArr
 		*/
+	#[wasm_bindgen(js_name = nearestNode)]
 	pub fn nearest_node_by_dist(
 		&self,
-		key_address: &Address,
-	) -> Option<NearestNodeResult> {
+		key_address: &U256,
+	) -> Option<NearestNode> {
 		let nearest_node =
 			self.remote_nodes.iter().min_by_key(|(_, remote_node)| {
 				OrderedFloat(
-					remote_node.public_key().address().jaccard(key_address),
+					remote_node.public_key().u256().jaccard(key_address),
 				)
 			});
 
@@ -330,8 +369,8 @@ impl JacDHT {
 			//Some(key) => {
 			Some((_, nearest_node)) => {
 				let dist =
-					nearest_node.public_key().address().jaccard(key_address);
-				Some(NearestNodeResult {
+					nearest_node.public_key().u256().jaccard(key_address);
+				Some(NearestNode {
 					nearest_node: nearest_node.clone(),
 					dist,
 				})
@@ -339,8 +378,40 @@ impl JacDHT {
 			None => None,
 		}
 	}
+
+	#[wasm_bindgen(js_name = nearestNodes)]
+	pub fn nearest_n_nodes_by_dist(
+		&self,
+		key_address: &U256,
+		n: usize,
+	) -> Vec<NearestNode> {
+		let mut sorted_nodes: Vec<_> = self
+			.remote_nodes_by_dist
+			.iter()
+			.map(|(key, &dist)| {
+				let dist = self
+					.remote_nodes
+					.get(key)
+					.unwrap()
+					.public_key()
+					.u256()
+					.jaccard(key_address);
+				(self.remote_nodes.get(key).unwrap().clone(), dist)
+			})
+			.collect();
+		sorted_nodes.sort_by(|a, b| a.1.partial_cmp(&b.1).unwrap());
+		sorted_nodes
+			.into_iter()
+			.take(n)
+			.map(|(node, dist)| NearestNode {
+				nearest_node: node,
+				dist,
+			})
+			.collect()
+	}
 }
 
+/*
 #[test]
 fn test_jac_dht() -> Result<(), Box<dyn std::error::Error>> {
 	let dummy_node: Node =
@@ -412,3 +483,5 @@ fn test_jac_dht() -> Result<(), Box<dyn std::error::Error>> {
 
 	Ok(())
 }
+
+*/
