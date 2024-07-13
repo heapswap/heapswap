@@ -197,7 +197,7 @@ rayon = { version = "1.10.0" }
 libp2p-websocket-websys = { version = "0.3.2" }
 ### Web
 web-sys = { version = "0.3.69" } # Bindings for all Web APIs
-gloo-utils = { version = "0.2.0" } # Convenience crate for common `web_sys` features
+gloo = { version = "0.11.0" } # Convenience crate for common `web_sys` features
 js-sys = { version = "0.3.69" } # Bindings for all JS global objects and functions in all JS environments like Node.js and browsers
 console_error_panic_hook = { version = "0.1.7" }
 stdweb = { version = "0.4.20" } # JS-Rust interoperability
@@ -250,3 +250,4 @@ num-traits = { version = "0.2" } # Traits for numeric types
 chrono = { version = "0.4.38", features = ["serde"] } # Time
 ordered-float = { version = "4.2.1" }
 #num-traits = {version = "0.2.19"}
+pin-utils = { version = "0.1.0" }

@@ -8,6 +8,7 @@
 	},
 	"dependencies": {},
 	"devDependencies": {
+		"kahn": "latest",
 		"@types/bun": "latest"
 	},
 	"peerDependencies": {

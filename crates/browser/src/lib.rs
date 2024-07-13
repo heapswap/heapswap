@@ -16,6 +16,7 @@ use wasm_bindgen::prelude::*;
 pub mod arr;
 pub mod crypto;
 pub mod jac_dht;
+pub mod networking;
 
 // try to set the global default subscriber
 pub fn try_set_as_global_default_with_config(

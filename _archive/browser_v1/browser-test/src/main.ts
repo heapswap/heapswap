@@ -1,5 +1,5 @@
-import * as heapswap from "./heapswap.ts";
+import * as heapswap from "./heapswap.ts"
 
-console.log("connecting");
-await heapswap.connect();
-console.log("connected");
+console.log("connecting")
+await heapswap.connect()
+console.log("connected")

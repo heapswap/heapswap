@@ -53,6 +53,20 @@ impl<'de> Deserialize<'de> for U256 {
 	}
 }
 
+impl U256 {
+	/**
+	 * Hashing
+	 */
+	pub fn hash(data: &[u8]) -> U256 {
+		let arr: [u8; 32] = blake3::hash(data).into();
+		U256::new(&arr).unwrap()
+	}
+
+	pub fn verify(data: &[u8], data_hash: U256) -> bool {
+		U256::hash(data) == data_hash
+	}
+}
+
 #[wasm_bindgen]
 impl U256 {
 	/**
@@ -69,12 +83,6 @@ impl U256 {
 			packed: OnceCell::new(),
 			popcount: OnceCell::new(),
 		})
-	}
-
-	#[wasm_bindgen(js_name = new, constructor)]
-	pub fn from_uint8array(unpacked: Uint8Array) -> Result<U256, U256Error> {
-		let unpacked = unpacked.to_vec();
-		U256::new(unpacked.as_slice())
 	}
 
 	#[wasm_bindgen]
@@ -137,13 +145,21 @@ impl U256 {
 	/**
 	 * Byteable
 		*/
+	pub fn to_bytes(&self) -> Vec<u8> {
+		self.unpacked().to_vec()
+	}
+
+	pub fn from_bytes(bytes: &[u8]) -> Result<U256, U256Error> {
+		U256::new(bytes)
+	}
+
 	#[wasm_bindgen(js_name = toBytes)]
-	pub fn to_bytes(&self) -> Uint8Array {
+	pub fn _js_to_bytes(&self) -> Uint8Array {
 		Uint8Array::from(self.unpacked().to_vec().as_slice())
 	}
 
 	#[wasm_bindgen(js_name = fromBytes)]
-	pub fn from_bytes(bytes: &Uint8Array) -> Result<U256, U256Error> {
+	pub fn _js_from_bytes(bytes: &Uint8Array) -> Result<U256, U256Error> {
 		let unpacked = bytes.to_vec();
 		U256::new(unpacked.as_slice())
 	}
@@ -161,6 +177,20 @@ impl U256 {
 		let unpacked =
 			arr::from_base32(string).map_err(|_| U256Error::InvalidBase32)?;
 		U256::new(unpacked.as_slice())
+	}
+
+	/*
+	 * Hashing
+		*/
+
+	#[wasm_bindgen(js_name = hash)]
+	pub fn _js_hash(data: Uint8Array) -> U256 {
+		U256::hash(data.to_vec().as_slice())
+	}
+
+	#[wasm_bindgen(js_name = verifyHash)]
+	pub fn _js_verify(data: Uint8Array, data_hash: U256) -> bool {
+		U256::verify(data.to_vec().as_slice(), data_hash)
 	}
 }
 

@@ -3,6 +3,7 @@
 Heapswap is a standardized collection of WASM utility functions for [Subfield](https://subfield.org).
 
 # Installation
+
 ```bash
 npm install heapswap
 ```
@@ -10,9 +11,9 @@ npm install heapswap
 # Usage
 
 ```javascript
-import * as hs from "heapswap";
+import * as hs from "heapswap"
 
-await hs.init(); // Initialize the WASM module
+await hs.init() // Initialize the WASM module
 ```
 
 # Features
@@ -79,26 +80,66 @@ const verified = keypair.verify(message: Uint8Array, signature: U256): boolean
 const sharedSecret = keypair.sharedSecret(publicKey: PublicKey): U256
 ```
 
+### Noise (Noise_NN_25519_ChaChaPoly_BLAKE2s)
+
+#### Constructors
+
+```javascript
+// The client creates a Noise initiator
+const initiator = hs.Noise.initiator()
+// The server creates a Noise responder
+const responder = hs.Noise.responder()
+```
+
+#### Handshake
+
+```javascript
+// step 1 : initiator -> responder
+let message1 = initiator.handshakeStep1()
+
+// step 2 : responder -> initiator
+let message2 = responder.handshakeStep2(message1)
+
+// step 3 : initiator -> responder
+initiator.handshakeStep3(message2)
+```
+
+#### Usage
+
+```javascript
+const helloMessage = hs.fromString("hello")
+
+// initiator -> responder
+let encrypted = initiator.encrypt(helloMessage)
+let decrypted = responder.decrypt(encrypted)
+
+// responder -> initiator
+encrypted = responder.encrypt(helloMessage)
+decrypted = initiator.decrypt(encrypted)
+```
+
 ## JacDHT
 
 JacDHT is a DHT that uses [Jaccard Similarity](https://en.wikipedia.org/wiki/Jaccard_index) for its routing. This is much more computationally expensive than XOR distance (finding the nearest node is O(n) instead of O(log(n))) and has the potential for collisions. But, if it works, it should allow routing based on vector similarity.
 
-```javascript
-// Nodes
+### Nodes
 
-// LocalNode is the local node, and requires a full keypair
+```javascript
+// LocalNode represents the instance and requires a full keypair
 const localNode = new hs.LocalNode(obj: Object, keypair: Keypair): LocalNode
 
-// RemoteNode is a remote node, and requires only a public key
+// RemoteNode represents other instances and requires only a public key
 const remoteNode = new hs.RemoteNode(
 	obj: Object,
 	publicKey: PublicKey,
 	localNode: LocalNode, // used to calculate the jaccard similarity to self
 	pingMs: number,
 ): RemoteNode
+```
 
+### DHT
 
-// DHT
+```javascript
 const dht = new hs.JacDHT(
 	localNode: LocalNode,
 	maxDistNodes: number, // Recommended: 32
@@ -122,9 +163,9 @@ dht.nearestNodesToLocalByPing(n: number): NearestNode[]
 
 ## Misc
 
-```javascript
-// Bytes
+### Byte Conversions
 
+```javascript
 // String encoding
 hs.toString(bytes: Uint8Array): string
 hs.fromString(str: string): Uint8Array

@@ -1,44 +1,44 @@
-import { useEffect, useState } from "react";
-import ky from "ky";
-import init from "./wasm/heapswap_browser.js";
-import * as hs from "./wasm/heapswap_browser.js";
+import { useEffect, useState } from "react"
+import ky from "ky"
+import init from "./wasm/heapswap_browser.js"
+import * as hs from "./wasm/heapswap_browser.js"
 //export * from "./wasm/heapswap_browser.js"
 
 function App() {
-	const [bootstrapAddrs, setBootstrapAddrs] = useState([] as string[]);
+	const [bootstrapAddrs, setBootstrapAddrs] = useState([] as string[])
 
 	useEffect(() => {
 		const fetchBootstrapAddrs = async () => {
 			// initalize the wasm runtime
-			await init();
+			await init()
 
 			// init the logging
-			await hs.init_logging();
+			await hs.init_logging()
 
 			// fetch the bootstrap addresses
 			const addrs: string[] = await ky
 				.get("http://localhost:3000/bootstrap")
-				.json();
-			setBootstrapAddrs(addrs);
-			console.log("addrs:", addrs);
+				.json()
+			setBootstrapAddrs(addrs)
+			console.log("addrs:", addrs)
 
 			// create the config
-			const config = new hs.Config(addrs);
-			await hs.initialize(config);
+			const config = new hs.Config(addrs)
+			await hs.initialize(config)
 
 			// start the main loop
-			console.log("entering main loop (js)");
+			console.log("entering main loop (js)")
 			//hs.main();
 
-			hs.connect();
+			hs.connect()
 
-			hs.create_unordered_list_of_connected_multiaddrs();
-		};
+			hs.create_unordered_list_of_connected_multiaddrs()
+		}
 
-		fetchBootstrapAddrs();
-	}, []); // Empty dependency array means this effect runs once on mount
+		fetchBootstrapAddrs()
+	}, []) // Empty dependency array means this effect runs once on mount
 
-	console.log(bootstrapAddrs);
+	console.log(bootstrapAddrs)
 
 	return (
 		<>
@@ -55,7 +55,7 @@ function App() {
 			<h1>Connected Addresses</h1>
 			<div id="connected-addresses"></div>
 		</>
-	);
+	)
 }
 
-export default App;
+export default App

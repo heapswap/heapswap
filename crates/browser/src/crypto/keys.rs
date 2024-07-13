@@ -189,16 +189,23 @@ impl PublicKey {
 		Ok(PublicKey::from_u256(u256))
 	}
 
-	#[wasm_bindgen(js_name = toBytes)]
-	pub fn to_bytes(&self) -> Uint8Array {
+	pub fn to_bytes(&self) -> Vec<u8> {
 		self.u256.to_bytes()
 	}
 
-	#[wasm_bindgen(js_name = fromBytes)]
-	pub fn from_bytes(bytes: &Uint8Array) -> Result<PublicKey, KeyError> {
-		let u256 =
-			U256::from_bytes(bytes).map_err(|_| KeyError::InvalidPublicKey)?;
+	#[wasm_bindgen(js_name = toBytes)]
+	pub fn _js_to_bytes(&self) -> Uint8Array {
+		Uint8Array::from(self.to_bytes().as_slice())
+	}
+
+	pub fn from_bytes(bytes: &[u8]) -> Result<PublicKey, KeyError> {
+		let u256 = U256::new(bytes).map_err(|_| KeyError::InvalidPublicKey)?;
 		Ok(PublicKey::from_u256(u256))
+	}
+
+	#[wasm_bindgen(js_name = fromBytes)]
+	pub fn _js_from_bytes(bytes: &Uint8Array) -> Result<PublicKey, KeyError> {
+		PublicKey::from_bytes(&bytes.to_vec().as_slice())
 	}
 }
 
@@ -292,15 +299,18 @@ impl PrivateKey {
 	}
 
 	#[wasm_bindgen]
-	pub fn to_bytes(&self) -> Uint8Array {
+	pub fn to_bytes(&self) -> Vec<u8> {
 		self.u256.to_bytes()
 	}
 
-	#[wasm_bindgen(js_name = fromBytes)]
-	pub fn from_bytes(bytes: &Uint8Array) -> Result<PrivateKey, KeyError> {
-		let u256 =
-			U256::from_bytes(bytes).map_err(|_| KeyError::InvalidPrivateKey)?;
+	pub fn from_bytes(bytes: &[u8]) -> Result<PrivateKey, KeyError> {
+		let u256 = U256::new(bytes).map_err(|_| KeyError::InvalidPrivateKey)?;
 		Ok(PrivateKey::from_u256(u256))
+	}
+
+	#[wasm_bindgen(js_name = fromBytes)]
+	pub fn _js_from_bytes(bytes: &Uint8Array) -> Result<PrivateKey, KeyError> {
+		PrivateKey::from_bytes(&bytes.to_vec().as_slice())
 	}
 }
 
@@ -373,10 +383,6 @@ impl Keypair {
 				arr::to_base32(&private_key.verifying_key().to_bytes());
 
 			if public_key_string.starts_with(prefix) {
-				//tracing::info!(
-				//	"Found vanity keypair after {} iterations",
-				//	counter
-				//);
 				return Ok(Keypair::new(
 					PrivateKey::new(Uint8Array::from(
 						private_key.to_bytes().as_ref(),
@@ -389,7 +395,7 @@ impl Keypair {
 	}
 
 	/**
-	 * Conversions
+	 * Stringable
 		*/
 	#[wasm_bindgen]
 	pub fn to_string(&self) -> String {
@@ -414,16 +420,22 @@ impl Keypair {
 		Keypair::new(private_key).map_err(|_| KeyError::InvalidKeypair)
 	}
 
-	#[wasm_bindgen]
-	pub fn to_bytes(&self) -> Uint8Array {
+	/**
+	 * Byteable
+		*/
+
+	pub fn to_bytes(&self) -> Vec<u8> {
 		let mut bytes = self.private_key().to_bytes().to_vec();
 		bytes.extend(self.public_key().to_bytes().to_vec());
-		Uint8Array::from(bytes.as_slice())
+		bytes
 	}
 
-	#[wasm_bindgen(js_name = fromBytes)]
-	pub fn from_bytes(bytes: &Uint8Array) -> Result<Keypair, KeyError> {
-		let bytes = bytes.to_vec();
+	#[wasm_bindgen(js_name = toBytes)]
+	pub fn _js_to_bytes(&self) -> Uint8Array {
+		Uint8Array::from(self.to_bytes().to_vec().as_slice())
+	}
+
+	pub fn from_bytes(bytes: &[u8]) -> Result<Keypair, KeyError> {
 		let private_key = PrivateKey::from_u256(
 			U256::new(&bytes[..SECRET_KEY_LENGTH])
 				.map_err(|_| KeyError::InvalidPrivateKey)?,
@@ -434,5 +446,10 @@ impl Keypair {
 		);
 
 		Keypair::new(private_key).map_err(|_| KeyError::InvalidKeypair)
+	}
+
+	#[wasm_bindgen(js_name = fromBytes)]
+	pub fn _js_from_bytes(bytes: &Uint8Array) -> Result<Keypair, KeyError> {
+		Keypair::from_bytes(&bytes.to_vec().as_slice())
 	}
 }
