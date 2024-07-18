@@ -6,8 +6,12 @@ use std::iter::Once;
 //use derive_more::{Display, Error};
 use getset::{CopyGetters, Getters, MutGetters, Setters};
 use js_sys::Uint8Array;
+use wasm_bindgen::prelude::*;
+
+
 use rand::rngs::OsRng;
 use rand::RngCore;
+use serde::{Deserialize, Serialize};
 
 use crate::arr::{hamming, xor};
 use crate::traits::*;
@@ -17,7 +21,6 @@ use ed25519_dalek::{
 };
 use ed25519_dalek::{PUBLIC_KEY_LENGTH, SECRET_KEY_LENGTH, SIGNATURE_LENGTH};
 use once_cell::sync::OnceCell;
-use wasm_bindgen::prelude::*;
 use x25519_dalek::{
 	PublicKey as DalekXPublicKey, SharedSecret as DalekXSharedSecret,
 	StaticSecret as DalekXPrivateKey,
@@ -73,25 +76,29 @@ pub enum KeyError {
  * Structs
 */
 #[wasm_bindgen]
-#[derive(Clone, Getters)]
+#[derive(Clone, Getters, Serialize, Deserialize)]
 pub struct PrivateKey {
 	#[getset(get = "pub")]
 	u256: U256, // edwards25519 private key
+	#[serde(skip)]
 	ed: OnceCell<DalekEdPrivateKey>,
+	#[serde(skip)]
 	x: OnceCell<DalekXPrivateKey>,
 }
 
 #[wasm_bindgen]
-#[derive(Clone, Getters)]
+#[derive(Clone, Getters, Serialize, Deserialize)]
 pub struct PublicKey {
 	#[getset(get = "pub")]
 	u256: U256, // edwards25519 public key
+	#[serde(skip)]
 	ed: OnceCell<DalekEdPublicKey>,
+	#[serde(skip)]
 	x: OnceCell<DalekXPublicKey>,
 }
 
 #[wasm_bindgen]
-#[derive(Clone, Getters)]
+#[derive(Clone, Getters, Serialize, Deserialize)]
 pub struct Keypair {
 	private_key: PrivateKey,
 	public_key: PublicKey,
@@ -167,11 +174,6 @@ impl PublicKey {
 			Ok(_) => Ok(true),
 			Err(_) => Ok(false),
 		}
-	}
-
-	#[wasm_bindgen]
-	pub fn jaccard(&self, public_key: &PublicKey) -> f64 {
-		self.u256().jaccard(&public_key.u256())
 	}
 
 	/**

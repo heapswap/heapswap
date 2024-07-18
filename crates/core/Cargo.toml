@@ -7,8 +7,6 @@ edition = "2021"
 crate-type = ["cdylib"]
 
 [dependencies]
-# Local
-#heapswap_core = { path = "../core" }
 # Crypto
 #crypto-bigint.workspace = true
 #num-bigint.workspace = true
@@ -19,16 +17,15 @@ chacha20poly1305.workspace = true
 curve25519-dalek.workspace = true
 ed25519-dalek.workspace = true
 x25519-dalek.workspace = true
-snow.workspace = true
+#snow.workspace = true
 # Encoding
 base32.workspace = true
 serde.workspace = true
-# Async
-futures.workspace = true
-tokio = {workspace = true, features = ["sync"]}
-# Networking
+serde_bytes.workspace = true
+bincode.workspace = true
+# Datastructures
 bytes.workspace = true
-yamux.workspace = true
+flume.workspace = true
 # Wasm
 wasm-bindgen.workspace = true
 wasm-bindgen-futures = { workspace = true, features = [
@@ -65,6 +62,10 @@ gloo = { workspace = true, features = [
 	#"net ",
 
 ] }
+# Async
+futures.workspace = true
+# Networking
+#yamux.workspace = true
 # Logging
 tracing.workspace = true
 tracing-subscriber.workspace = true
@@ -79,6 +80,92 @@ strum.workspace = true
 ordered-float.workspace = true
 priority-queue.workspace = true
 pin-utils.workspace = true
+chrono.workspace = true
+
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+libp2p = { workspace = true, features = [
+	#"async-std",
+	#"autonat",
+	"cbor",
+	#"dcutr",
+	#"dns",
+	#"ecdsa",
+	"ed25519",
+	#"floodsub",
+	"gossipsub",
+	"identify",
+	"json",
+	"kad",
+	"macros",
+	#"mdns",
+	#"memory-connection-limits",
+	#"metrics",
+	"noise",
+	"ping",
+	#"plaintext",
+	#"pnet",
+	#"quic",
+	"relay",
+	"rendezvous",
+	"request-response",
+	#"rsa",
+	#"secp256k1",
+	"serde",
+	#"tcp",
+	#"tls",
+	#"tokio",
+	#"uds",
+	"wasm-bindgen",
+	"websocket-websys",
+	#"websocket",
+	"webtransport-websys",
+	"yamux",
+	#"upnp",
+
+] }
+
+[target.'cfg(not(target_arch = "wasm32"))'.dependencies]
+libp2p = { workspace = true, features = [
+	#"async-std",
+	#"autonat",
+	"cbor",
+	#"dcutr",
+	"dns",
+	#"ecdsa",
+	"ed25519",
+	#"floodsub",
+	"gossipsub",
+	"identify",
+	"json",
+	"kad",
+	"macros",
+	"mdns",
+	#"memory-connection-limits",
+	#"metrics",
+	"noise",
+	"ping",
+	#"plaintext",
+	#"pnet",
+	"quic",
+	"relay",
+	"rendezvous",
+	"request-response",
+	#"rsa",
+	#"secp256k1",
+	"serde",
+	"tcp",
+	"tls",
+	"tokio",
+	#"uds",
+	#"wasm-bindgen",
+	#"websocket-websys",
+	"websocket",
+	#"webtransport-websys",
+	"yamux",
+	#"upnp",
+
+] }
+tokio = { workspace = true, features = ["full"] }
 
 [dev-dependencies]
 timeit.workspace = true

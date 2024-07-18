@@ -1,6 +1,8 @@
 pkg
 wasm
 browser-test/src/wasm
+_.rs
+
 
 # Logs
 logs

@@ -9,8 +9,8 @@ use wasm_bindgen::prelude::*;
 
 pub type Plaintext = Uint8Array;
 pub type Ciphertext = Uint8Array;
-pub type Secret = U256; //[u8; 32];
-pub type SecretArray = [u8; 32];
+pub type SecretKey = U256; //[u8; 32];
+pub type SecretKeyArray = [u8; 32];
 const NONCE_LENGTH: usize = 12;
 pub type Nonce = Uint8Array; // [u8; NONCE_LENGTH];
 pub type NonceArray = [u8; NONCE_LENGTH];
@@ -76,7 +76,7 @@ impl Cipher {
 		*/
 
 	#[wasm_bindgen(constructor)]
-	pub fn new(secret: Secret) -> Cipher {
+	pub fn new(secret: SecretKey) -> Cipher {
 		let cipher = ChaCha20Poly1305::new(secret.unpacked().into());
 
 		Cipher { secret, cipher }
@@ -86,9 +86,9 @@ impl Cipher {
 	 * Random
 		*/
 
-	#[wasm_bindgen(js_name = randomSecret)]
-	pub fn random_secret() -> Secret {
-		Secret::new(U256::random().unpacked()).unwrap()
+	#[wasm_bindgen(js_name = randomSecretKey)]
+	pub fn random_secret() -> SecretKey {
+		U256::random()
 	}
 
 	#[wasm_bindgen(js_name = encrypt)]

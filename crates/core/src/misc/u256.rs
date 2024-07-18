@@ -18,17 +18,12 @@ pub enum U256Error {
 const UNPACKED_LENGTH: usize = 32;
 const PACKED_LENGTH: usize = 4;
 const PACKED_CHUNKS: usize = UNPACKED_LENGTH / PACKED_LENGTH;
-const EXTENDED_UNPACKED_LENGTH: usize = 2 * UNPACKED_LENGTH;
-const EXTENDED_PACKED_LENGTH: usize = 2 * PACKED_LENGTH;
-const EXTENDED_PACKED_CHUNKS: usize =
-	EXTENDED_UNPACKED_LENGTH / EXTENDED_PACKED_LENGTH;
 
 #[wasm_bindgen]
 #[derive(Getters, Debug, Clone)]
 pub struct U256 {
-	#[getset(get = "pub")]
-	unpacked: [u8; UNPACKED_LENGTH],
-	packed: OnceCell<[u64; EXTENDED_PACKED_LENGTH]>,
+	unpacked: OnceCell<[u8; UNPACKED_LENGTH]>,
+	packed: OnceCell<[u64; PACKED_LENGTH]>,
 	popcount: OnceCell<u32>,
 	string: OnceCell<String>,
 }
@@ -59,12 +54,93 @@ impl U256 {
 	 * Hashing
 	 */
 	pub fn hash(data: &[u8]) -> U256 {
-		let arr: [u8; 32] = blake3::hash(data).into();
-		U256::new(&arr).unwrap()
+		let _hash: [u8; 32] = blake3::hash(data).into();
+		U256::new(_hash)
 	}
 
 	pub fn verify(data: &[u8], data_hash: U256) -> bool {
 		U256::hash(data) == data_hash
+	}
+}
+
+impl U256 {
+	/**
+	 * Constructors
+		*/
+
+	pub fn new(unpacked: [u8; UNPACKED_LENGTH]) -> U256 {
+		U256 {
+			unpacked: OnceCell::from(unpacked),
+			packed: OnceCell::new(),
+			popcount: OnceCell::new(),
+			string: OnceCell::new(),
+		}
+	}
+
+	pub fn new_from_packed(packed: &[u64]) -> U256 {
+		let packed: [u64; PACKED_LENGTH] = packed
+			.try_into()
+			.map_err(|_| U256Error::InvalidLength)
+			.unwrap();
+
+		let unpacked = U256::unpack(&packed);
+
+		U256 {
+			unpacked: OnceCell::from(unpacked),
+			packed: OnceCell::from(packed),
+			popcount: OnceCell::new(),
+			string: OnceCell::new(),
+		}
+	}
+
+	/**
+	 * Getters
+		*/
+
+	fn unpack(packed: &[u64; PACKED_LENGTH]) -> [u8; UNPACKED_LENGTH] {
+		let mut unpacked = [0u8; UNPACKED_LENGTH];
+		packed.iter().enumerate().for_each(|(i, chunk)| {
+			unpacked[i * 8..(i + 1) * 8].copy_from_slice(&chunk.to_le_bytes());
+		});
+		unpacked
+	}
+
+	fn pack(unpacked: &[u8; UNPACKED_LENGTH]) -> [u64; PACKED_LENGTH] {
+		let mut packed = [0u64; PACKED_LENGTH];
+
+		unpacked
+			.chunks(PACKED_CHUNKS)
+			.enumerate()
+			.for_each(|(i, chunk)| {
+				packed[i] = u64::from_le_bytes(chunk.try_into().unwrap());
+			});
+
+		packed
+	}
+
+	pub fn unpacked(&self) -> &[u8; UNPACKED_LENGTH] {
+		self.unpacked.get_or_init(|| U256::unpack(self.packed()))
+	}
+
+	pub fn packed(&self) -> &[u64; PACKED_LENGTH] {
+		self.packed.get_or_init(|| U256::pack(self.unpacked()))
+	}
+
+	pub fn popcount(&self) -> &u32 {
+		self.popcount.get_or_init(|| arr::popcount(self.packed()))
+	}
+
+	/**
+	 * Byteable
+		*/
+	pub fn to_bytes(&self) -> Vec<u8> {
+		self.unpacked().to_vec()
+	}
+
+	pub fn from_bytes(bytes: &[u8]) -> Result<U256, U256Error> {
+		let bytes: [u8; UNPACKED_LENGTH] =
+			bytes.try_into().map_err(|_| U256Error::InvalidLength)?;
+		Ok(U256::new(bytes))
 	}
 }
 
@@ -73,60 +149,22 @@ impl U256 {
 	/**
 	 * Constructors
 		*/
-
-	pub fn new(unpacked: &[u8]) -> Result<U256, U256Error> {
-		let unpacked = unpacked
+	#[wasm_bindgen(constructor)]
+	pub fn _js_new(unpacked: Uint8Array) -> Result<U256, U256Error> {
+		let unpacked: [u8; UNPACKED_LENGTH] = unpacked
+			.to_vec()
+			.as_slice()
 			.try_into()
 			.map_err(|_| U256Error::InvalidLength)
 			.unwrap();
-		Ok(U256 {
-			unpacked,
-			packed: OnceCell::new(),
-			popcount: OnceCell::new(),
-			string: OnceCell::new(),
-		})
+		Ok(U256::new(unpacked))
 	}
 
 	#[wasm_bindgen]
 	pub fn random() -> U256 {
-		let unpacked = arr::random(UNPACKED_LENGTH);
-		U256::new(unpacked.as_slice()).unwrap()
-	}
-
-	/**
-	 * Getters
-		*/
-
-	// packing converts the u8 array into a u64 array, for faster bitwise operations
-	// it also extends the 256 bit key to 512 bits by appending the hash of the key
-	// hopefully this extension should be enough to prevent jaccard collisions
-	fn pack(&self) -> [u64; EXTENDED_PACKED_LENGTH] {
-		let mut packed = [0u64; EXTENDED_PACKED_LENGTH];
-
-		let extension: [u8; UNPACKED_LENGTH] =
-			blake3::hash(self.unpacked()).into();
-		let extended: [u8; EXTENDED_UNPACKED_LENGTH] =
-			arr::concat(&[&self.unpacked, &extension])
-				.try_into()
-				.unwrap();
-
-		for (i, chunk) in
-			extended.chunks_exact(EXTENDED_PACKED_CHUNKS).enumerate()
-		{
-			packed[i] = u64::from_le_bytes(chunk.try_into().unwrap());
-		}
-
-		packed
-	}
-
-	fn packed(&self) -> &[u64; EXTENDED_PACKED_LENGTH] {
-		self.packed.get_or_init(|| self.pack())
-	}
-
-	// cache the popcount
-	// note that this operates on packed, to get the counts of the extended key
-	fn popcount(&self) -> &u32 {
-		self.popcount.get_or_init(|| arr::popcount(self.packed()))
+		let unpacked: [u8; UNPACKED_LENGTH] =
+			arr::random(UNPACKED_LENGTH).try_into().unwrap();
+		U256::new(unpacked)
 	}
 
 	/**
@@ -140,6 +178,22 @@ impl U256 {
 	}
 
 	#[wasm_bindgen]
+	pub fn xor(&self, other: &U256) -> U256 {
+		//U256::new_from_packed(&arr::xor(self.packed(), other.packed()))
+		U256::new(arr::xor(self.unpacked(), other.unpacked()))
+	}
+
+	#[wasm_bindgen]
+	pub fn hamming(&self, other: &U256) -> u32 {
+		arr::hamming(self.packed(), other.packed())
+	}
+
+	#[wasm_bindgen]
+	pub fn common_prefix(&self, other: &U256) -> u32 {
+		arr::common_prefix(self.unpacked(), other.unpacked())
+	}
+
+	#[wasm_bindgen]
 	pub fn equals(&self, other: &U256) -> bool {
 		self == other
 	}
@@ -147,13 +201,6 @@ impl U256 {
 	/**
 	 * Byteable
 		*/
-	pub fn to_bytes(&self) -> Vec<u8> {
-		self.unpacked().to_vec()
-	}
-
-	pub fn from_bytes(bytes: &[u8]) -> Result<U256, U256Error> {
-		U256::new(bytes)
-	}
 
 	#[wasm_bindgen(js_name = toBytes)]
 	pub fn _js_to_bytes(&self) -> Uint8Array {
@@ -162,8 +209,12 @@ impl U256 {
 
 	#[wasm_bindgen(js_name = fromBytes)]
 	pub fn _js_from_bytes(bytes: &Uint8Array) -> Result<U256, U256Error> {
-		let unpacked = bytes.to_vec();
-		U256::new(unpacked.as_slice())
+		let unpacked: [u8; UNPACKED_LENGTH] = bytes
+			.to_vec()
+			.as_slice()
+			.try_into()
+			.map_err(|_| U256Error::InvalidLength)?;
+		Ok(U256::new(unpacked))
 	}
 
 	/**
@@ -178,11 +229,13 @@ impl U256 {
 
 	#[wasm_bindgen(js_name = fromString)]
 	pub fn from_string(string: &str) -> Result<U256, U256Error> {
-		let unpacked: [u8;32] =
-			arr::from_base32(string).map_err(|_| U256Error::InvalidBase32)?.try_into().map_err(|_| U256Error::InvalidLength)?;
-			
+		let unpacked: [u8; 32] = arr::from_base32(string)
+			.map_err(|_| U256Error::InvalidBase32)?
+			.try_into()
+			.map_err(|_| U256Error::InvalidLength)?;
+
 		Ok(U256 {
-			unpacked,
+			unpacked: OnceCell::from(unpacked),
 			packed: OnceCell::new(),
 			popcount: OnceCell::new(),
 			string: OnceCell::from(string.to_string()),

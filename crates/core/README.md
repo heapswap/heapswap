@@ -13,7 +13,7 @@ npm install heapswap
 ```javascript
 import * as hs from "heapswap"
 
-await hs.init() // Initialize the WASM module
+await hs.init() // Initialize the WASM module, only necessary if the environment does not support top-level await
 ```
 
 # Features
@@ -28,8 +28,9 @@ await hs.init() // Initialize the WASM module
 const u256 = new hs.U256(bytes: Uint8Array): U256
 const u256 = hs.U256.random(): U256
 
-// Jaccard similarity of concat(U256, hash(U256))
-// The hash provides extra entropy for routing
+// Operationsh
+u256.xor(other: U256): U256
+u256.hamming(other: U256): number
 u256.jaccard(other: U256): number
 
 // Equality
@@ -118,6 +119,7 @@ encrypted = responder.encrypt(helloMessage)
 decrypted = initiator.decrypt(encrypted)
 ```
 
+<!---
 ## JacDHT
 
 JacDHT is a DHT that uses [Jaccard Similarity](https://en.wikipedia.org/wiki/Jaccard_index) for its routing. This is much more computationally expensive than XOR distance (finding the nearest node is O(n) instead of O(log(n))) and has the potential for collisions. But, if it works, it should allow routing based on vector similarity.
@@ -136,6 +138,7 @@ const remoteNode = new hs.RemoteNode(
 	pingMs: number,
 ): RemoteNode
 ```
+
 
 ### DHT
 
@@ -160,6 +163,7 @@ dht.nearestNodesToLocalByDist(n: number): NearestNode[]
 // find the nodes nearest in latency space to the local node
 dht.nearestNodesToLocalByPing(n: number): NearestNode[]
 ```
+--->
 
 ## Misc
 

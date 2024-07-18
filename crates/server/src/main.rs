@@ -9,11 +9,11 @@ use futures::StreamExt;
 use heapswap_core::{bys, networking::*};
 use heapswap_server::networking::*;
 
-use libp2p::multiaddr::Protocol;
-use libp2p::swarm::handler::multi;
-use libp2p::swarm::SwarmEvent;
-use libp2p::Swarm;
-use libp2p::{
+use swarm_create::multiaddr::Protocol;
+use swarm_create::swarm::handler::multi;
+use swarm_create::swarm::SwarmEvent;
+use swarm_create::Swarm;
+use swarm_create::{
 	identity::ed25519::Keypair, request_response::ProtocolSupport,
 	StreamProtocol,
 };
@@ -76,7 +76,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
 	let keypair = Keypair::generate();
 
 	let swarm: ThreadsafeSubfieldSwarm = Arc::new(Mutex::new(
-		create_swarm(SwarmConfig {
+		swarm_create(SwarmConfig {
 			keypair: keypair.clone().into(),
 			listen_addresses: vec![
 				"/ip4/0.0.0.0/tcp/0/ws".to_string(),

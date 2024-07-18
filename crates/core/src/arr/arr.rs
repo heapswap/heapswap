@@ -131,3 +131,21 @@ where
 
 	intersection as f64 / union as f64
 }
+
+// common prefix length
+pub fn common_prefix<T, const N: usize>(a: &[T; N], b: &[T; N]) -> u32
+where
+	T: PrimInt + BitXor<Output = T> + BitXor, // Ensure T supports XOR and is a primitive integer
+{
+	let mut count = 0;
+	for i in 0..N {
+		let xor = a[i] ^ b[i];
+		if xor == T::zero() {
+			count += 8;
+		} else {
+			count += xor.leading_zeros();
+			break;
+		}
+	}
+	count
+}
