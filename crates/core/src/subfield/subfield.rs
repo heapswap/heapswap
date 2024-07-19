@@ -1,6 +1,9 @@
+use crate::arr;
+use crate::crypto::*;
 use crate::u256::*;
 use futures::task::{Context, Poll, Waker};
 use futures::{Stream, StreamExt};
+use getset::{Getters, Setters};
 use libp2p::kad::store::MemoryStore;
 use libp2p::{
 	gossipsub,
@@ -17,12 +20,10 @@ use std::future::Future;
 use std::hash::{DefaultHasher, Hash, Hasher};
 use std::pin::Pin;
 use std::sync::Arc;
-
-#[cfg(target_arch = "wasm32")]
 use std::{io, time::Duration};
 
-#[cfg(not(target_arch = "wasm32"))]
-use tokio::{io, time::Duration};
+//#[cfg(not(target_arch = "wasm32"))]
+//use tokio::{io, time::Duration};
 
 //#[derive(Debug, Serialize, Deserialize)]
 //pub struct SubfieldRequest {
@@ -33,7 +34,108 @@ use tokio::{io, time::Duration};
 //pub struct SubfieldResponse {
 //	pub pong: String,
 //}
+#[derive(Debug)]
+pub enum SubfieldError {
+	NoSigner,
+	NoCosigner,
+	NoTangent,
+}
 
+/**
+ * Subfield
+*/
+pub type Field = Option<U256>;
+
+#[derive(Debug, Serialize, Deserialize, Getters, Setters)]
+pub struct Subfield {
+	#[getset(get = "pub")]
+	signer: Field,
+	#[getset(get = "pub")]
+	cosigner: Field,
+	#[getset(get = "pub")]
+	tangent: Field,
+}
+
+impl Subfield {
+	// Check if the entry has at least one of the three fields
+	pub fn is_empty(&self) -> bool {
+		self.signer().is_none()
+			&& self.cosigner().is_none()
+			&& self.tangent().is_none()
+	}
+
+	pub fn is_some(&self) -> bool {
+		!self.is_empty()
+	}
+
+	// Check if the entry has a signer, cosigner, and tangent
+	pub fn is_complete(&self) -> Result<(), SubfieldError> {
+		if self.signer().is_none() {
+			return Err(SubfieldError::NoSigner);
+		}
+		if self.cosigner().is_none() {
+			return Err(SubfieldError::NoCosigner);
+		}
+		if self.tangent().is_none() {
+			return Err(SubfieldError::NoTangent);
+		}
+		Ok(())
+	}
+
+	// hash the whole subfield
+	pub fn hash(&self) -> U256 {
+		let mut fields: Vec<&[u8]> = Vec::new();
+
+		// signer, cosigner, and tangent are either unpacked U256 or [0;32]
+		for method in [Self::signer, Self::cosigner, Self::tangent].iter() {
+			if let Some(value) = method(self) {
+				fields.push(value.unpacked().as_ref());
+			} else {
+				fields.push(&[0; 32]);
+			}
+		}
+
+		hash::hash(arr::concat(&fields).as_ref())
+	}
+
+	// return a list of the hashes (or keys) of all possible combinations of the subfield
+	pub fn hashes(&self) -> Vec<U256> {
+		let mut result = Vec::new();
+
+		let zero = &Some(U256::zero());
+		let signer = self.signer();
+		let cosigner = self.cosigner();
+		let tangent = self.tangent();
+
+		for (a, b, c) in &[
+			// singles - hash(signer), hash(cosigner), hash(tangent)
+			(signer, zero, zero),
+			(zero, cosigner, zero),
+			(zero, zero, tangent),
+			// doubles - hash(all possible combinations of two fields)
+			(signer, cosigner, zero),
+			(signer, zero, tangent),
+			(zero, cosigner, tangent),
+			// triple - hash(signer, tangent, cosigner)
+			(signer, cosigner, tangent),
+		] {
+			if let (Some(a), Some(b), Some(c)) =
+				(a.as_ref(), b.as_ref(), c.as_ref())
+			{
+				result.push(hash::hash(
+					arr::concat(&[a.unpacked(), b.unpacked(), c.unpacked()])
+						.as_ref(),
+				));
+			}
+		}
+
+		result
+	}
+}
+
+/**
+ * SubfieldBehaviour
+*/
 #[derive(NetworkBehaviour)]
 pub struct SubfieldBehaviour {
 	//pub subfield: Behaviour<SubfieldRequest, SubfieldResponse>,

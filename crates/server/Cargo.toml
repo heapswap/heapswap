@@ -57,6 +57,7 @@ strum.workspace = true
 lazy_static.workspace = true
 once_cell.workspace = true
 eyre.workspace = true
+rand.workspace = true
 #[[bin]]
 #name = "example-websockets"
 #path = "src/main.rs"

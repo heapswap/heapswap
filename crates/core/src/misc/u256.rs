@@ -20,7 +20,7 @@ const PACKED_LENGTH: usize = 4;
 const PACKED_CHUNKS: usize = UNPACKED_LENGTH / PACKED_LENGTH;
 
 #[wasm_bindgen]
-#[derive(Getters, Debug, Clone)]
+#[derive(Getters, Debug)]
 pub struct U256 {
 	unpacked: OnceCell<[u8; UNPACKED_LENGTH]>,
 	packed: OnceCell<[u64; PACKED_LENGTH]>,
@@ -149,6 +149,12 @@ impl U256 {
 	/**
 	 * Constructors
 		*/
+
+	#[wasm_bindgen(js_name = zero)]
+	pub fn zero() -> U256 {
+		U256::new([0; UNPACKED_LENGTH])
+	}
+
 	#[wasm_bindgen(constructor)]
 	pub fn _js_new(unpacked: Uint8Array) -> Result<U256, U256Error> {
 		let unpacked: [u8; UNPACKED_LENGTH] = unpacked
@@ -260,5 +266,29 @@ impl U256 {
 impl PartialEq for U256 {
 	fn eq(&self, other: &Self) -> bool {
 		self.unpacked() == other.unpacked()
+	}
+}
+
+impl Into<String> for U256 {
+	fn into(self) -> String {
+		self.to_string()
+	}
+}
+
+impl From<String> for U256 {
+	fn from(string: String) -> Self {
+		U256::from_string(&string).unwrap()
+	}
+}
+
+impl From<&str> for U256 {
+	fn from(string: &str) -> Self {
+		U256::from_string(string).unwrap()
+	}
+}
+
+impl Clone for U256 {
+	fn clone(&self) -> Self {
+		U256::new(self.unpacked().clone())
 	}
 }

@@ -5,5 +5,7 @@ cargo watch \
     -i "src/data/*" \
     -i "src/schemas/*" \
     -i "crates/browser" \
+    -i "crates/core" \
+    -i "crates/protos" \
     -c \
     -x "run --bin heapswap_server"

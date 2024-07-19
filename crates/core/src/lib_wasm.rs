@@ -20,11 +20,13 @@ fn wasm_start() {
 	console_error_panic_hook::set_once();
 
 	// set tracing level
-	let level = tracing::Level::INFO;
-	let tracing_cfg = tracing_wasm::WASMLayerConfigBuilder::new()
-		.set_max_level(level)
-		.build();
-	let _ = try_set_as_global_default_with_config(tracing_cfg);
+	//let level = tracing::Level::INFO;
+	//let tracing_cfg = tracing_wasm::WASMLayerConfigBuilder::new()
+	//	.set_max_level(level)
+	//	.build();
+	//let _ = try_set_as_global_default_with_config(tracing_cfg);
 
-	tracing::info!("tracing initialized with level: {:?}", level);
+	//tracing::info!("tracing initialized with level: {:?}", level);
+	
+	crate::bev::entrypoint::main();
 }

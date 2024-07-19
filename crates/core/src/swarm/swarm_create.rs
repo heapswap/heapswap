@@ -1,13 +1,9 @@
-#![allow(dead_code)]
-#![allow(unused_imports)]
-#![allow(unused_import_braces)]
-#![allow(unused_braces)]
 use futures::{prelude::*, stream::StreamExt};
 use libp2p::kad;
 use libp2p::kad::store::MemoryStore;
 use libp2p::kad::Mode;
 
-use super::subfield::*;
+use crate::subfield::*;
 use crate::{arr, crypto::keys::Keypair};
 use bytes::Bytes;
 use libp2p::{
@@ -25,6 +21,20 @@ use std::hash::{Hash, Hasher};
 use std::sync::Arc;
 use std::time::Duration;
 use tracing_subscriber::EnvFilter;
+use crate::subfield::*;
+
+#[cfg(target_arch = "wasm32")]
+use std::sync::{Mutex, MutexGuard};
+
+//pub type SubfieldSwarm = Arc<Mutex<Swarm<SubfieldBehaviour>>>;
+//pub type SubfieldSwarmEvent = SwarmEvent<SubfieldBehaviourEvent>;
+pub type SubfieldSwarm = Swarm<SubfieldBehaviour>;
+pub type SubfieldSwarmEvent = SwarmEvent<SubfieldBehaviourEvent>;
+
+#[derive(Debug)]
+pub enum SubfieldCreateSwarmError {
+	FailedToLockSwarm,
+}
 
 pub fn heapswap_keypair_to_libp2p_keypair(
 	keypair: &Keypair,
@@ -38,9 +48,7 @@ pub fn heapswap_keypair_to_libp2p_keypair(
 #[derive(Clone)]
 pub struct SwarmConfig {
 	pub keypair: Keypair,
-	#[cfg(not(target_arch = "wasm32"))]
 	pub listen_addresses: Vec<String>,
-	#[cfg(target_arch = "wasm32")]
 	pub bootstrap_multiaddrs: Vec<String>,
 }
 
@@ -50,7 +58,7 @@ pub struct SwarmConfig {
 #[cfg(target_arch = "wasm32")]
 pub async fn swarm_create(
 	swarm_config: SwarmConfig,
-) -> Result<Swarm<SubfieldBehaviour>, Box<dyn Error>> {
+) -> Result<SubfieldSwarm, Box<dyn Error>> {
 	use libp2p::core::upgrade;
 	use std::time::Duration;
 
@@ -60,6 +68,7 @@ pub async fn swarm_create(
 	.with_wasm_bindgen()
 	.with_other_transport(|key| {
 		//Ok(libp2p::webtransport_websys::Transport::new(libp2p::webtransport_websys::Config::new(&key)))
+		
 		Ok(libp2p::websocket_websys::Transport::default()
 			.upgrade(upgrade::Version::V1)
 			.authenticate(
@@ -68,7 +77,9 @@ pub async fn swarm_create(
 			)
 			.multiplex(yamux::Config::default())
 			.boxed())
+		
 	})?
+	
 	.with_behaviour(|key| Ok(SubfieldBehaviour::new(key)))?
 	.with_swarm_config(|c| {
 		c.with_idle_connection_timeout(Duration::from_secs(60))
@@ -93,6 +104,7 @@ pub async fn swarm_create(
 		}
 	}
 
+	//Ok(Arc::new(Mutex::new(swarm)))
 	Ok(swarm)
 }
 
@@ -102,13 +114,12 @@ pub async fn swarm_create(
 #[cfg(not(target_arch = "wasm32"))]
 pub async fn swarm_create(
 	swarm_config: SwarmConfig,
-) -> Result<Swarm<SubfieldBehaviour>, Box<dyn Error>> {
-	use tokio::time::Duration;
+) -> Result<SubfieldSwarm, Box<dyn Error>> {
 
 	let mut swarm = libp2p::SwarmBuilder::with_existing_identity(
 		heapswap_keypair_to_libp2p_keypair(&swarm_config.keypair),
 	)
-	.with_tokio()
+	.with_async_std()
 	.with_tcp(
 		tcp::Config::default(),
 		noise::Config::new,
@@ -119,6 +130,7 @@ pub async fn swarm_create(
 		libp2p::yamux::Config::default,
 	)
 	.await?
+	//.with_quic()
 	.with_behaviour(|key| Ok(SubfieldBehaviour::new(key)))
 	.map_err(|e| e.to_string())?
 	.with_swarm_config(|c| {
@@ -130,5 +142,6 @@ pub async fn swarm_create(
 		swarm.listen_on(addr.parse::<Multiaddr>()?)?;
 	}
 
+	//Ok(Arc::new(Mutex::new(swarm)))
 	Ok(swarm)
 }

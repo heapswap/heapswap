@@ -4,7 +4,11 @@ version = "0.1.0"
 edition = "2021"
 
 [lib]
-crate-type = ["cdylib"]
+crate-type = ["cdylib", "rlib"]
+
+[[bin]]
+name = "heapswap" 
+path = "src/main.rs"
 
 [dependencies]
 # Crypto
@@ -26,6 +30,7 @@ bincode.workspace = true
 # Datastructures
 bytes.workspace = true
 flume.workspace = true
+dashmap.workspace = true
 # Wasm
 wasm-bindgen.workspace = true
 wasm-bindgen-futures = { workspace = true, features = [
@@ -62,10 +67,18 @@ gloo = { workspace = true, features = [
 	#"net ",
 
 ] }
+# Bevy
+bevy = {workspace = true, default-features = false, features = [
+	 "multi_threaded",
+]}
+bevy_async_task.workspace = true
 # Async
+async-std.workspace = true
+async-compat.workspace = true
 futures.workspace = true
 # Networking
 #yamux.workspace = true
+reqwest.workspace = true
 # Logging
 tracing.workspace = true
 tracing-subscriber.workspace = true
@@ -126,7 +139,7 @@ libp2p = { workspace = true, features = [
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 libp2p = { workspace = true, features = [
-	#"async-std",
+	"async-std",
 	#"autonat",
 	"cbor",
 	#"dcutr",
@@ -155,7 +168,7 @@ libp2p = { workspace = true, features = [
 	"serde",
 	"tcp",
 	"tls",
-	"tokio",
+	#"tokio",
 	#"uds",
 	#"wasm-bindgen",
 	#"websocket-websys",
@@ -165,7 +178,10 @@ libp2p = { workspace = true, features = [
 	#"upnp",
 
 ] }
-tokio = { workspace = true, features = ["full"] }
+#tokio = { workspace = true, features = ["full"] }
+
 
 [dev-dependencies]
 timeit.workspace = true
+
+

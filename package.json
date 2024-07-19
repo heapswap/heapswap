@@ -7,10 +7,11 @@
 	"scripts": {
 		"fix": "cargo fix --allow-dirty --allow-staged",
 		"fmt": "bash .sh/fmt.sh",
-		"dev": "concurrently -n server,browser -c magenta,green \"npm run server\" \"npm run browser\"",
+		"dev": "concurrently -n server,browser -c magenta,green \"bun run server\" \"bun run browser\"",
 		"core": "bash .sh/run.sh core",
 		"server": "bash .sh/run.sh server",
-		"browser": "cd packages/browser && npm run dev",
+		"server3": "concurrently -n s0,s1,s2 -c magenta,green,cyan \"bun run server\" \"bun run server\" \"bun run server\"",
+		"browser": "cd packages/browser && bun run dev",
 		"build": "bash .sh/build_browser.sh",
 		"test": "bash .sh/test.sh"
 	},

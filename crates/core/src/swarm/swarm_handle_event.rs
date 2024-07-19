@@ -1,13 +1,19 @@
-use super::subfield::*;
-use super::swarm_create::*;
+use crate::subfield::*;
+use crate::swarm::*;
 #[cfg(not(target_arch = "wasm32"))]
 use libp2p::mdns;
 use libp2p::{gossipsub, kad, ping, swarm::SwarmEvent, Swarm};
 
-pub fn swarm_handle_event(
-	swarm: &mut Swarm<SubfieldBehaviour>,
-	event: SwarmEvent<SubfieldBehaviourEvent>,
-) {
+#[derive(Debug)]
+pub enum SwarmHandleEventError {
+	FailedToLockSwarm,
+}
+
+pub async fn swarm_handle_event(
+	swarm: &mut SubfieldSwarm,
+	event: SubfieldSwarmEvent,
+) -> Result<(), SwarmHandleEventError> {
+
 	match event {
 		SwarmEvent::Behaviour(swarm_event) => {
 			match swarm_event {
@@ -71,7 +77,7 @@ pub fn swarm_handle_event(
 									"mDNS discovered a new peer: {:?}",
 									peer_id
 								);
-								//let _ = swarm.dial(multiaddr);
+								let _ = swarm.dial(multiaddr.clone());
 								swarm
 									.behaviour_mut()
 									.kademlia
@@ -133,4 +139,5 @@ pub fn swarm_handle_event(
 		}
 		_ => {}
 	}
+	Ok(())
 }

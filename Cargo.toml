@@ -132,7 +132,9 @@ tokio = { version = "1.37.0" }
 tokio-util = { version = "0.7.11", features = ["compat"] }
 tokio_with_wasm = { version = "0.6.1" }
 ### Async
+async-std = {version = "1.12.0"}
 async-stream = { version = "0.3.5" }
+async-compat = { version = "0.2.4"}
 ### Futures
 futures = { version = "0.3.30" }
 futures-util = { version = "0.3.30" }
@@ -207,6 +209,9 @@ tsify = { version = "0.4.5" } # Macros for Typescript
 # directories = { version = "5.0.1" } # Platform-specific directories for common directories
 # glob = { version = "0.3.1" } # Match file paths with Unix shell style patterns
 # tar = { version = "0.4.40" } # Read and write .tar files
+# Bevy
+bevy = {version = "0.14.0", default-features = false}
+bevy_async_task = { version = "0.2.0"}
 #
 ## Utils
 ##
