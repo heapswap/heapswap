@@ -30,6 +30,7 @@ const u256 = hs.U256.random(): U256
 
 // Operations
 u256.xor(other: U256): U256
+u256.xorLeadingZeroes(other: U256): number
 u256.hamming(other: U256): number
 u256.jaccard(other: U256): number
 u256.equals(other: U256): boolean

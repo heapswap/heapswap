@@ -12,7 +12,7 @@ test("hash", async () => {
 test("jaccard", async () => {
 	const a = hs.hash("hello")
 	const b = hs.hash("world")
-
+	
 	expect(a.jaccard(b)).toBeLessThan(1)
 	expect(a.jaccard(a)).toBe(1)
 	expect(a.jaccard(b)).toEqual(b.jaccard(a))

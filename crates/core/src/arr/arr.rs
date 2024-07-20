@@ -133,7 +133,7 @@ where
 }
 
 // common prefix length
-pub fn common_prefix<T, const N: usize>(a: &[T; N], b: &[T; N]) -> u32
+pub fn xor_leading_zeroes<T, const N: usize>(a: &[T; N], b: &[T; N]) -> u32
 where
 	T: PrimInt + BitXor<Output = T> + BitXor, // Ensure T supports XOR and is a primitive integer
 {
