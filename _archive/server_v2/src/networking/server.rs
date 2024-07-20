@@ -21,17 +21,26 @@ async fn add_security_headers(request: Request, next: Next) -> Response {
 }
 */
 
-pub fn spawn_axum_loop(app: Router, mut port: i32) -> tokio::task::JoinHandle<()> {
+pub fn spawn_axum_loop(
+	app: Router,
+	mut port: i32,
+) -> tokio::task::JoinHandle<()> {
 	tokio::spawn(async move {
 		let cors = CorsLayer::new()
 			// allow `GET` and `POST` when accessing the resource
-			.allow_methods([Method::GET, Method::POST, Method::OPTIONS, Method::PUT, Method::DELETE])
+			.allow_methods([
+				Method::GET,
+				Method::POST,
+				Method::OPTIONS,
+				Method::PUT,
+				Method::DELETE,
+			])
 			// allow requests from any origin
 			//.allow_credentials(
 			.allow_origin(Any);
 
 		let app = app.layer(cors);
-			//.layer(axum::middleware::from_fn(add_security_headers));
+		//.layer(axum::middleware::from_fn(add_security_headers));
 
 		loop {
 			let addr = format!("127.0.0.1:{}", port);

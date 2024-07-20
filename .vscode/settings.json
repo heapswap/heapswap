@@ -4,8 +4,8 @@
 		"crates/core/Cargo.toml",
 		//"crates/browser/Cargo.toml",
 		//{ "root": "crates/browser", "target": "wasm32-unknown-unknown" },
-		"crates/server/Cargo.toml",
-		"crates/protos/Cargo.toml"
+		//"crates/server/Cargo.toml",
+		//"crates/protos/Cargo.toml"
 	],
 	//"rust-analyzer.cargo.target": "wasm32-unknown-unknown",
 	"rust-analyzer.server.extraEnv": {

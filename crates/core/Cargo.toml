@@ -1,13 +1,13 @@
 [package]
 name = "heapswap_core"
-version = "0.1.0"
+version = "1.0.0"
 edition = "2021"
 
 [lib]
 crate-type = ["cdylib", "rlib"]
 
 [[bin]]
-name = "heapswap" 
+name = "heapswap"
 path = "src/main.rs"
 
 [dependencies]
@@ -18,10 +18,10 @@ rand.workspace = true
 getrandom.workspace = true
 blake3.workspace = true
 chacha20poly1305.workspace = true
-curve25519-dalek.workspace = true
+#curve25519-dalek.workspace = true
 ed25519-dalek.workspace = true
 x25519-dalek.workspace = true
-#snow.workspace = true
+snow.workspace = true
 # Encoding
 base32.workspace = true
 serde.workspace = true
@@ -29,8 +29,8 @@ serde_bytes.workspace = true
 bincode.workspace = true
 # Datastructures
 bytes.workspace = true
-flume.workspace = true
-dashmap.workspace = true
+#flume.workspace = true
+#dashmap.workspace = true
 # Wasm
 wasm-bindgen.workspace = true
 wasm-bindgen-futures = { workspace = true, features = [
@@ -40,45 +40,45 @@ wasm-bindgen-futures = { workspace = true, features = [
 #rayon.workspace = true
 console_error_panic_hook.workspace = true
 js-sys.workspace = true
-web-sys = { workspace = true, features = [
-	"ReadableStream",
-	"ReadableStreamDefaultReader",
-	"ReadableStreamDefaultController",
-	"BinaryType",
-	"FileReader",
-	"ProgressEvent",
-	"WebSocket",
-	"ErrorEvent",
-	"MessageEvent",
-	"File",
-	"Blob"
-] }
-gloo = { workspace = true, features = [
-	"timers",
-	"events",
-	"file",
-	"dialogs",
-	"storage",
-	"render",
-	#"console",
-	"utils",
-	"history",
-	"worker",
-	#"net ",
+#web-sys = { workspace = true, features = [
+#	"ReadableStream",
+#	"ReadableStreamDefaultReader",
+#	"ReadableStreamDefaultController",
+#	"BinaryType",
+#	"FileReader",
+#	"ProgressEvent",
+#	"WebSocket",
+#	"ErrorEvent",
+#	"MessageEvent",
+#	"File",
+#	"Blob"
+#] }
+#gloo = { workspace = true, features = [
+#	"timers",
+#	"events",
+#	"file",
+#	"dialogs",
+#	"storage",
+#	"render",
+#	#"console",
+#	"utils",
+#	"history",
+#	"worker",
+#	#"net ",
 
-] }
+#] }
 # Bevy
-bevy = {workspace = true, default-features = false, features = [
-	 "multi_threaded",
-]}
-bevy_async_task.workspace = true
+#bevy = { workspace = true, default-features = false, features = [
+#	"multi_threaded",
+#] }
+#bevy_async_task.workspace = true
 # Async
-async-std.workspace = true
-async-compat.workspace = true
+#async-std.workspace = true
+#async-compat.workspace = true
 futures.workspace = true
 # Networking
 #yamux.workspace = true
-reqwest.workspace = true
+#reqwest.workspace = true
 # Logging
 tracing.workspace = true
 tracing-subscriber.workspace = true
@@ -90,98 +90,99 @@ getset.workspace = true
 num-traits.workspace = true
 #derive_more.workspace = true
 strum.workspace = true
-ordered-float.workspace = true
-priority-queue.workspace = true
+#ordered-float.workspace = true
+#priority-queue.workspace = true
 pin-utils.workspace = true
 chrono.workspace = true
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
-libp2p = { workspace = true, features = [
-	#"async-std",
-	#"autonat",
-	"cbor",
-	#"dcutr",
-	#"dns",
-	#"ecdsa",
-	"ed25519",
-	#"floodsub",
-	"gossipsub",
-	"identify",
-	"json",
-	"kad",
-	"macros",
-	#"mdns",
-	#"memory-connection-limits",
-	#"metrics",
-	"noise",
-	"ping",
-	#"plaintext",
-	#"pnet",
-	#"quic",
-	"relay",
-	"rendezvous",
-	"request-response",
-	#"rsa",
-	#"secp256k1",
-	"serde",
-	#"tcp",
-	#"tls",
-	#"tokio",
-	#"uds",
-	"wasm-bindgen",
-	"websocket-websys",
-	#"websocket",
-	"webtransport-websys",
-	"yamux",
-	#"upnp",
+#libp2p = { workspace = true, features = [
+#	#"async-std",
+#	"autonat",
+#	"cbor",
+#	"dcutr",
+#	#"dns",
+#	#"ecdsa",
+#	"ed25519",
+#	#"floodsub",
+#	"gossipsub",
+#	"identify",
+#	"json",
+#	"kad",
+#	"macros",
+#	#"mdns",
+#	#"memory-connection-limits",
+#	#"metrics",
+#	"noise",
+#	"ping",
+#	#"plaintext",
+#	#"pnet",
+#	#"quic",
+#	#"relay",
+#	"rendezvous",
+#	"request-response",
+#	#"rsa",
+#	#"secp256k1",
+#	"serde",
+#	#"tcp",
+#	#"tls",
+#	#"tokio",
+#	#"uds",
+#	"wasm-bindgen",
+#	"websocket-websys",
+#	#"websocket",
+#	"webtransport-websys",
+#	"yamux",
+#	#"upnp",
 
-] }
+#] }
+#libp2p-webrtc-websys.workspace = true
+#libp2p-websocket-websys.workspace = true
+
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
-libp2p = { workspace = true, features = [
-	"async-std",
-	#"autonat",
-	"cbor",
-	#"dcutr",
-	"dns",
-	#"ecdsa",
-	"ed25519",
-	#"floodsub",
-	"gossipsub",
-	"identify",
-	"json",
-	"kad",
-	"macros",
-	"mdns",
-	#"memory-connection-limits",
-	#"metrics",
-	"noise",
-	"ping",
-	#"plaintext",
-	#"pnet",
-	"quic",
-	"relay",
-	"rendezvous",
-	"request-response",
-	#"rsa",
-	#"secp256k1",
-	"serde",
-	"tcp",
-	"tls",
-	#"tokio",
-	#"uds",
-	#"wasm-bindgen",
-	#"websocket-websys",
-	"websocket",
-	#"webtransport-websys",
-	"yamux",
-	#"upnp",
+#libp2p = { workspace = true, features = [
+#	"async-std",
+#	"autonat",
+#	"cbor",
+#	"dcutr",
+#	"dns",
+#	#"ecdsa",
+#	"ed25519",
+#	#"floodsub",
+#	"gossipsub",
+#	"identify",
+#	"json",
+#	"kad",
+#	"macros",
+#	"mdns",
+#	"memory-connection-limits",
+#	#"metrics",
+#	"noise",
+#	"ping",
+#	#"plaintext",
+#	#"pnet",
+#	"quic",
+#	"relay",
+#	"rendezvous",
+#	"request-response",
+#	#"rsa",
+#	#"secp256k1",
+#	"serde",
+#	"tcp",
+#	"tls",
+#	"tokio",
+#	#"uds",
+#	#"wasm-bindgen",
+#	#"websocket-websys",
+#	"websocket",
+#	#"webtransport-websys",
+#	"yamux",
+#	#"upnp",
 
-] }
+#] }
+#libp2p-webrtc = { workspace = true, features = ["tokio"] }
+
 #tokio = { workspace = true, features = ["full"] }
-
-
 [dev-dependencies]
 timeit.workspace = true
-
-

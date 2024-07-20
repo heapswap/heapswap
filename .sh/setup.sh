@@ -1,4 +1,4 @@
-sudo apt install -y pkg-config libssl-dev clang lld lib libogg-dev
+sudo apt install -y pkg-config libssl-dev clang lld libogg-dev cmake libclang-dev libssl-dev libudev-dev
 
 npm install
 npm install -g prettier@2.8.8 prettier-plugin-rust@0.1.9 prettier-plugin-toml@0.3.1

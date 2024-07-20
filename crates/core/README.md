@@ -28,12 +28,10 @@ await hs.init() // Initialize the WASM module, only necessary if the environment
 const u256 = new hs.U256(bytes: Uint8Array): U256
 const u256 = hs.U256.random(): U256
 
-// Operationsh
+// Operations
 u256.xor(other: U256): U256
 u256.hamming(other: U256): number
 u256.jaccard(other: U256): number
-
-// Equality
 u256.equals(other: U256): boolean
 
 // Bytes

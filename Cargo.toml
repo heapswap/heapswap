@@ -132,9 +132,9 @@ tokio = { version = "1.37.0" }
 tokio-util = { version = "0.7.11", features = ["compat"] }
 tokio_with_wasm = { version = "0.6.1" }
 ### Async
-async-std = {version = "1.12.0"}
+async-std = { version = "1.12.0" }
 async-stream = { version = "0.3.5" }
-async-compat = { version = "0.2.4"}
+async-compat = { version = "0.2.4" }
 ### Futures
 futures = { version = "0.3.30" }
 futures-util = { version = "0.3.30" }
@@ -197,6 +197,8 @@ wasm-bindgen-rayon = { version = "1.2.1" }
 rayon = { version = "1.10.0" }
 #libp2p-webrtc-websys = {version = "0.3.0-alpha.1"}
 libp2p-websocket-websys = { version = "0.3.2" }
+libp2p-webrtc = { version = "0.7.1-alpha" } # WebRTC
+libp2p-webrtc-websys = { version =	"0.3.0-alpha"} # WebRTC (browser)
 ### Web
 web-sys = { version = "0.3.69" } # Bindings for all Web APIs
 gloo = { version = "0.11.0" } # Convenience crate for common `web_sys` features
@@ -210,8 +212,8 @@ tsify = { version = "0.4.5" } # Macros for Typescript
 # glob = { version = "0.3.1" } # Match file paths with Unix shell style patterns
 # tar = { version = "0.4.40" } # Read and write .tar files
 # Bevy
-bevy = {version = "0.14.0", default-features = false}
-bevy_async_task = { version = "0.2.0"}
+bevy = { version = "0.14.0", default-features = false }
+bevy_async_task = { version = "0.2.0" }
 #
 ## Utils
 ##

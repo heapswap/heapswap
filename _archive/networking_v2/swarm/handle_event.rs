@@ -13,7 +13,6 @@ pub async fn swarm_handle_event(
 	swarm: &mut SubfieldSwarm,
 	event: SubfieldSwarmEvent,
 ) -> Result<(), SwarmHandleEventError> {
-
 	match event {
 		SwarmEvent::Behaviour(swarm_event) => {
 			match swarm_event {
@@ -97,7 +96,8 @@ pub async fn swarm_handle_event(
 					match mdns_event {
 						_ => {}
 					}
-				}
+				},
+				_ => {}
 			}
 		}
 		SwarmEvent::NewListenAddr {

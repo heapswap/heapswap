@@ -10,3 +10,4 @@ crates/browser/static
 crates/core/static
 pkg
 wasm
+certs

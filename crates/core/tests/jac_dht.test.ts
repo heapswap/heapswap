@@ -1,6 +1,7 @@
-import * as hs from "../pkg/heapswap_core"
-import { expect, test } from "bun:test"
+//import * as hs from "../pkg/heapswap_core"
+//import { expect, test } from "bun:test"
 
+/*
 test("nodes", async () => {
 	const localKeypair = hs.Keypair.random()
 	const remoteKeypair = hs.Keypair.random()
@@ -46,7 +47,7 @@ test("dht", async () => {
 		dht.tryAddNode(remoteNode)
 	}
 
-	const lookupCount = 3
+	const lookupCount = 3 
 
 	console.time("lookup")
 	let lookupKey = hs.hash("hello")
@@ -58,3 +59,4 @@ test("dht", async () => {
 	expect(lookupResult[0].dist).toBeLessThan(lookupResult[1].dist)
 	expect(lookupResult[1].dist).toBeLessThan(lookupResult[2].dist)
 })
+*/

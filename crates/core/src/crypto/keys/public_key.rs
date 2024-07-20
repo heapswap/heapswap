@@ -108,7 +108,7 @@ impl PublicKey {
 	/**
 	 * Operations
 		*/
-	#[wasm_bindgen]
+	#[wasm_bindgen(js_name = verify)]
 	pub fn _js_verify(
 		&self,
 		message: &Uint8Array,

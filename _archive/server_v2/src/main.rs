@@ -11,10 +11,11 @@ use heapswap_server::networking::*;
 
 use libp2p::multiaddr::Protocol;
 use libp2p::Multiaddr;
+use libp2p_webrtc as webrtc;
 //use swarm_create::multiaddr::Protocol;
 //use swarm_create::swarm::handler::multi;
 //use swarm_create::swarm::SwarmEvent;
-//use swarm_create::Swarm;  
+//use swarm_create::Swarm;
 //use swarm_create::{
 //	identity::ed25519::Keypair, request_response::ProtocolSupport,
 //	StreamProtocol,
@@ -38,9 +39,7 @@ use tokio::task::yield_now;
 use tokio::time::Duration;
 
 use axum::{http::StatusCode, response::Html, routing::get, Router};
-use heapswap_core::{
-	arr, subfield::*, swarm::*, crypto::*
-};
+use heapswap_core::{arr, crypto::*, subfield::*, swarm::*};
 
 type ThreadsafeSubfieldSwarm = Arc<Mutex<SubfieldSwarm>>;
 
@@ -48,8 +47,10 @@ type ThreadsafeSubfieldSwarm = Arc<Mutex<SubfieldSwarm>>;
 struct AppState {
 	swarm: ThreadsafeSubfieldSwarm,
 }
- 
+
 async fn get_bootstrap(State(state): State<AppState>) -> Json<Vec<String>> {
+	let filter_private = false;
+
 	let multiaddrs = state
 		.swarm
 		.lock()
@@ -59,10 +60,13 @@ async fn get_bootstrap(State(state): State<AppState>) -> Json<Vec<String>> {
 		.filter(|addr| {
 			// Check if the address is not local
 			!addr.iter().any(|proto| match proto {
-				Protocol::Ip4(ip) => ip.is_loopback() || ip.is_private(),
+				Protocol::Ip4(ip) => {
+					ip.is_loopback() || (filter_private && ip.is_private())
+				}
 				Protocol::Ip6(ip) => {
 					ip.is_loopback()
-						|| ip.segments().starts_with(&[0xfd00, 0x0])
+						|| (filter_private
+							&& ip.segments().starts_with(&[0xfd00, 0x0]))
 				}
 				_ => false,
 			})
@@ -74,20 +78,16 @@ async fn get_bootstrap(State(state): State<AppState>) -> Json<Vec<String>> {
 }
 
 async fn get_peers(State(state): State<AppState>) -> Json<Vec<String>> {
-	
 	let swarm = state.swarm.lock().await;
-	
-    let peers = swarm
-        .connected_peers()
-        .into_iter()
-        .map(|peer_id| {
-			peer_id.to_string()
-        })
-        .collect::<Vec<_>>();
 
-    Json(peers)
+	let peers = swarm
+		.connected_peers()
+		.into_iter()
+		.map(|peer_id| peer_id.to_string())
+		.collect::<Vec<_>>();
+
+	Json(peers)
 }
-
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error>> {
@@ -97,31 +97,47 @@ async fn main() -> Result<(), Box<dyn Error>> {
 		.init();
 
 	let keypair = keys::Keypair::random();
-	
+	let local_keypair = heapswap_keypair_to_libp2p_keypair(&keypair);
+
+	// set local ip to "0.0.0.0"
+	let local_ipv4 = IpAddr::from(Ipv4Addr::UNSPECIFIED);
+	let local_ipv6 = IpAddr::from(Ipv6Addr::UNSPECIFIED);
+
 	// random u16 listen address
-	//let webrtc_port: u16 = rand::random::<u16>();
+	//let webrtc_ipv4_port: u16 = rand::random::<u16>();
+	//let webrtc_ipv6_port: u16 = rand::random::<u16>();
 	//let quic_port: u16 = rand::random::<u16>();
-	
-	//let local_ip = IpAddr::from("0.0.0.0");
-	
-	//let address_webrtc = Multiaddr::from(listen_address)
-	//.with(Protocol::Udp(webrtc_port))
-	//.with(Protocol::WebRTCDirect);
 
-	//let address_quic = Multiaddr::from(listen_address)
-	//	.with(Protocol::Udp(quic_port))
-	//	.with(Protocol::QuicV1);
+	let webrtc_ipv4_address = Multiaddr::from(local_ipv4)
+		.with(Protocol::Udp(0))
+		.with(Protocol::WebRTCDirect);
 
+	let webrtc_ipv6_address = Multiaddr::from(local_ipv6)
+		.with(Protocol::Udp(0))
+		.with(Protocol::WebRTCDirect);
+
+	let quic_ipv4_address = Multiaddr::from(local_ipv4)
+		.with(Protocol::Udp(0))
+		.with(Protocol::QuicV1);
+	
+	let quic_ipv6_address = Multiaddr::from(local_ipv6)
+		.with(Protocol::Udp(0))
+		.with(Protocol::QuicV1);
+		
 	let swarm: ThreadsafeSubfieldSwarm = Arc::new(Mutex::new(
 		swarm_create(SwarmConfig {
 			keypair: keypair.clone().into(),
 			listen_addresses: vec![
-				"/ip4/0.0.0.0/tcp/0/ws".to_string(),
-				"/ip6/::/tcp/0/ws".to_string(),
+				//"/ip4/0.0.0.0/tcp/0/ws".to_string(),
+				//"/ip6/::/tcp/0/ws".to_string(),
 				//"/ip4/0.0.0.0/udp/0/quic".to_string(),
 				//"/ip6/::/udp/0/quic".to_string(),
+				//webrtc_ipv4_address.to_string(),
+				//webrtc_ipv6_address.to_string(),
+				quic_ipv4_address.to_string(),
+				quic_ipv6_address.to_string(),
 			],
-			bootstrap_multiaddrs: vec![]
+			bootstrap_multiaddrs: vec![],
 		})
 		.await?,
 	));
@@ -140,20 +156,15 @@ async fn main() -> Result<(), Box<dyn Error>> {
 	let axum_handle = spawn_axum_loop(app, 3000);
 
 	let swarm_handle = spawn_swarm_loop(swarm.clone());
-	
-	let _ = tokio::try_join!(
-		axum_handle, 
-		swarm_handle,
-	).map(|_| ());
+
+	let _ = tokio::try_join!(axum_handle, swarm_handle,).map(|_| ());
 
 	Ok(())
 }
 
 // due to the swarm needing to be wrapped in a mutex for use with axum,
 // we need to poll the swarm instead of using the swarm.next() method
-async fn poll_swarm(
-	swarm: &mut SubfieldSwarm,
-) -> Option<SubfieldSwarmEvent> {
+async fn poll_swarm(swarm: &mut SubfieldSwarm) -> Option<SubfieldSwarmEvent> {
 	match swarm
 		.poll_next_unpin(&mut Context::from_waker(&futures::task::noop_waker()))
 	{
@@ -176,7 +187,7 @@ pub fn spawn_swarm_loop(
 
 			if let Some(event) = event {
 				let mut lock = swarm.lock().await;
-				let _ =	swarm_handle_event(&mut *lock, event).await;
+				let _ = swarm_handle_event(&mut *lock, event).await;
 			}
 
 			let _ = yield_now().await;

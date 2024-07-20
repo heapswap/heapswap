@@ -86,7 +86,7 @@ impl Cipher {
 	 * Random
 		*/
 
-	#[wasm_bindgen(js_name = randomSecretKey)]
+	#[wasm_bindgen(js_name = randomSecret)]
 	pub fn random_secret() -> SecretKey {
 		U256::random()
 	}

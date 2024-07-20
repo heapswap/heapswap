@@ -8,13 +8,13 @@ use libp2p::kad::store::MemoryStore;
 use libp2p::{
 	gossipsub,
 	identity::Keypair,
-	kad, ping,
+	kad, ping, dcutr, autonat,
 	request_response::{self, cbor::Behaviour},
 	swarm::{NetworkBehaviour, SwarmEvent},
 	StreamProtocol, Swarm,
 };
 #[cfg(not(target_arch = "wasm32"))]
-use libp2p::{mdns, noise, tcp, yamux};
+use libp2p::{mdns, noise, tcp, yamux, relay};
 use serde::{Deserialize, Serialize};
 use std::future::Future;
 use std::hash::{DefaultHasher, Hash, Hasher};
@@ -142,12 +142,19 @@ pub struct SubfieldBehaviour {
 	pub ping: ping::Behaviour,
 	pub kademlia: kad::Behaviour<MemoryStore>,
 	pub gossipsub: gossipsub::Behaviour,
+	pub dcutr: dcutr::Behaviour,
+	pub autonat: autonat::Behaviour,
 	#[cfg(not(target_arch = "wasm32"))]
 	pub mdns: mdns::tokio::Behaviour,
+	#[cfg(not(target_arch = "wasm32"))]
+	pub relay: relay::Behaviour,
 }
 
 impl SubfieldBehaviour {
 	pub fn new(key: &Keypair) -> Self {
+		
+		let local_peer_id = key.public().to_peer_id();
+		
 		// custom subfield protocol
 		//let subfield = Behaviour::new(
 		//	[(
@@ -183,12 +190,16 @@ impl SubfieldBehaviour {
 				key.public().to_peer_id(),
 				MemoryStore::new(key.public().to_peer_id()),
 			),
+			dcutr: dcutr::Behaviour::new(local_peer_id.clone()),
+			autonat: autonat::Behaviour::new(local_peer_id.clone(), autonat::Config::default()),
 			#[cfg(not(target_arch = "wasm32"))]
 			mdns: mdns::tokio::Behaviour::new(
 				mdns::Config::default(),
 				key.public().to_peer_id(),
 			)
 			.unwrap(),
+			#[cfg(not(target_arch = "wasm32"))]
+			relay: relay::Behaviour::new(local_peer_id.clone(), relay::Config::default()),
 		};
 
 		// Set the Kademlia mode
