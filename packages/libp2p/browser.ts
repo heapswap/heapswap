@@ -14,15 +14,9 @@ import { pubsubPeerDiscovery } from "@libp2p/pubsub-peer-discovery"
 import { kadDHT } from "@libp2p/kad-dht"
 import { bootstrap } from "@libp2p/bootstrap"
 import { IDBDatastore } from "datastore-idb"
-import * as common from "@heapswap/libp2p-common"
-export * from "@heapswap/libp2p-common"
-export {
-	SUBFIELD_ECHO_PROTOCOL,
-	SUBFIELD_KAD_PROTOCOL,
-	SUBFIELD_PROTOCOL,
-	SUBFIELD_PUBSUB_PROTOCOL,
-	createLibp2pOptions,
-} from "@heapswap/libp2p-common"
+import * as common from "./common"
+export * from "./common"
+//export {SUBFIELD_ECHO_PROTOCOL, SUBFIELD_KAD_PROTOCOL, SUBFIELD_PROTOCOL, SUBFIELD_PUBSUB_PROTOCOL, createLibp2pOptions } from "./common"
 
 export async function createLibp2p(options: common.createLibp2pOptions) {
 	const peerDiscovery: any = [
@@ -38,6 +32,10 @@ export async function createLibp2p(options: common.createLibp2pOptions) {
 			})
 		)
 	}
+	
+	// const datastore = new IDBDatastore(options.datastorePath ?? "_datastore")
+	// await datastore.open()
+	 
 
 	const libp2p = await _createLibp2p({
 		addresses: {
@@ -81,8 +79,9 @@ export async function createLibp2p(options: common.createLibp2pOptions) {
 		connectionManager: {
 			minConnections: 0,
 		},
-		datastore: new IDBDatastore(options.datastorePath ?? "_datastore"),
+		// datastore
 	})
+	
 
 	return libp2p
 }

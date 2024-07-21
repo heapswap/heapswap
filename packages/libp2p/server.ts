@@ -11,15 +11,9 @@ import { kadDHT } from "@libp2p/kad-dht"
 import { bootstrap } from "@libp2p/bootstrap"
 import { mdns } from "@libp2p/mdns"
 import { LevelDatastore } from "datastore-level"
-import * as common from "@heapswap/libp2p-common"
-export * from "@heapswap/libp2p-common"
-export {
-	SUBFIELD_ECHO_PROTOCOL,
-	SUBFIELD_KAD_PROTOCOL,
-	SUBFIELD_PROTOCOL,
-	SUBFIELD_PUBSUB_PROTOCOL,
-	createLibp2pOptions,
-} from "@heapswap/libp2p-common"
+import * as common from "./common"
+export * from "./common"
+//export {SUBFIELD_ECHO_PROTOCOL, SUBFIELD_KAD_PROTOCOL, SUBFIELD_PROTOCOL, SUBFIELD_PUBSUB_PROTOCOL, createLibp2pOptions } from './common'
 
 export async function createLibp2p(options: common.createLibp2pOptions) {
 	const peerDiscovery: any = [

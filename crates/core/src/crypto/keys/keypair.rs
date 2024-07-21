@@ -146,7 +146,7 @@ impl Keypair {
 			}
 		}
 	}
-	
+
 	/*
 	#[wasm_bindgen(js_name = toLibp2pKeypairBytes)]
 	pub fn to_libp2p_keypair_bytes(
@@ -163,9 +163,9 @@ impl Keypair {
 			.as_slice()
 		))
 	}
-	
 
-	
+
+
 	#[wasm_bindgen(js_name = fromLibp2pKeypairBytes)]
 	pub fn from_libp2p_keypair_bytes(bytes: &Uint8Array) -> Result<Keypair, KeyError> {
 		let bytes_vec = bytes.to_vec();
@@ -183,8 +183,7 @@ impl Keypair {
 		})
 	}
 	*/
-	
-	
+
 	/**
 	 * Stringable
 		*/

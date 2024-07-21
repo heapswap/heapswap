@@ -182,7 +182,7 @@ impl U256 {
 		//U256::new_from_packed(&arr::xor(self.packed(), other.packed()))
 		U256::new(arr::xor(self.unpacked(), other.unpacked()))
 	}
-	
+
 	#[wasm_bindgen(js_name = xorLeadingZeroes)]
 	pub fn xor_leading_zeroes(&self, other: &U256) -> u32 {
 		arr::xor_leading_zeroes(self.unpacked(), other.unpacked())
@@ -192,7 +192,7 @@ impl U256 {
 	pub fn hamming(&self, other: &U256) -> u32 {
 		arr::hamming(self.packed(), other.packed())
 	}
-	
+
 	#[wasm_bindgen]
 	pub fn jaccard(&self, other: &U256) -> f64 {
 		let intersection = arr::andcount(self.packed(), other.packed());

@@ -1,5 +1,5 @@
 {
-	"name": "@heapswap/libp2p-server",
+	"name": "@heapswap/libp2p-common",
 	"version": "1.0.0",
 	"type": "module",
 	"scripts": {
@@ -7,7 +7,7 @@
 		"build": "vite build"
 	},
 	"dependencies": {
-		"@heapswap/libp2p-common": "file:../common",
+		"@libp2p/interface-keys": "^1.0.8",
 		"@chainsafe/libp2p-gossipsub": "^13.0.0",
 		"@chainsafe/libp2p-noise": "^15.0.0",
 		"@chainsafe/libp2p-yamux": "^6.0.1",
@@ -22,7 +22,11 @@
 		"@multiformats/multiaddr": "^12.1.11",
 		"libp2p": "^1.0.8",
 		"@libp2p/mdns": "^10.1.2",
+		"@libp2p/pubsub-peer-discovery": "^10.0.2",
+		"datastore-idb": "^2.1.9",
 		"datastore-level": "^10.1.8"
 	},
-	"devDependencies": {}
+	"devDependencies": {
+		"vite": "^5.3.1"
+	}
 }

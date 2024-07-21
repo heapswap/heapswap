@@ -22,7 +22,7 @@ pub fn try_set_as_global_default_with_config(
 ) -> Result<(), SetGlobalDefaultError> {
 	tracing::subscriber::set_global_default(
 		Registry::default().with(WASMLayer::new(config)),
-	) 
+	)
 }
 
 #[cfg(target_arch = "wasm32")]
