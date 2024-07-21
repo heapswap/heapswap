@@ -55,7 +55,7 @@ test("vanity keypair", async () => {
 	// 3 characters - <1m
 	// 4 characters - <20m
 	// 5 characters - <10h
-	const prefix = "a"
+	const prefix = "aa"
 	const keypair = hs.Keypair.vanity(prefix)
 	expect(keypair.publicKey.toString().slice(0, prefix.length)).toBe(prefix)
 })

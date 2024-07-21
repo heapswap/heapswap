@@ -94,6 +94,7 @@ strum.workspace = true
 #priority-queue.workspace = true
 pin-utils.workspace = true
 chrono.workspace = true
+libp2p = { workspace = true, default-features = false}
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
 #libp2p = { workspace = true, features = [

@@ -146,7 +146,45 @@ impl Keypair {
 			}
 		}
 	}
+	
+	/*
+	#[wasm_bindgen(js_name = toLibp2pKeypairBytes)]
+	pub fn to_libp2p_keypair_bytes(
+		&self
+	) -> Result<Uint8Array, KeyError> {
+		Ok(Uint8Array::from(
+			libp2p::identity::Keypair::ed25519_from_bytes(
+				self.private_key().u256().unpacked().clone(),
+			)
+			.map_err(|_| KeyError::InvalidPrivateKey)?
+			.to_protobuf_encoding()
+			.map_err(|_| KeyError::EncodingError)?
+			.to_vec()
+			.as_slice()
+		))
+	}
+	
 
+	
+	#[wasm_bindgen(js_name = fromLibp2pKeypairBytes)]
+	pub fn from_libp2p_keypair_bytes(bytes: &Uint8Array) -> Result<Keypair, KeyError> {
+		let bytes_vec = bytes.to_vec();
+		let libp2p_keypair = libp2p::identity::Keypair::from_protobuf_encoding(&bytes_vec)
+			.map_err(|_| KeyError::InvalidKeypair)?;
+
+		let private_key_bytes = libp2p_keypair.try_into_ed25519().map_err(|_| KeyError::InvalidPrivateKey)?.to_bytes();
+		let private_key = PrivateKey::from_bytes(&private_key_bytes[..SECRET_KEY_LENGTH])
+			.map_err(|_| KeyError::InvalidPrivateKey)?;
+		let public_key = private_key.public_key();
+
+		Ok(Keypair {
+			private_key,
+			public_key,
+		})
+	}
+	*/
+	
+	
 	/**
 	 * Stringable
 		*/

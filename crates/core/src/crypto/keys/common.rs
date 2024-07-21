@@ -59,6 +59,7 @@ pub type SharedSecret = U256;
 #[wasm_bindgen]
 #[derive(Debug)]
 pub enum KeyError {
+	EncodingError,
 	InvalidYCoordinate,
 	InvalidSignature,
 	InvalidPublicKey,

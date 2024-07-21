@@ -11,3 +11,4 @@ crates/core/static
 pkg
 wasm
 certs
+_datastore

@@ -1,0 +1,9 @@
+syntax = "proto3";
+
+package subfield;
+
+message Subfield {
+    bytes signer = 1;
+	bytes cosigner = 2;
+	bytes tangent = 3;
+}
