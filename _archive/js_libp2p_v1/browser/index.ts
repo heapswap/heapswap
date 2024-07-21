@@ -14,8 +14,9 @@ import { pubsubPeerDiscovery } from '@libp2p/pubsub-peer-discovery'
 import { kadDHT } from '@libp2p/kad-dht'
 import { bootstrap } from '@libp2p/bootstrap'
 import { IDBDatastore } from 'datastore-idb'
-import * as common from '../common'
-export * from '../common'
+import * as common from "@heapswap/libp2p-common"
+export * from "@heapswap/libp2p-common"
+export {SUBFIELD_ECHO_PROTOCOL, SUBFIELD_KAD_PROTOCOL, SUBFIELD_PROTOCOL, SUBFIELD_PUBSUB_PROTOCOL, createLibp2pOptions } from "@heapswap/libp2p-common"
 
 
 export async function createLibp2p(options: common.createLibp2pOptions) {

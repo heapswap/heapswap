@@ -7,6 +7,7 @@
 	  "build": "vite build"
 	},
 	"dependencies": {
+	  "@heapswap/libp2p-common": "file:../common",
 	  "@chainsafe/libp2p-gossipsub": "^13.0.0",
 	  "@chainsafe/libp2p-noise": "^15.0.0",
 	  "@chainsafe/libp2p-yamux": "^6.0.1",
