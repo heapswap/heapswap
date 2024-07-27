@@ -31,14 +31,14 @@ use tokio::{
 	sync::{Mutex, MutexGuard},
 };
 
-pub struct SwarmConfig {
+pub struct SubfieldSwarmConfig {
 	//pub keypair: KeyPair,
 	pub listen_addresses: Vec<String>,
 	pub is_server: bool,
 }
 
 pub fn create_tokio_swarm(
-	swarm_config: SwarmConfig,
+	swarm_config: SubfieldSwarmConfig,
 ) -> Result<Swarm<SubfieldBehaviour>, Box<dyn Error>> {
 	//let _keypair: Keypair = Keypair::generate();
 

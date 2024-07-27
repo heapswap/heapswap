@@ -1,4 +1,6 @@
-pub mod cipher;
-pub mod hash;
-pub mod keys;
-pub mod noise;
+mod cipher;
+pub use cipher::*;
+mod hash;
+pub use hash::*;
+mod keys;
+pub use keys::*;

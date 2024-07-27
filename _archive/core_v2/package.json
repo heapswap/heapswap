@@ -1,0 +1,19 @@
+{
+	"name": "heapswap",
+	"version": "0.0.1",
+	"module": "index.ts",
+	"type": "module",
+	"scripts": {
+		"build": "bash ../../.sh/browser-build.sh",
+		"publish": "npm run build && npm publish"
+	},
+	"dependencies": {
+		"@libp2p/crypto": "^4.1.6"
+	},
+	"devDependencies": {
+		"@types/bun": "latest"
+	},
+	"peerDependencies": {
+		"typescript": "^5.0.0"
+	}
+}

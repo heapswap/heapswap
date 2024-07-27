@@ -10,18 +10,19 @@ import { createLibp2p as _createLibp2p } from "libp2p"
 import { kadDHT } from "@libp2p/kad-dht"
 import { bootstrap } from "@libp2p/bootstrap"
 import { mdns } from "@libp2p/mdns"
-import { LevelDatastore } from "datastore-level"
-import * as common from "./common"
-export * from "./common"
+// import { LevelDatastore } from "datastore-level"
+import * as common from "./common.ts"
+export * from "./common.ts"
 //export {SUBFIELD_ECHO_PROTOCOL, SUBFIELD_KAD_PROTOCOL, SUBFIELD_PROTOCOL, SUBFIELD_PUBSUB_PROTOCOL, createLibp2pOptions } from './common'
 
 export async function createLibp2p(options: common.createLibp2pOptions) {
+	// peer discovery
 	const peerDiscovery: any = [
 		mdns({
 			interval: 20e3,
 		}),
 	]
-
+	// add bootstrap peers to peer discovery
 	if (options.bootstrapPeers && options.bootstrapPeers.length > 0) {
 		peerDiscovery.push(
 			bootstrap({
@@ -57,7 +58,7 @@ export async function createLibp2p(options: common.createLibp2pOptions) {
 			minConnections: 0,
 		},
 		peerDiscovery,
-		datastore: new LevelDatastore(options.datastorePath ?? "_datastore"),
+		// datastore: new LevelDatastore(options.datastorePath ?? "_datastore"),
 	})
 
 	return libp2p

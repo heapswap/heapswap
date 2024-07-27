@@ -53,7 +53,7 @@ pub fn heapswap_keypair_to_libp2p_keypair(
 }
 
 #[derive(Clone)]
-pub struct SwarmConfig {
+pub struct SubfieldSwarmConfig {
 	pub keypair: Keypair,
 	pub listen_addresses: Vec<String>,
 	pub bootstrap_multiaddrs: Vec<String>,
@@ -64,7 +64,7 @@ pub struct SwarmConfig {
 */
 #[cfg(target_arch = "wasm32")]
 pub async fn swarm_create(
-	swarm_config: SwarmConfig,
+	swarm_config: SubfieldSwarmConfig,
 ) -> Result<SubfieldSwarm, Box<dyn Error>> {
 	use libp2p::core::upgrade;
 	use std::time::Duration;
@@ -116,7 +116,7 @@ pub async fn swarm_create(
 */
 #[cfg(not(target_arch = "wasm32"))]
 pub async fn swarm_create(
-	swarm_config: SwarmConfig,
+	swarm_config: SubfieldSwarmConfig,
 ) -> Result<SubfieldSwarm, Box<dyn Error>> {
 	let keypair = heapswap_keypair_to_libp2p_keypair(&swarm_config.keypair);
 

@@ -6,7 +6,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
         .with_env_filter(EnvFilter::from_default_env())
         .try_init();
 
-	let swarm = Arc::new(Mutex::new(create_swarm(SwarmConfig {
+	let swarm = Arc::new(Mutex::new(create_swarm(SubfieldSwarmConfig {
 		listen_addresses: vec!["/ip4/0.0.0.0/tcp/0".to_string()],
 		is_server: true,
 	}).await?));
@@ -127,7 +127,7 @@ async fn test_swarm() -> Result<(), Box<dyn Error>> {
 	println!("Creating {} swarms", replicas);
 	
 	for i in 0..replicas {
-		let swarm = Arc::new(Mutex::new(create_swarm(SwarmConfig {
+		let swarm = Arc::new(Mutex::new(create_swarm(SubfieldSwarmConfig {
 			listen_addresses: vec!["/ip4/0.0.0.0/tcp/0".to_string()],
 			is_server: true,
 		}).await?));

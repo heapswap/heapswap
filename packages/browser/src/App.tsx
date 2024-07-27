@@ -1,14 +1,23 @@
-import React from "react"
+// import React from "react"
 import { createLibp2p, SUBFIELD_ECHO_PROTOCOL } from "@heapswap/libp2p/browser"
-import {pipe} from "it-pipe"
+import { pipe } from "it-pipe"
+import { useEffect } from "react"
 
 function App() {
 	const runNode = async () => {
+		console.log("running node")
+
 		const swarm = await createLibp2p({
 			bootstrapPeers: [
-				'/ip4/127.0.0.1/tcp/34403/ws/p2p/12D3KooWJmDCYzYsnczGag8Noanzw3fWUH8EqrNCSNtekb9YqLHK'
+				"/ip4/127.0.0.1/tcp/41613/ws/p2p/12D3KooWBLx5DHRK31hqtNipXoGy7iJ4DYJg9W7yV8Un3A2h9ch2",
 			],
+			devMode: true,
 		})
+
+		console.log(
+			"browser node is listening at",
+			swarm.getMultiaddrs().map((ma) => ma.toString())
+		)
 
 		const stream = await swarm.dialProtocol(
 			swarm.getConnections().map((c) => c.remoteAddr),
@@ -36,11 +45,13 @@ function App() {
 				return string
 			}
 		)
-		
-		console.info(`Echoed back to us: "${output}"`)
+
+		console.log(`Echoed back to us: "${output}"`)
 	}
 
-	runNode()
+	useEffect(() => {
+		runNode()
+	}, [])
 
 	return (
 		<>

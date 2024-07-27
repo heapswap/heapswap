@@ -4,8 +4,8 @@ import { yamux } from "@chainsafe/libp2p-yamux"
 import { circuitRelayTransport } from "@libp2p/circuit-relay-v2"
 import { dcutr } from "@libp2p/dcutr"
 import { identify } from "@libp2p/identify"
-import { webRTC } from "@libp2p/webrtc"
 import { webSockets } from "@libp2p/websockets"
+import { webRTC } from "@libp2p/webrtc"
 import * as filters from "@libp2p/websockets/filters"
 //import { multiaddr } from '@multiformats/multiaddr'
 import { createLibp2p as _createLibp2p } from "libp2p"
@@ -14,17 +14,24 @@ import { pubsubPeerDiscovery } from "@libp2p/pubsub-peer-discovery"
 import { kadDHT } from "@libp2p/kad-dht"
 import { bootstrap } from "@libp2p/bootstrap"
 import { IDBDatastore } from "datastore-idb"
-import * as common from "./common"
-export * from "./common"
+import * as common from "./common.ts"
+export * from "./common.ts"
 //export {SUBFIELD_ECHO_PROTOCOL, SUBFIELD_KAD_PROTOCOL, SUBFIELD_PROTOCOL, SUBFIELD_PUBSUB_PROTOCOL, createLibp2pOptions } from "./common"
 
 export async function createLibp2p(options: common.createLibp2pOptions) {
+	console.log("creating libp2p")
+
+	let datastore = new IDBDatastore(options.datastorePath ?? "_datastore")
+	await datastore.open()
+
+	// peer discovery
 	const peerDiscovery: any = [
 		pubsubPeerDiscovery({
 			interval: 1000,
 		}),
 	]
 
+	// add bootstrap peers to peer discovery
 	if (options.bootstrapPeers && options.bootstrapPeers.length > 0) {
 		peerDiscovery.push(
 			bootstrap({
@@ -32,10 +39,6 @@ export async function createLibp2p(options: common.createLibp2pOptions) {
 			})
 		)
 	}
-	
-	// const datastore = new IDBDatastore(options.datastorePath ?? "_datastore")
-	// await datastore.open()
-	 
 
 	const libp2p = await _createLibp2p({
 		addresses: {
@@ -79,9 +82,10 @@ export async function createLibp2p(options: common.createLibp2pOptions) {
 		connectionManager: {
 			minConnections: 0,
 		},
-		// datastore
+		datastore,
 	})
-	
+
+	console.log("libp2p created", libp2p)
 
 	return libp2p
 }

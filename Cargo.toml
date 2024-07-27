@@ -31,11 +31,11 @@ chacha20poly1305 = { version = "0.10.1" } # Stream Cipher
 curve25519-dalek = { version = "4.1.2" } # Key generation and conversion
 ed25519-dalek = { version = "2.1.1", features = [
 	"serde",
-	"rand_core"
+	"rand_core",
 ] } # Key signing
 x25519-dalek = { version = "2.0.1", features = [
 	"serde",
-	"static_secrets"
+	"static_secrets",
 ] } # Key exchange
 snow = { version = "0.9.6" } # Networking encryption
 #
@@ -52,6 +52,12 @@ lz4_flex = { version = "0.11.3" } # Fast, Low Ratio
 # tui = { version = "0.19.0" } # Rich terminal user interfaces and dashboards
 # ctrlc = { version = "3.4.4" } # Ctrl-c signal handler
 #
+## Dioxus
+##
+dioxus = { version = "0.5", features = ["web", "router"] }
+dioxus-logger = { version = "0.5.1" }
+manganis = { git = "https://github.com/DioxusLabs/manganis", branch = "main" }
+#
 ## Datastructures
 ##
 bytes = { version = "1.6.0", features = ["serde"] } # Bytes
@@ -66,7 +72,7 @@ priority-queue = { version = "2.0.3" }
 ## Encoding
 ##
 serde = { version = "1.0.201", features = [
-	"derive"
+	"derive",
 ] } # Serialization/deserializaton
 serde_with = { version = "3.8.1" } # Specify how to serialize certain fields
 serde_bytes = { version = "0.11.14" } # Optimized handling of `&[u8]` and `Vec<u8>` for Serde
@@ -138,6 +144,7 @@ async-compat = { version = "0.2.4" }
 ### Futures
 futures = { version = "0.3.30" }
 futures-util = { version = "0.3.30" }
+futures-channel = { version = "0.3.30" }
 ### Concurrency
 # crossbeam = { version = "0.8.4" }
 # crossbeam-utils = { version = "0.8.19" }
@@ -156,7 +163,7 @@ tracing-serde = { version = "0.1.3" } # Tracing + Serde
 tracing-journald = { version = "0.3.0" } # Tracing + JournalD
 tracing-wasm = { version = "0.2.1" } #  Tracing + Wasm
 tracing-subscriber = { version = "0.3.18", features = [
-	"env-filter"
+	"env-filter",
 ] } # Tracing + Tokio
 ### Non-Tracing
 # console_log = { version = "1.0.0" } # Send messages to the browser console
@@ -167,7 +174,9 @@ tracing-subscriber = { version = "0.3.18", features = [
 #
 ## Storage
 ##
-sea-orm = { version = "0.12.15" } # ORM
+gluesql = { version = "0.15.0", default-features = false }
+# gluesql-idb-storage = "0.15.0"
+# sea-orm = { version = "0.12.15" } # ORM
 #redb = { version = "2.1.0" } # KV-store
 #rocksdb = { version = "0.22" }
 #
@@ -189,7 +198,7 @@ sea-orm = { version = "0.12.15" } # ORM
 wasm-bindgen = { version = "0.2.92", features = [
 	"serde",
 	"serde_json",
-	"serde-serialize"
+	"serde-serialize",
 ] } # Interact between JS and Rust.
 wasm-bindgen-futures = { version = "0.4.42" } # Convert between Rust Futures and JavaScript Promises
 wasm-bindgen-struct = { version = "0.1.0" } # Macro for adeclaring wasm-bindgen imports
@@ -224,7 +233,7 @@ lazy_static = { version = "1.4.0" } # Lazily evaluated static variables
 derive_builder = { version = "0.20.0" } # Macro to implement the builder pattern for arbitrary structs
 if_chain = { version = "1.0.2" } # Macro for writing nested `if let` expressions.
 strum = { version = "0.26.2", features = [
-	"derive"
+	"derive",
 ] } # Macros for working with enums and strings
 #strum_macros = { version = "0.26.2" } # Macros for working with enums and strings
 once_cell = { version = "1.19.0" } # Single assignment cells and lazy values
@@ -246,7 +255,7 @@ smallvec = { version = "1.13.2", features = [
 	"write",
 	"union",
 	"const_generics",
-	"const_new"
+	"const_new",
 ] } # Store small vectors on the stack
 derive_more = { version = "0.99.18" } # More derive macros
 zeroize = { version = "1.8.1" } # Zeroing memory

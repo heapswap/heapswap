@@ -5,8 +5,6 @@ use std::iter::Once;
 //use crypto_bigint::{Encoding, Random, Uint8Array};
 //use derive_more::{Display, Error};
 use getset::{CopyGetters, Getters, MutGetters, Setters};
-use js_sys::Uint8Array;
-use wasm_bindgen::prelude::*;
 
 use rand::rngs::OsRng;
 use rand::RngCore;
@@ -20,6 +18,7 @@ use ed25519_dalek::{
 };
 use ed25519_dalek::{PUBLIC_KEY_LENGTH, SECRET_KEY_LENGTH, SIGNATURE_LENGTH};
 use once_cell::sync::OnceCell;
+use std::fmt;
 use x25519_dalek::{
 	PublicKey as DalekXPublicKey, SharedSecret as DalekXSharedSecret,
 	StaticSecret as DalekXPrivateKey,
@@ -31,7 +30,6 @@ use crate::u256::*;
 use super::common::*;
 use super::public_key::*;
 
-#[wasm_bindgen]
 #[derive(Clone, Getters, Serialize, Deserialize)]
 pub struct PrivateKey {
 	#[getset(get = "pub")]
@@ -40,6 +38,14 @@ pub struct PrivateKey {
 	ed: OnceCell<DalekEdPrivateKey>,
 	#[serde(skip)]
 	x: OnceCell<DalekXPrivateKey>,
+}
+
+impl fmt::Debug for PrivateKey {
+	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+		f.debug_struct("PrivateKey")
+			.field("u256", &self.u256)
+			.finish()
+	}
 }
 
 impl PrivateKey {
@@ -53,6 +59,10 @@ impl PrivateKey {
 			ed: OnceCell::new(),
 			x: OnceCell::new(),
 		}
+	}
+
+	pub fn random() -> Self {
+		Self::from_u256(U256::random())
 	}
 
 	/**
@@ -78,72 +88,27 @@ impl PrivateKey {
 		PublicKey::new(public_key)
 	}
 
-	pub fn sign(&self, message: &[u8]) -> SignatureArr {
-		self.ed().sign(message.to_vec().as_slice()).to_bytes()
-	}
-}
-
-#[wasm_bindgen]
-impl PrivateKey {
-	#[wasm_bindgen(constructor)]
-	pub fn _js_new(ed: EdPrivateKeyJS) -> Result<PrivateKey, KeyError> {
-		let ed: PrivateKeyArr = ed
-			.to_vec()
-			.try_into()
-			.map_err(|_| KeyError::InvalidPrivateKey)?;
-
-		Ok(Self::from_u256(U256::new(ed)))
-	}
-
-	#[wasm_bindgen]
-	pub fn random() -> Self {
-		Self::from_u256(U256::random())
-	}
-
-	#[wasm_bindgen]
-	pub fn edwards(&self) -> U256 {
-		U256::new(self.u256.unpacked().clone())
-	}
-
-	#[wasm_bindgen]
-	pub fn montgomery(&self) -> U256 {
-		U256::new(self.x().to_bytes().clone())
-	}
-
-	#[wasm_bindgen(js_name = publicKey, getter)]
-	pub fn _js_public_key(&self) -> EdPublicKeyJS {
-		Uint8Array::from(self.public_key().to_bytes().as_ref())
-	}
-
 	/**
 	 * Operations
 		*/
-	#[wasm_bindgen(js_name = sign)]
-	pub fn _js_sign(&self, message: &Uint8Array) -> SignatureJS {
-		Uint8Array::from(self.sign(message.to_vec().as_slice()).as_ref())
-	}
 
-	#[wasm_bindgen(js_name = sharedSecret)]
-	pub fn _js_shared_secret(&self, public_key: &PublicKey) -> U256 {
-		self.shared_secret(public_key)
+	pub fn sign(&self, message: &[u8]) -> Signature {
+		self.ed().sign(message.to_vec().as_slice()).to_bytes()
 	}
 
 	/**
 	 * Conversions
 		*/
-	#[wasm_bindgen]
 	pub fn to_string(&self) -> String {
 		self.u256.to_string()
 	}
 
-	#[wasm_bindgen]
 	pub fn from_string(string: &str) -> Result<PrivateKey, KeyError> {
 		let u256 = U256::from_string(string)
 			.map_err(|_| KeyError::InvalidPrivateKey)?;
 		Ok(PrivateKey::from_u256(u256))
 	}
 
-	#[wasm_bindgen]
 	pub fn to_bytes(&self) -> Vec<u8> {
 		self.u256.to_bytes()
 	}
@@ -153,9 +118,24 @@ impl PrivateKey {
 			U256::from_bytes(bytes).map_err(|_| KeyError::InvalidPrivateKey)?;
 		Ok(PrivateKey::from_u256(u256))
 	}
+}
 
-	#[wasm_bindgen(js_name = fromBytes)]
-	pub fn _js_from_bytes(bytes: &Uint8Array) -> Result<PrivateKey, KeyError> {
-		PrivateKey::from_bytes(&bytes.to_vec().as_slice())
+impl Libp2pKeypairable<KeyError> for PrivateKey {
+	fn to_libp2p_keypair(&self) -> libp2p::identity::Keypair {
+		libp2p::identity::Keypair::ed25519_from_bytes(
+			self.u256().unpacked().clone(),
+		)
+		.unwrap()
+	}
+
+	fn from_libp2p_keypair(
+		libp2p_keypair: libp2p::identity::Keypair,
+	) -> Result<PrivateKey, KeyError> {
+		let ed25519_keypair = libp2p_keypair
+			.try_into_ed25519()
+			.map_err(|_| KeyError::InvalidPrivateKey)?;
+		let private_key = PrivateKey::from_bytes(&ed25519_keypair.to_bytes())
+			.map_err(|_| KeyError::InvalidPrivateKey)?;
+		Ok(private_key)
 	}
 }

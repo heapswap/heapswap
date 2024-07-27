@@ -18,7 +18,7 @@ use std::error::Error;
 
 //#[wasm_bindgen]
 #[derive(Debug, Clone)]
-pub struct SwarmConfig {
+pub struct SubfieldSwarmConfig {
 	pub keypair: Keypair,
 	#[cfg(not(target_arch = "wasm32"))]
 	pub listen_addresses: Vec<String>,
@@ -28,7 +28,7 @@ pub struct SwarmConfig {
 
 #[cfg(not(target_arch = "wasm32"))]
 pub async fn create_swarm(
-	swarm_config: SwarmConfig,
+	swarm_config: SubfieldSwarmConfig,
 ) -> Result<Swarm<SubfieldBehaviour>, Box<dyn Error>> {
 	use tokio::time::Duration;
 
@@ -63,7 +63,7 @@ pub async fn create_swarm(
 
 #[cfg(target_arch = "wasm32")]
 pub async fn create_swarm(
-	swarm_config: SwarmConfig,
+	swarm_config: SubfieldSwarmConfig,
 ) -> Result<Swarm<SubfieldBehaviour>, Box<dyn Error>> {
 	use std::time::Duration;
 

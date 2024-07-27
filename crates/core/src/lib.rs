@@ -1,42 +1,49 @@
+#![allow(non_snake_case)]
+#![allow(dead_code)]
 #![allow(unused_imports)]
 #![allow(unused_variables)]
-#![allow(dead_code)]
+#![allow(unused_parens)]
+#![allow(unused_mut)]
+
+pub use eyre::{
+	eyre as eyr, Ok as EOk, OptionExt as _, Report as EReport,
+	Result as EResult,
+};
+/**
+ * Reexports
+*/
+// pub use futures::prelude::*;
+pub use lazy_static::lazy_static;
+pub use libp2p;
+pub use once_cell::sync::{Lazy, OnceCell};
+pub use reqwest;
+// pub use serde::{Deserialize, Deserializer, Serialize, Serializer};
+pub use serde::{de::DeserializeOwned, Deserialize, Serialize};
+pub use std::sync::Arc;
+pub use strum;
+pub use tracing;
+
+// Mutex reexport
+#[cfg(not(feature = "server"))]
+pub use {
+	// std::sync::{Mutex, MutexGuard},
+	futures::lock::{Mutex, MutexGuard},
+	std::sync::RwLock, // std::thread::yield_now,
+};
+#[cfg(feature = "server")]
+pub use {
+	tokio,
+	tokio::sync::{Mutex, MutexGuard, RwLock},
+	tokio::task::yield_now,
+};
+/**
+ * Exports
+*/
+pub mod arr;
+pub mod crypto;
+pub mod subfield;
 
 mod misc;
 pub use misc::*;
-
-pub mod arr;
-pub mod crypto;
-
-use wasm_bindgen::prelude::*;
-
-use tracing::subscriber::SetGlobalDefaultError;
-use tracing_subscriber::prelude::*;
-use tracing_subscriber::Registry;
-use tracing_wasm::{WASMLayer, WASMLayerConfig};
-
-#[cfg(target_arch = "wasm32")]
-// try to set the global default subscriber
-pub fn try_set_as_global_default_with_config(
-	config: WASMLayerConfig,
-) -> Result<(), SetGlobalDefaultError> {
-	tracing::subscriber::set_global_default(
-		Registry::default().with(WASMLayer::new(config)),
-	)
-}
-
-#[cfg(target_arch = "wasm32")]
-#[wasm_bindgen(start)]
-fn wasm_start() {
-	// set panic hook
-	console_error_panic_hook::set_once();
-
-	// set tracing level
-	let level = tracing::Level::DEBUG;
-	let tracing_cfg = tracing_wasm::WASMLayerConfigBuilder::new()
-		.set_max_level(level)
-		.build();
-	let _ = try_set_as_global_default_with_config(tracing_cfg);
-
-	tracing::info!("initialized with tracing level: {:?}", level);
-}
+pub mod constants;
+pub use constants::*;

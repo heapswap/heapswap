@@ -31,13 +31,13 @@ struct Behaviour {
 	mdns: mdns::tokio::Behaviour,
 }
 
-struct SwarmConfig {
+struct SubfieldSwarmConfig {
 	listen_addresses: Vec<String>,
 	is_server: bool,
 }
 
 
-fn create_swarm(swarm_config:SwarmConfig ) -> Result<Swarm<Behaviour>, Box<dyn Error>> {
+fn create_swarm(swarm_config:SubfieldSwarmConfig ) -> Result<Swarm<Behaviour>, Box<dyn Error>> {
 	let mut swarm = libp2p::SwarmBuilder::with_new_identity()
         .with_tokio()
         .with_tcp(
@@ -203,7 +203,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
         .with_env_filter(EnvFilter::from_default_env())
         .try_init();
 
-	let swarm = Arc::new(Mutex::new(create_swarm(SwarmConfig {
+	let swarm = Arc::new(Mutex::new(create_swarm(SubfieldSwarmConfig {
 		listen_addresses: vec!["/ip4/0.0.0.0/tcp/0".to_string()],
 		is_server: true,
 	})?));
@@ -324,7 +324,7 @@ async fn test_swarm() -> Result<(), Box<dyn Error>> {
 	println!("Creating {} swarms", replicas);
 	
 	for i in 0..replicas {
-		let swarm = Arc::new(Mutex::new(create_swarm(SwarmConfig {
+		let swarm = Arc::new(Mutex::new(create_swarm(SubfieldSwarmConfig {
 			listen_addresses: vec!["/ip4/0.0.0.0/tcp/0".to_string()],
 			is_server: true,
 		})?));

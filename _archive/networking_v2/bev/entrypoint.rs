@@ -47,7 +47,7 @@ async fn start_libp2p_swarm_wasm() -> SubfieldSwarm {
 	tracing::info!("Bootstrap Multiaddrs: {:?}", bootstrap_multiaddrs);
 
 	// create a libp2p swarm
-	let swarm_config = SwarmConfig {
+	let swarm_config = SubfieldSwarmConfig {
 		keypair,
 		bootstrap_multiaddrs,
 		listen_addresses: vec![],

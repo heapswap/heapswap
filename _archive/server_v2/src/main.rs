@@ -125,7 +125,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
 		.with(Protocol::QuicV1);
 		
 	let swarm: ThreadsafeSubfieldSwarm = Arc::new(Mutex::new(
-		swarm_create(SwarmConfig {
+		swarm_create(SubfieldSwarmConfig {
 			keypair: keypair.clone().into(),
 			listen_addresses: vec![
 				//"/ip4/0.0.0.0/tcp/0/ws".to_string(),

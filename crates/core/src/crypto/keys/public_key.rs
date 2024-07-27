@@ -5,8 +5,6 @@ use std::iter::Once;
 //use crypto_bigint::{Encoding, Random, Uint8Array};
 //use derive_more::{Display, Error};
 use getset::{CopyGetters, Getters, MutGetters, Setters};
-use js_sys::Uint8Array;
-use wasm_bindgen::prelude::*;
 
 use rand::rngs::OsRng;
 use rand::RngCore;
@@ -28,8 +26,8 @@ use x25519_dalek::{
 pub use super::common::*;
 use crate::arr;
 use crate::u256::*;
+use std::fmt;
 
-#[wasm_bindgen]
 #[derive(Clone, Getters, Serialize, Deserialize)]
 pub struct PublicKey {
 	#[getset(get = "pub")]
@@ -38,6 +36,14 @@ pub struct PublicKey {
 	ed: OnceCell<DalekEdPublicKey>,
 	#[serde(skip)]
 	x: OnceCell<DalekXPublicKey>,
+}
+
+impl fmt::Debug for PublicKey {
+	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+		f.debug_struct("PublicKey")
+			.field("u256", &self.u256)
+			.finish()
+	}
 }
 
 /**
@@ -71,68 +77,28 @@ impl PublicKey {
 		})
 	}
 
+	/**
+	 * Operations
+		*/
+
 	pub fn verify(
 		&self,
 		message: &[u8],
-		signature: &SignatureArr,
+		signature: &Signature,
 	) -> Result<bool, KeyError> {
 		match self.ed().verify(message, &DalekSignature::from(signature)) {
 			Ok(_) => Ok(true),
 			Err(_) => Ok(false),
 		}
 	}
-}
-
-#[wasm_bindgen]
-impl PublicKey {
-	#[wasm_bindgen(constructor)]
-	pub fn _js_new(ed: EdPublicKeyJS) -> Result<PublicKey, KeyError> {
-		let ed: PublicKeyArr = ed
-			.to_vec()
-			.try_into()
-			.map_err(|_| KeyError::InvalidPublicKey)?;
-
-		Ok(Self::new(ed))
-	}
-
-	#[wasm_bindgen]
-	pub fn edwards(&self) -> U256 {
-		U256::new(self.u256.unpacked().clone())
-	}
-
-	#[wasm_bindgen]
-	pub fn montgomery(&self) -> U256 {
-		U256::new(self.x().as_bytes().clone())
-	}
-
-	/**
-	 * Operations
-		*/
-	#[wasm_bindgen(js_name = verify)]
-	pub fn _js_verify(
-		&self,
-		message: &Uint8Array,
-		signature: &Uint8Array,
-	) -> Result<bool, KeyError> {
-		let message: &[u8] = &message.to_vec();
-		let signature: SignatureArr = signature
-			.to_vec()
-			.as_slice()
-			.try_into()
-			.map_err(|_| KeyError::InvalidSignature)?;
-
-		self.verify(message, &signature)
-	}
 
 	/**
 	 * Conversions
 		*/
-	#[wasm_bindgen(js_name = toString)]
 	pub fn to_string(&self) -> String {
 		self.u256.to_string()
 	}
 
-	#[wasm_bindgen(js_name = fromString)]
 	pub fn from_string(string: &str) -> Result<PublicKey, KeyError> {
 		let u256 = U256::from_string(string)
 			.map_err(|_| KeyError::InvalidPublicKey)?;
@@ -143,21 +109,11 @@ impl PublicKey {
 		self.u256.to_bytes()
 	}
 
-	#[wasm_bindgen(js_name = toBytes)]
-	pub fn _js_to_bytes(&self) -> Uint8Array {
-		Uint8Array::from(self.to_bytes().as_slice())
-	}
-
 	pub fn from_bytes(bytes: &[u8]) -> Result<PublicKey, KeyError> {
 		let bytes: PublicKeyArr =
 			bytes.try_into().map_err(|_| KeyError::InvalidPublicKey)?;
 
 		let u256 = U256::new(bytes);
 		Ok(PublicKey::from_u256(u256))
-	}
-
-	#[wasm_bindgen(js_name = fromBytes)]
-	pub fn _js_from_bytes(bytes: &Uint8Array) -> Result<PublicKey, KeyError> {
-		PublicKey::from_bytes(&bytes.to_vec().as_slice())
 	}
 }

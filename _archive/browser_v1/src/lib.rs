@@ -21,7 +21,7 @@ use tracing::Level;
 use wasm_bindgen::{prelude::*, JsError};
 use web_sys::{Document, HtmlElement};
 
-static CONFIG: OnceCell<Mutex<SwarmConfig>> = OnceCell::new();
+static CONFIG: OnceCell<Mutex<SubfieldSwarmConfig>> = OnceCell::new();
 static SWARM: OnceCell<ThreadsafeSubfieldSwarm> = OnceCell::new();
 
 #[wasm_bindgen]
@@ -57,7 +57,7 @@ pub async fn init_logging() {
 
 #[wasm_bindgen]
 pub async fn initialize(config: Config) -> Result<(), JsError> {
-	let swarm_config = SwarmConfig {
+	let swarm_config = SubfieldSwarmConfig {
 		bootstrap_urls: config.bootstrap_urls,
 		keypair: Keypair::generate_ed25519().into(),
 	};

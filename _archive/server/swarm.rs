@@ -31,14 +31,14 @@ struct Behaviour {
 	//mdns: mdns::tokio::Behaviour,
 }
 
-struct SwarmConfig {
+struct SubfieldSwarmConfig {
 	keypair: KeyPair,
 	listen_addresses: Vec<String>,
 	is_server: bool,
 }
 
 
-fn create_swarm(swarm_config:SwarmConfig ) -> Result<Swarm<Behaviour>, Box<dyn Error>> {
+fn create_swarm(swarm_config:SubfieldSwarmConfig ) -> Result<Swarm<Behaviour>, Box<dyn Error>> {
 	
 	let keypair: Keypair = Keypair::generate();
 	
