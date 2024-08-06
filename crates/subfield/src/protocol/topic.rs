@@ -1,5 +1,5 @@
 use super::*;
-use crate::u256::U256;
+use crate::vector::U256;
 use crate::*;
 use getset::{Getters, Setters};
 

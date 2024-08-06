@@ -1,6 +1,5 @@
 use super::keys::Keypair;
 use crate::arr;
-use js_sys::Uint8Array;
 use lazy_static::lazy_static;
 use once_cell::sync::OnceCell;
 pub use snow::{
@@ -8,7 +7,6 @@ pub use snow::{
 	TransportState,
 };
 use std::sync::Mutex;
-use wasm_bindgen::prelude::*;
 
 pub type NoiseBuffer = Vec<u8>;
 
@@ -23,7 +21,6 @@ const OVERHEAD: usize = 16;
 const CHUNK_SIZE_WITHOUT_OVERHEAD: usize = CHUNK_SIZE - OVERHEAD;
 const CHUNK_SIZE_WITH_OVERHEAD: usize = CHUNK_SIZE + OVERHEAD;
 
-#[wasm_bindgen]
 #[derive(Debug, Clone, strum::Display)]
 pub enum NoiseError {
 	#[strum(serialize = "InvalidKey")]
@@ -48,7 +45,6 @@ pub enum NoiseRole {
 
 pub type NoiseKeypairString = String;
 
-#[wasm_bindgen]
 pub struct Noise {
 	role: NoiseRole,
 	keypair: Keypair,
@@ -59,6 +55,68 @@ pub struct Noise {
 }
 
 impl Noise {
+	
+	/**
+	 * Constructors
+	*/
+	pub fn new(
+		role: NoiseRole,
+		keypair: Keypair,
+		handshake_state: HandshakeState,
+	) -> Self {
+		Noise {
+			role,
+			keypair,
+			handshake: Mutex::new(handshake_state),
+			transport: OnceCell::new(),
+			buffer: Mutex::new(vec![0u8; CHUNK_SIZE]),
+		}
+	}
+
+	
+	/**
+	 * Getters
+	*/
+	pub fn keypair(&self) -> Keypair {
+		self.keypair.clone()
+	}
+	
+	/**
+	 * Initiator
+	*/
+	pub fn initiator() -> Noise {
+		let keypair = Keypair::random();
+		Noise::initiator_from_keypair(keypair)
+	}
+	
+	pub fn initiator_from_keypair(keypair: Keypair) -> Noise {
+		let state = Builder::new(NOISE_PARAMS.clone())
+			.local_private_key(keypair.private_key().u256().data_u8())
+			//.remote_public_key(keypair.public_key().u256().data_u8())
+			.build_initiator()
+			.unwrap();
+
+		Noise::new(NoiseRole::Initiator, keypair, state)
+	}
+
+	/**
+	 * Responder
+		*/
+	pub fn responder() -> Noise {
+		let keypair = Keypair::random();
+		Noise::responder_from_keypair(keypair)
+	}
+
+	pub fn responder_from_keypair(keypair: Keypair) -> Noise {
+		let state = Builder::new(NOISE_PARAMS.clone())
+			.local_private_key(keypair.private_key().u256().data_u8())
+			//.remote_public_key(keypair.public_key().u256().data_u8())
+			.build_responder()
+			.unwrap();
+
+		Noise::new(NoiseRole::Responder, keypair, state)
+	}
+	
 	/**
 	 * Handshake
 		*/
@@ -88,14 +146,14 @@ impl Noise {
 
 	// Step 1
 	// Initiator: Write the first handshake message
-	fn handshake_step_1(&mut self) -> Result<NoiseBuffer, NoiseError> {
+	pub fn handshake_step_1(&mut self) -> Result<NoiseBuffer, NoiseError> {
 		self.encrypt_handshake()
 	}
 
 	// Step 2
 	// Responder: Read the first handshake message
 	// Responder: Write the second handshake message
-	fn handshake_step_2(
+	pub fn handshake_step_2(
 		&mut self,
 		message: &[u8],
 	) -> Result<NoiseBuffer, NoiseError> {
@@ -107,17 +165,33 @@ impl Noise {
 
 	// Step 3
 	// Initiator: Read the second handshake message
-	fn handshake_step_3(&mut self, message: &[u8]) -> Result<(), NoiseError> {
+	pub fn handshake_step_3(&mut self, message: &[u8]) -> Result<(), NoiseError> {
 		let _ = self.decrypt_handshake(message)?;
 		self.into_transport_mode();
 		Ok(())
+	}
+	
+	// into transport mode
+	fn into_transport_mode(&mut self) {
+		let handshake_option = self.handshake.get_mut().unwrap();
+		// Replace the handshake with a dummy
+		let dummy_handshake_state = Builder::new(NOISE_PARAMS.clone())
+			.local_private_key(self.keypair.private_key().u256().data_u8())
+			.build_initiator()
+			.unwrap();
+		let handshake =
+			std::mem::replace(handshake_option, dummy_handshake_state);
+
+		let transport = handshake.into_transport_mode().unwrap();
+
+		let _ = self.transport.set(Mutex::new(transport));
 	}
 
 	/**
 	 * Encrypt
 
 	*/
-	fn encrypt(&mut self, data: &[u8]) -> Result<NoiseBuffer, NoiseError> {
+	pub fn encrypt(&mut self, data: &[u8]) -> Result<NoiseBuffer, NoiseError> {
 		let mut encrypted_data = Vec::new();
 
 		let mut buffer = self.buffer.lock().unwrap();
@@ -136,7 +210,7 @@ impl Noise {
 	/**
 	 * Decrypt
 		*/
-	fn decrypt(&mut self, data: &[u8]) -> Result<NoiseBuffer, NoiseError> {
+	pub fn decrypt(&mut self, data: &[u8]) -> Result<NoiseBuffer, NoiseError> {
 		let mut decrypted_data = Vec::new();
 		let mut buffer = self.buffer.lock().unwrap();
 		let mut transport = self.transport.get().unwrap().lock().unwrap();
@@ -152,142 +226,25 @@ impl Noise {
 	}
 }
 
-#[wasm_bindgen]
-impl Noise {
-	/**
-	 * Constructors
-		*/
-	fn new(
-		role: NoiseRole,
-		keypair: Keypair,
-		handshake_state: HandshakeState,
-	) -> Self {
-		Noise {
-			role,
-			keypair,
-			handshake: Mutex::new(handshake_state),
-			transport: OnceCell::new(),
-			buffer: Mutex::new(vec![0u8; CHUNK_SIZE]),
-		}
-	}
-
-	/**
-		* Initiator
-		*/
-	#[wasm_bindgen]
-	pub fn initiator() -> Noise {
-		let keypair = Keypair::random();
-		Noise::initiator_from_keypair(keypair)
-	}
-
-	#[wasm_bindgen(js_name = initiatorFromKeypair)]
-	pub fn initiator_from_keypair(keypair: Keypair) -> Noise {
-		let state = Builder::new(NOISE_PARAMS.clone())
-			.local_private_key(keypair.private_key().u256().data_u8())
-			//.remote_public_key(keypair.public_key().u256().data_u8())
-			.build_initiator()
-			.unwrap();
-
-		Noise::new(NoiseRole::Initiator, keypair, state)
-	}
-
-	/**
-	 * Responder
-		*/
-	#[wasm_bindgen]
-	pub fn responder() -> Noise {
-		let keypair = Keypair::random();
-		Noise::responder_from_keypair(keypair)
-	}
-
-	#[wasm_bindgen(js_name = responderFromKeypair)]
-	pub fn responder_from_keypair(keypair: Keypair) -> Noise {
-		let state = Builder::new(NOISE_PARAMS.clone())
-			.local_private_key(keypair.private_key().u256().data_u8())
-			//.remote_public_key(keypair.public_key().u256().data_u8())
-			.build_responder()
-			.unwrap();
-
-		Noise::new(NoiseRole::Responder, keypair, state)
-	}
-
-	/**
-	 * Handshake
-		*/
-
-	#[wasm_bindgen(js_name = handshakeStep1)]
-	pub fn _js_handshake_step_1(&mut self) -> Result<Uint8Array, JsError> {
-		self.handshake_step_1()
-			.map(|encrypted_data| Uint8Array::from(&encrypted_data[..]))
-			.map_err(|e| JsError::new(&e.to_string()))
-	}
-
-	#[wasm_bindgen(js_name = handshakeStep2)]
-	pub fn _js_handshake_step_2(
-		&mut self,
-		message: &Uint8Array,
-	) -> Result<Uint8Array, JsError> {
-		self.handshake_step_2(&message.to_vec())
-			.map(|encrypted_data| Uint8Array::from(&encrypted_data[..]))
-			.map_err(|e| JsError::new(&e.to_string()))
-	}
-
-	#[wasm_bindgen(js_name = handshakeStep3)]
-	pub fn _js_handshake_step_3(
-		&mut self,
-		message: &Uint8Array,
-	) -> Result<(), JsError> {
-		self.handshake_step_3(&message.to_vec())
-			.map_err(|e| JsError::new(&e.to_string()))
-	}
-
-	fn into_transport_mode(&mut self) {
-		let handshake_option = self.handshake.get_mut().unwrap();
-		// Replace the handshake with a dummy
-		let dummy_handshake_state = Builder::new(NOISE_PARAMS.clone())
-			.local_private_key(self.keypair.private_key().u256().data_u8())
-			.build_initiator()
-			.unwrap();
-		let handshake =
-			std::mem::replace(handshake_option, dummy_handshake_state);
-
-		let transport = handshake.into_transport_mode().unwrap();
-
-		let _ = self.transport.set(Mutex::new(transport));
-	}
-
-	/**
-	 * Encrypt
-		*/
-
-	#[wasm_bindgen(js_name = encrypt)]
-	pub fn _js_encrypt(
-		&mut self,
-		data: &Uint8Array,
-	) -> Result<Uint8Array, JsError> {
-		self.encrypt(&data.to_vec())
-			.map(|encrypted_data| Uint8Array::from(&encrypted_data[..]))
-			.map_err(|e| JsError::new(&e.to_string()))
-	}
-
-	/**
-	 * Decrypt
-		*/
-	#[wasm_bindgen(js_name = decrypt)]
-	pub fn _js_decrypt(
-		&mut self,
-		data: &Uint8Array,
-	) -> Result<Uint8Array, JsError> {
-		self.decrypt(&data.to_vec())
-			.map(|decrypted_data| Uint8Array::from(&decrypted_data[..]))
-			.map_err(|e| JsError::new(&e.to_string()))
-	}
-
-	/**
-	 * Getters
-		*/
-	#[wasm_bindgen(getter)]
-	pub fn keypair(&self) -> Keypair {
-		self.keypair.clone()
-	}
+#[test]
+fn test_noise() {
+	let mut initiator = Noise::initiator();
+	let mut responder = Noise::responder();
+	
+	// handshake
+	let initiator_message = initiator.handshake_step_1().unwrap();
+	let responder_message = responder.handshake_step_2(&initiator_message).unwrap();
+	initiator.handshake_step_3(&responder_message).unwrap();
+	
+	// encrypt from initiator to responder
+	let data = b"hello world";
+	let encrypted = initiator.encrypt(data).unwrap();
+	let decrypted = responder.decrypt(&encrypted).unwrap();
+	assert_eq!(data.to_vec(), decrypted);
+	
+	// encrypt from responder to initiator
+	let data = b"hello world";
+	let encrypted = responder.encrypt(data).unwrap();
+	let decrypted = initiator.decrypt(&encrypted).unwrap();
+	assert_eq!(data.to_vec(), decrypted);
 }

@@ -24,7 +24,7 @@ use x25519_dalek::{
 };
 
 use crate::arr;
-use crate::u256::*;
+use crate::vector::*;
 
 /**
  * Types

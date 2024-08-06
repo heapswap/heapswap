@@ -129,6 +129,7 @@ num-traits.workspace = true
 strum.workspace = true
 ndarray = { workspace = true, features = ["serde"]}
 ndarray-rand = { workspace = true}
+chrono.workspace = true
 
 [dev-dependencies]
 timeit.workspace = true

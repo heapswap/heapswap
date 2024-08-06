@@ -1,7 +1,7 @@
 use super::super::*;
 use crate::arr;
 use crate::crypto::*;
-use crate::u256::*;
+use crate::vector::*;
 use futures::task::{Context, Poll, Waker};
 use futures::{Stream, StreamExt};
 use getset::{Getters, Setters};

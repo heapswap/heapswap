@@ -25,7 +25,7 @@ use x25519_dalek::{
 };
 
 use crate::arr;
-use crate::u256::*;
+use crate::vector::*;
 
 use super::common::*;
 use super::public_key::*;
@@ -95,31 +95,43 @@ impl PrivateKey {
 	pub fn sign(&self, message: &[u8]) -> Signature {
 		self.ed().sign(message.to_vec().as_slice()).to_bytes()
 	}
+}
 
-	/**
-	 * Conversions
-		*/
-	pub fn to_string(&self) -> String {
-		self.u256.to_string()
+
+/**
+ * Vecable
+*/
+impl Vecable<KeyError> for PrivateKey {
+	fn to_vec(&self) -> Vec<u8> {
+		self.u256.to_vec()
 	}
-
-	pub fn from_string(string: &str) -> Result<PrivateKey, KeyError> {
-		let u256 = U256::from_string(string)
-			.map_err(|_| KeyError::InvalidPrivateKey)?;
-		Ok(PrivateKey::from_u256(u256))
+	
+	fn from_vec(vec: Vec<u8>) -> Result<PrivateKey, KeyError> {
+		Self::from_arr(&vec)
 	}
-
-	pub fn to_bytes(&self) -> Vec<u8> {
-		self.u256.to_bytes()
-	}
-
-	pub fn from_bytes(bytes: &[u8]) -> Result<PrivateKey, KeyError> {
-		let u256 =
-			U256::from_bytes(bytes).map_err(|_| KeyError::InvalidPrivateKey)?;
+	fn from_arr(arr: &[u8]) -> Result<Self, KeyError> {
+		let u256 =	 U256::from_arr(arr).map_err(|_| KeyError::InvalidPrivateKey)?;
 		Ok(PrivateKey::from_u256(u256))
 	}
 }
 
+/**
+ * Stringable
+*/
+impl Stringable<KeyError> for PrivateKey {
+	fn to_string(&self) -> String {
+		self.u256.to_string()
+	}
+	
+	fn from_string(string: &str) -> Result<Self, KeyError> {
+		let u256 = U256::from_string(string).map_err(|_| KeyError::InvalidPrivateKey)?;
+		Ok(PrivateKey::from_u256(u256))
+	}
+}
+
+/**
+ * Libp2pKeypairable
+*/
 impl Libp2pKeypairable<KeyError> for PrivateKey {
 	fn to_libp2p_keypair(&self) -> libp2p::identity::Keypair {
 		libp2p::identity::Keypair::ed25519_from_bytes(
@@ -134,7 +146,7 @@ impl Libp2pKeypairable<KeyError> for PrivateKey {
 		let ed25519_keypair = libp2p_keypair
 			.try_into_ed25519()
 			.map_err(|_| KeyError::InvalidPrivateKey)?;
-		let private_key = PrivateKey::from_bytes(&ed25519_keypair.to_bytes())
+		let private_key = PrivateKey::from_vec(ed25519_keypair.to_bytes().to_vec())
 			.map_err(|_| KeyError::InvalidPrivateKey)?;
 		Ok(private_key)
 	}

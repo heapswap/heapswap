@@ -25,7 +25,7 @@ use x25519_dalek::{
 
 pub use super::common::*;
 use crate::arr;
-use crate::u256::*;
+use crate::vector::*;
 use std::fmt;
 
 #[derive(Clone, Getters, Serialize, Deserialize)]
@@ -92,28 +92,36 @@ impl PublicKey {
 		}
 	}
 
-	/**
-	 * Conversions
-		*/
-	pub fn to_string(&self) -> String {
-		self.u256.to_string()
-	}
+}
 
-	pub fn from_string(string: &str) -> Result<PublicKey, KeyError> {
-		let u256 = U256::from_string(string)
-			.map_err(|_| KeyError::InvalidPublicKey)?;
+/**
+ * Vecable
+*/
+impl Vecable<KeyError> for PublicKey {
+	fn to_vec(&self) -> Vec<u8> {
+		self.u256.to_vec()
+	}
+	
+	fn from_vec(vec: Vec<u8>) -> Result<PublicKey, KeyError> {
+		Self::from_arr(&vec)
+	}
+	
+	fn from_arr(arr: &[u8]) -> Result<Self, KeyError> {
+		let u256 = U256::from_arr(arr).map_err(|_| KeyError::InvalidPublicKey)?;
 		Ok(PublicKey::from_u256(u256))
 	}
+}
 
-	pub fn to_bytes(&self) -> Vec<u8> {
-		self.u256.to_bytes()
+/**
+ * Stringable
+*/
+impl Stringable<KeyError> for PublicKey {
+	fn to_string(&self) -> String {
+		self.u256.to_string()
 	}
-
-	pub fn from_bytes(bytes: &[u8]) -> Result<PublicKey, KeyError> {
-		let bytes: PublicKeyArr =
-			bytes.try_into().map_err(|_| KeyError::InvalidPublicKey)?;
-
-		let u256 = U256::new(bytes);
+	
+	fn from_string(string: &str) -> Result<Self, KeyError> {
+		let u256 = U256::from_string(string).map_err(|_| KeyError::InvalidPublicKey)?;
 		Ok(PublicKey::from_u256(u256))
 	}
 }

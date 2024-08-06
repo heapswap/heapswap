@@ -33,7 +33,7 @@ impl<
 }
 
 pub struct SubfieldStoreConfig {
-	location: String,
+	pub location: String,
 }
 
 #[derive(Clone)]

@@ -12,6 +12,9 @@ pub use topic::*;
 mod author;
 pub use author::*;
 
+mod events;
+pub use events::*;
+
 // events
 // mod handle_events;
 // pub use handle_events::*;

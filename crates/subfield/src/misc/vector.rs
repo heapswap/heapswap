@@ -12,6 +12,8 @@ pub enum VectorError {
 	InvalidLength,
 }
 
+pub type U256 = Vector<32>;
+pub type U1024 = Vector<128>;
 
 #[derive(Debug)]
 pub struct Vector<const N: usize>
@@ -104,16 +106,20 @@ impl<const N: usize> Vector<N> {
 }
 
 /**
- * Byteable
+ * Arrable
 */
-impl<const N: usize> Byteable<VectorError> for Vector<N> {
-	fn to_bytes(&self) -> Vec<u8> {
+impl<const N: usize> Vecable<VectorError> for Vector<N> {
+	fn to_vec(&self) -> Vec<u8> {
 		self.data_u8.to_vec()
 	}
-
-	fn from_bytes(bytes: &[u8]) -> Result<Vector<N>, VectorError> {
+	
+	fn from_vec(bytes: Vec<u8>) -> Result<Vector<N>, VectorError> {
+		Vector::<N>::from_arr(&bytes)
+	}
+	
+	fn from_arr(arr: &[u8]) -> Result<Vector<N>, VectorError> {
 		let bytes: [u8; N] =
-			bytes.try_into().map_err(|_| VectorError::InvalidLength)?;
+		arr.try_into().map_err(|_| VectorError::InvalidLength)?;
 		Ok(Vector::<N>::from_u8(bytes))
 	}
 }
@@ -144,14 +150,29 @@ impl<const N: usize> PartialEq for Vector<N> {
 	}
 }
 
+impl<const N: usize> Eq for Vector<N> {}
+
 impl<const N: usize> Into<String> for Vector<N> {
 	fn into(self) -> String {
 		self.to_string()
 	}
 }
 
+impl<const N: usize> PartialOrd for Vector<N> {
+    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+        self.data_u8.partial_cmp(&other.data_u8)
+    }
+}
+
+impl<const N: usize> Ord for Vector<N> {
+    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
+        self.data_u8.cmp(&other.data_u8)
+    }
+}
+
+
 /**
- * Impls
+ * Froms
 */
 impl<const N: usize> From<String> for Vector<N> {
 	fn from(string: String) -> Self {
@@ -162,6 +183,12 @@ impl<const N: usize> From<String> for Vector<N> {
 impl<const N: usize> From<&str> for Vector<N> {
 	fn from(string: &str) -> Self {
 		Vector::<N>::from_string(string).unwrap()
+	}
+}
+
+impl<const N: usize> Into<Vec<u8>> for Vector<N> {
+	fn into(self) -> Vec<u8> {
+		self.to_vec()
 	}
 }
 
@@ -199,7 +226,7 @@ impl<'de, const N: usize> Deserialize<'de> for Vector<N> {
 	}
 }
 
-
+/*
 #[test]
 fn test_distance(){
     
@@ -211,7 +238,7 @@ fn test_distance(){
     
         let key = Vector::<32>::random();
         
-		/*
+		
         for i in 0..population_size{
             distances.push(key.cosine_similarity(&Vector::<32>::random()));
         }  
@@ -226,8 +253,9 @@ fn test_distance(){
         distances.sort_by(|a, b| b.partial_cmp(a).unwrap());
         // println!("desc: {:?}", &distances[0..3]);
         assert_ne!(distances[0], distances[1]);     
-		*/   
+		   
         
     });
 	println!("test_distance: {:.2}ms", s*iterations as f64);
 }
+*/

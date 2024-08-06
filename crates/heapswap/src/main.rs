@@ -6,6 +6,7 @@
 
 use subfield::libp2p::futures::FutureExt;
 use subfield::libp2p::multiaddr::{Multiaddr, Protocol};
+use subfield::store::SubfieldStoreConfig;
 use subfield::*;
 
 use std::borrow::BorrowMut;
@@ -36,8 +37,8 @@ use {
 
 #[derive(Clone)]
 pub struct AppState {
-	swarm_tx: Transmitter<subfield::SubfieldMessage>,
-	swarm: subfield::ThreadsafeSubfieldSwarm,
+	swarm_tx: Transmitter<SubfieldRequest>,
+	swarm: swarm::ThreadsafeSubfieldSwarm,
 }
 
 fn main() -> EResult<()> {
@@ -93,9 +94,9 @@ fn main() -> EResult<()> {
 
 			let keypair = crypto::Keypair::random();
 
-			let swarm_instance: subfield::SubfieldSwarm =
+			let swarm_instance: swarm::SubfieldSwarm =
 			// Arc::new(Mutex::new(
-			subfield::create_server(subfield::SubfieldSwarmConfig {
+			swarm::create(swarm::SubfieldSwarmConfig {
 				keypair: keypair.clone(),
 				listen_addresses: vec![
 					"/ip4/0.0.0.0/tcp/0/ws".to_string(),
@@ -113,7 +114,7 @@ fn main() -> EResult<()> {
 			.map_err(|e| eyr!(e.to_string()))?;
 			// ));
 
-			let threadsafe_swarm: ThreadsafeSubfieldSwarm =
+			let threadsafe_swarm: swarm::ThreadsafeSubfieldSwarm =
 				Arc::new(Mutex::new(swarm_instance));
 
 			// let (outgoing_swarm_tx, outgoing_swarm_rx) = swarm::new_subfield_message_channel();
@@ -124,13 +125,15 @@ fn main() -> EResult<()> {
 			// let mp_swarm = Arc::new(Mutex::new(swarm::MultiplexedSwarm::new(swarm_instance)));
 			// let mp_swarm_cloned = mp_swarm.clone();
 
-			let (mut tx, mut rx) = portal::<SubfieldMessage>();
+			let (mut tx, mut rx) = portal::<SubfieldRequest>();
 			let swarm_tx = tx.clone();
 
 			let threadsafe_swarm_cloned = threadsafe_swarm.clone();
-
+				
 			let store_threadsafe = Arc::new(Mutex::new(
-				store::SubfieldStore::new("_".to_string()).await.unwrap(),
+				store::SubfieldStore::new(SubfieldStoreConfig{
+					location: "".to_string(),
+				}).await.unwrap(),
 			));
 
 			tokio::task::spawn_local(async move {
@@ -141,7 +144,7 @@ fn main() -> EResult<()> {
 
 					let mut store_lock = store_threadsafe.lock().await;
 
-					let _ = subfield::handle_events(
+					let _ = events::handle_events(
 						&mut *store_lock,
 						&mut *swarm_lock,
 						&mut rx,

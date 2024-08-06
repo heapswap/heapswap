@@ -6,7 +6,7 @@ use super::swarm_create::*;
 use crate::arr;
 use crate::crypto::*;
 use crate::crypto::*;
-use crate::u256::*;
+use crate::vector::*;
 use bytes::Bytes;
 use dashmap::DashMap;
 use futures::task::{Context, Poll, Waker};

@@ -1,6 +1,6 @@
 use super::subfield::*;
 use crate::crypto::*;
-use crate::u256::*;
+use crate::vector::*;
 use bytes::Bytes;
 use futures::task::{Context, Poll, Waker};
 use futures::{Stream, StreamExt};

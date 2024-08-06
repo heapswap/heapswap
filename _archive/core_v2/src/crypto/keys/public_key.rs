@@ -27,7 +27,7 @@ use x25519_dalek::{
 
 pub use super::common::*;
 use crate::arr;
-use crate::u256::*;
+use crate::vector::*;
 
 #[wasm_bindgen]
 #[derive(Clone, Getters, Serialize, Deserialize)]

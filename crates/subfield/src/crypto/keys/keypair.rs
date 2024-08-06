@@ -27,7 +27,7 @@ use super::private_key::*;
 use super::public_key::*;
 use super::{common::*, private_key};
 use crate::arr;
-use crate::u256::*;
+use crate::vector::*;
 
 #[derive(Debug, Clone, Serialize, Deserialize, Getters)]
 pub struct Keypair {
@@ -98,28 +98,38 @@ impl Keypair {
 	}
 }
 
+/**
+ * Stringable
+*/
 impl Stringable<KeyError> for Keypair {
 	fn to_string(&self) -> String {
-		arr::to_base32(&self.to_bytes())
+		arr::to_base32(&self.to_vec())
 	}
 
 	fn from_string(string: &str) -> Result<Keypair, KeyError> {
 		let string_bytes =
 			arr::from_base32(string).map_err(|_| KeyError::InvalidKeypair)?;
 
-		Self::from_bytes(&string_bytes)
+		Self::from_arr(&string_bytes)
 	}
 }
 
-impl Byteable<KeyError> for Keypair {
-	fn to_bytes(&self) -> Vec<u8> {
-		let mut bytes = self.private_key().to_bytes().to_vec();
-		bytes.extend(self.public_key().to_bytes().to_vec());
+/**
+ * Vecable
+*/
+impl Vecable<KeyError> for Keypair {
+	fn to_vec(&self) -> Vec<u8> {
+		let mut bytes = self.private_key().to_vec().to_vec();
+		bytes.extend(self.public_key().to_vec().to_vec());
 		bytes
 	}
 
-	fn from_bytes(bytes: &[u8]) -> Result<Keypair, KeyError> {
-		let private_key = PrivateKey::from_bytes(&bytes[..SECRET_KEY_LENGTH])
+	fn from_vec(bytes: Vec<u8>) -> Result<Keypair, KeyError> {
+		Self::from_arr(&bytes)
+	}
+	
+	fn from_arr(arr: &[u8]) -> Result<Keypair, KeyError> {
+		let private_key = PrivateKey::from_arr(&arr[..SECRET_KEY_LENGTH])
 			.map_err(|_| KeyError::InvalidPrivateKey)?;
 		let public_key = private_key.public_key();
 
@@ -127,6 +137,9 @@ impl Byteable<KeyError> for Keypair {
 	}
 }
 
+/**
+ * Libp2pKeypairable
+*/
 impl Libp2pKeypairable<KeyError> for Keypair {
 	fn to_libp2p_keypair(&self) -> libp2p::identity::Keypair {
 		self.private_key().to_libp2p_keypair()
@@ -138,4 +151,22 @@ impl Libp2pKeypairable<KeyError> for Keypair {
 		PrivateKey::from_libp2p_keypair(libp2p_keypair)
 			.map(|private_key| Keypair::new(private_key))
 	}
+}
+
+#[test]
+fn test_sign_and_verify() {
+	let keypair = Keypair::random();
+	let message = b"hello world";
+	let signature = keypair.sign(message);
+	assert!(keypair.public_key().verify(message, &signature).unwrap());
+
+}
+
+#[test]
+fn test_shared_secret() {
+	let alice = Keypair::random();
+	let bob = Keypair::random();
+	let alice_shared_secret = alice.shared_secret(&bob.public_key());
+	let bob_shared_secret = bob.shared_secret(&alice.public_key());
+	assert_eq!(alice_shared_secret, bob_shared_secret);
 }

@@ -1,5 +1,5 @@
 use crate::arr;
-use crate::u256::*;
+use crate::vector::*;
 use js_sys::Uint8Array;
 use wasm_bindgen::prelude::*;
 //use getset::Getters;

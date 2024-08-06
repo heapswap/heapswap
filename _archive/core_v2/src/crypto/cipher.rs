@@ -1,5 +1,5 @@
 use crate::arr;
-use crate::u256::*;
+use crate::vector::*;
 use chacha20poly1305::{
 	aead::{Aead, AeadCore, KeyInit, OsRng},
 	ChaCha20Poly1305,

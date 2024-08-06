@@ -29,7 +29,7 @@ use super::private_key::*;
 use super::public_key::*;
 use super::{common::*, private_key};
 use crate::arr;
-use crate::u256::*;
+use crate::vector::*;
 
 #[wasm_bindgen]
 #[derive(Clone, Serialize, Deserialize, Getters)]

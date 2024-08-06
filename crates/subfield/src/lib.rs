@@ -17,6 +17,8 @@ pub use lazy_static::lazy_static;
 pub use libp2p;
 pub use once_cell::sync::{Lazy, OnceCell};
 pub use reqwest;
+pub use bytes::{Buf, BufMut, Bytes, BytesMut};
+pub use bincode::{deserialize, serialize};
 // pub use serde::{Deserialize, Deserializer, Serialize, Serializer};
 pub use serde::{de::DeserializeOwned, Deserialize, Deserializer, Serialize, Serializer};
 pub use getset::{

@@ -1,3 +1,5 @@
+use bytes::Bytes;
+
 // Able to be randomly generated
 pub trait Randomable: Sized {
 	fn random() -> Self;
@@ -5,9 +7,17 @@ pub trait Randomable: Sized {
 
 // Able to be converted to and from bytes
 pub trait Byteable<E>: Sized {
-	fn to_bytes(&self) -> Vec<u8>;
-	fn from_bytes(bytes: &[u8]) -> Result<Self, E>;
+	fn to_bytes(&self) -> Bytes;
+	fn from_bytes(bytes: Bytes) -> Result<Self, E>;
 }
+
+// Able to be converted to and from a vec
+pub trait Vecable<E>: Sized {
+	fn to_vec(&self) -> Vec<u8>;
+	fn from_vec(vector: Vec<u8>) -> Result<Self, E>;
+	fn from_arr(arr: &[u8]) -> Result<Self, E>;
+}
+
 
 // Able to be converted to and from a string
 pub trait Stringable<E>: Sized {

@@ -3,7 +3,7 @@ use crate::arr::{hamming, xor};
 use crate::constants::NS;
 use crate::crypto::keys;
 use crate::misc::traits::*;
-use crate::u256;
+use crate::vector;
 use crate::{crypto::keys::KeyArr, u256::*};
 use getset::{CopyGetters, Getters, Setters};
 use ordered_float::OrderedFloat;

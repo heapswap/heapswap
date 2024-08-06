@@ -1,5 +1,5 @@
 use crate::arr;
-use crate::u256::*;
+use crate::vector::*;
 use chacha20poly1305::{
 	aead::{Aead, AeadCore, KeyInit, OsRng},
 	ChaCha20Poly1305,
@@ -35,12 +35,15 @@ impl Cipher {
 		Cipher { secret, cipher }
 	}
 
+	pub fn random() -> Cipher {
+		Cipher::new(U256::random())
+	}
+	
 	/**
-	 * Random
+	 * Getters
 		*/
-
-	pub fn random_secret() -> SecretKey {
-		U256::random()
+	pub fn secret(&self) -> &SecretKey {
+		&self.secret
 	}
 
 	/**
@@ -81,4 +84,13 @@ impl Cipher {
 		// Concatenate nonce and encrypted data
 		arr::concat(&[&nonce, encrypted_data.as_slice()])
 	}
+}
+
+#[test]
+fn test_cipher() {
+	let cipher = Cipher::random();
+	let plaintext = b"hello world";
+	let ciphertext = cipher.encrypt(plaintext);
+	let decrypted = cipher.decrypt(&ciphertext).unwrap();
+	assert_eq!(plaintext.to_vec(), decrypted);
 }

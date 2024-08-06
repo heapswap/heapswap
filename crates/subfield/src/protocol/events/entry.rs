@@ -1,6 +1,6 @@
-use super::subfield::*;
+use crate::*;
 use crate::crypto::*;
-use crate::u256::*;
+use crate::vector::*;
 use bytes::Bytes;
 use futures::task::{Context, Poll, Waker};
 use futures::{Stream, StreamExt};
@@ -39,11 +39,11 @@ pub struct Entry {
 pub struct PublicEntryData {
 	#[getset(get = "pub")]
 	#[serde(with = "serde_bytes")]
-	signer_signature: keys::SignatureArr,
+	signer_signature: crypto::Signature,
 
 	#[getset(get = "pub")]
 	#[serde(with = "serde_bytes")]
-	cosigner_signature: Option<keys::SignatureArr>,
+	cosigner_signature: Option<crypto::Signature>,
 
 	#[getset(get = "pub")]
 	private_is_private: bool,
