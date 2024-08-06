@@ -47,7 +47,7 @@ pub fn heapswap_keypair_to_libp2p_keypair(
 	keypair: &Keypair,
 ) -> libp2p::identity::Keypair {
 	libp2p::identity::Keypair::ed25519_from_bytes(
-		keypair.private_key().u256().unpacked().clone(),
+		keypair.private_key().u256().data_u8().clone(),
 	)
 	.unwrap()
 }

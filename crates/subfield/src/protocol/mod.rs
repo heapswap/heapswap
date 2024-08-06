@@ -3,8 +3,8 @@ pub mod swarm;
 
 mod subfield;
 pub use subfield::*;
-mod subfield_client;
-pub use subfield_client::*;
+// mod subfield_client;
+// pub use subfield_client::*;
 mod message;
 pub use message::*;
 mod topic;
@@ -25,4 +25,3 @@ pub use author::*;
 // // misc
 // mod misc;
 // pub use misc::*;
-k

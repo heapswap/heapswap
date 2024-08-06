@@ -247,7 +247,8 @@ semver = { version = "1.0.23" } # Parser and evaluator for Cargo's semantic vers
 indent = { version = "0.1.1" } # Functions for indenting multiline strings
 typenum = { version = "1.17.0" } # Type-level numbers evaluated at compile time
 generic-array = { version = "1.0.0" } # Generically lengthed arrays
-ndarray = { version = "0.15.6" } # Ndimensional arrays
+ndarray = { version = "0.16.0" } # Generic arrays
+ndarray-rand = { version = "0.15.0" } # Random Generic arrays
 byteorder = { version = "1.5.0" } # Encoding and decoding numbers in either big-endian or little-endian order
 num_cpus = { version = "1.16.0" } # Get the number of cpus
 timeit = { version = "0.1.2" } # Timeit macro

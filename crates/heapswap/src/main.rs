@@ -4,10 +4,9 @@
 #![allow(unused_parens)]
 #![allow(dead_code)]
 
-use heapswap_core::libp2p::futures::FutureExt;
-use heapswap_core::libp2p::multiaddr::{Multiaddr, Protocol};
-use heapswap_core::subfield::{SubfieldMessage, ThreadsafeSubfieldSwarm};
-use heapswap_core::*;
+use subfield::libp2p::futures::FutureExt;
+use subfield::libp2p::multiaddr::{Multiaddr, Protocol};
+use subfield::*;
 
 use std::borrow::BorrowMut;
 use std::{
@@ -38,7 +37,7 @@ use {
 #[derive(Clone)]
 pub struct AppState {
 	swarm_tx: Transmitter<subfield::SubfieldMessage>,
-	swarm: ThreadsafeSubfieldSwarm,
+	swarm: subfield::ThreadsafeSubfieldSwarm,
 }
 
 fn main() -> EResult<()> {

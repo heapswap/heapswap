@@ -61,7 +61,7 @@ impl PublicKey {
 		*/
 	pub fn ed(&self) -> &DalekEdPublicKey {
 		self.ed.get_or_init(|| {
-			DalekEdPublicKey::from_bytes(&self.u256.unpacked()).unwrap()
+			DalekEdPublicKey::from_bytes(&self.u256.data_u8()).unwrap()
 		})
 	}
 
@@ -97,7 +97,7 @@ impl PublicKey {
 
 	#[wasm_bindgen]
 	pub fn edwards(&self) -> U256 {
-		U256::new(self.u256.unpacked().clone())
+		U256::new(self.u256.data_u8().clone())
 	}
 
 	#[wasm_bindgen]

@@ -183,8 +183,8 @@ impl Noise {
 	#[wasm_bindgen(js_name = initiatorFromKeypair)]
 	pub fn initiator_from_keypair(keypair: Keypair) -> Noise {
 		let state = Builder::new(NOISE_PARAMS.clone())
-			.local_private_key(keypair.private_key().u256().unpacked())
-			//.remote_public_key(keypair.public_key().u256().unpacked())
+			.local_private_key(keypair.private_key().u256().data_u8())
+			//.remote_public_key(keypair.public_key().u256().data_u8())
 			.build_initiator()
 			.unwrap();
 
@@ -203,8 +203,8 @@ impl Noise {
 	#[wasm_bindgen(js_name = responderFromKeypair)]
 	pub fn responder_from_keypair(keypair: Keypair) -> Noise {
 		let state = Builder::new(NOISE_PARAMS.clone())
-			.local_private_key(keypair.private_key().u256().unpacked())
-			//.remote_public_key(keypair.public_key().u256().unpacked())
+			.local_private_key(keypair.private_key().u256().data_u8())
+			//.remote_public_key(keypair.public_key().u256().data_u8())
 			.build_responder()
 			.unwrap();
 
@@ -245,7 +245,7 @@ impl Noise {
 		let handshake_option = self.handshake.get_mut().unwrap();
 		// Replace the handshake with a dummy
 		let dummy_handshake_state = Builder::new(NOISE_PARAMS.clone())
-			.local_private_key(self.keypair.private_key().u256().unpacked())
+			.local_private_key(self.keypair.private_key().u256().data_u8())
 			.build_initiator()
 			.unwrap();
 		let handshake =

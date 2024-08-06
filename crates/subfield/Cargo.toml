@@ -1,5 +1,5 @@
 [package]
-name = "heapswap_core"
+name = "subfield"
 version = "0.1.0"
 authors = ["kahnpoint <96557890+kahnpoint@users.noreply.github.com>"]
 edition = "2021"
@@ -26,19 +26,12 @@ server = [
 	"libp2p/dns",
 	"libp2p/relay",
 	"libp2p/quic",
-	# "openssl"
-	# "libp2p-webrtc/tokio",
-	"gluesql/sled-storage",
-	"gluesql/idb-storage",
-	"gluesql/shared-memory-storage",
 ]
 browser = [
 	"libp2p/wasm-bindgen",
 	"libp2p/websocket-websys",
 	# "libp2p-webrtc-websys",
 	"gloo",
-	"gluesql/idb-storage",
-	"gluesql/shared-memory-storage",
 ]
 
 # client = []
@@ -134,9 +127,18 @@ once_cell.workspace = true
 getset.workspace = true
 num-traits.workspace = true
 strum.workspace = true
+ndarray = { workspace = true, features = ["serde"]}
+ndarray-rand = { workspace = true}
 
 [dev-dependencies]
 timeit.workspace = true
 
 [build]
 # rustflags = ["-Z", "threads=8"]
+
+
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+gluesql = { workspace = true, features = ["idb-storage", "shared-memory-storage"] }
+
+[target.'cfg(not(target_arch = "wasm32"))'.dependencies]
+gluesql = { workspace = true, features = ["sled-storage", "shared-memory-storage"] }

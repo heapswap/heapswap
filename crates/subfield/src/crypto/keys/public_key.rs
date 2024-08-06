@@ -67,7 +67,7 @@ impl PublicKey {
 		*/
 	pub fn ed(&self) -> &DalekEdPublicKey {
 		self.ed.get_or_init(|| {
-			DalekEdPublicKey::from_bytes(&self.u256.unpacked()).unwrap()
+			DalekEdPublicKey::from_bytes(&self.u256.data_u8()).unwrap()
 		})
 	}
 

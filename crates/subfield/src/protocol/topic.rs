@@ -96,7 +96,7 @@ impl SubfieldTopic {
 		// signer, cosigner, and tangent are either unpacked U256 or [0;32]
 		for method in [Self::signer, Self::cosigner, Self::tangent].iter() {
 			if let Some(value) = method(self) {
-				fields.push(value.unpacked().as_ref());
+				fields.push(value.data_u8().as_ref());
 			} else {
 				fields.push(&[0; 32]);
 			}
@@ -130,7 +130,7 @@ impl SubfieldTopic {
 				(a.as_ref(), b.as_ref(), c.as_ref())
 			{
 				result.push(crypto::hash(
-					arr::concat(&[a.unpacked(), b.unpacked(), c.unpacked()])
+					arr::concat(&[a.data_u8(), b.data_u8(), c.data_u8()])
 						.as_ref(),
 				));
 			}

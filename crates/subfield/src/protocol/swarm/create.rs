@@ -28,21 +28,13 @@ use {
 	libp2p::{tcp, websocket},
 	// libp2p_webrtc as webrtc,
 	tracing_subscriber::EnvFilter,
-	// tokio::sync::Mutex,
 };
-// #[cfg(not(feature = "server"))]
-// use std::sync::Mutex;
-
-//use libp2p_webrtc_websys as webrtc_websys;
-//#[cfg(feature="server")]
 use std::collections::hash_map::DefaultHasher;
 use std::error::Error;
 use std::hash::{Hash, Hasher};
 use std::sync::Arc;
 use std::time::Duration;
 
-//pub type SubfieldSwarm = Arc<Mutex<Swarm<SubfieldBehaviour>>>;
-//pub type SubfieldSwarmEvent = SwarmEvent<SubfieldBehaviourEvent>;
 pub type SubfieldSwarm = Swarm<SubfieldBehaviour>;
 pub type SubfieldSwarmEvent = SwarmEvent<SubfieldBehaviourEvent>;
 #[cfg(feature = "server")]
@@ -68,7 +60,9 @@ const IDLE_CONNECTION_TIMEOUT: u64 = 600;
 pub async fn create(
 	swarm_config: SubfieldSwarmConfig,
 ) -> eyre::Result<SubfieldSwarm> {
-	let mut swarm;
+	#![allow(unused_assignments)]
+	let mut swarm: Result<Swarm<SubfieldBehaviour>, EReport>
+	= Err(eyr!("Failed to create swarm"));
 	#[cfg(feature = "browser")]
 	{
 		swarm = create_client(swarm_config).await;
@@ -93,7 +87,6 @@ async fn create_client(
 
 	#[cfg(target_arch = "wasm32")]
 	{
-		// tracing::info!("Creating Swarm");
 
 		let keypair = swarm_config.keypair.to_libp2p_keypair();
 
@@ -103,16 +96,12 @@ async fn create_client(
 				// let config = webtransport_websys::Config::new(&key);
 				// let transport = webtransport_websys::Transport::new(config).boxed();
 				// Ok(transport)
-
 				let transport = websocket_websys::Transport::default()
 					.upgrade(upgrade::Version::V1)
 					.authenticate(noise::Config::new(&key)?)
 					.multiplex(yamux::Config::default())
 					.boxed();
 				Ok(transport)
-				// libp2p_webrtc_websys::Transport::new(
-				// 	libp2p_webrtc_websys::Config::new(&key),
-				// )
 			})?
 			.with_behaviour(|key| Ok(SubfieldBehaviour::new(key)))?
 			.with_swarm_config(|c| {
@@ -140,7 +129,6 @@ async fn create_client(
 					success = true;
 					break;
 				}
-				//Err(e) => eprintln!("Failed to dial bootstrap URL: {:?}", e),
 				Err(_) => {}
 			}
 		}
@@ -162,23 +150,6 @@ async fn create_server(
 	swarm_config: SubfieldSwarmConfig,
 ) -> eyre::Result<SubfieldSwarm> {
 	let keypair = swarm_config.keypair.to_libp2p_keypair();
-
-	//let local_cert_path = "./certs/webrtc.pem";
-	//let webrtc_cert = read_or_create_certificate(Path::new(local_cert_path))
-	//.await
-	//.context("Failed to read certificate")?;
-
-	//let transport = {
-	//    let webrtc = webrtc::async_std::Transport::new(local_key.clone(), certificate);
-	//    let quic = quic::async_std::Transport::new(quic::Config::new(&keypair));
-
-	//    let mapped = webrtc.or_transport(quic).map(|fut, _| match fut {
-	//        Either::Right((local_peer_id, conn)) => (local_peer_id, StreamMuxerBox::new(conn)),
-	//        Either::Left((local_peer_id, conn)) => (local_peer_id, StreamMuxerBox::new(conn)),
-	//    });
-
-	//    dns::AsyncStdDnsConfig::system(mapped)?.boxed()
-	//};
 
 	let mut swarm =
 		libp2p::SwarmBuilder::with_existing_identity(keypair.clone())
@@ -203,10 +174,8 @@ async fn create_server(
 			// 	)
 			// 	.map(|(peer_id, conn), _| (peer_id, StreamMuxerBox::new(conn))))
 			// })?
-			//  .with_quic()
 			.with_behaviour(|key| Ok(SubfieldBehaviour::new(key)))
 			.map_err(|e| eyr!(e.to_string()))?
-			// .map_err(|e| eyr!(e))
 			.with_swarm_config(|c| {
 				c.with_idle_connection_timeout(Duration::from_secs(
 					IDLE_CONNECTION_TIMEOUT,

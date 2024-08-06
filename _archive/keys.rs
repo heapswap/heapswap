@@ -134,7 +134,7 @@ impl PublicKey {
 		*/
 	fn ed(&self) -> &DalekEdPublicKey {
 		self.ed.get_or_init(|| {
-			DalekEdPublicKey::from_bytes(&self.u256.unpacked()).unwrap()
+			DalekEdPublicKey::from_bytes(&self.u256.data_u8()).unwrap()
 		})
 	}
 
@@ -146,7 +146,7 @@ impl PublicKey {
 
 	#[wasm_bindgen]
 	pub fn edwards(&self) -> U256 {
-		U256::new(self.u256.unpacked().as_ref()).unwrap()
+		U256::new(self.u256.data_u8().as_ref()).unwrap()
 	}
 
 	#[wasm_bindgen]
@@ -243,7 +243,7 @@ impl PrivateKey {
 		*/
 	fn ed(&self) -> &DalekEdPrivateKey {
 		self.ed.get_or_init(|| {
-			DalekEdPrivateKey::from_bytes(&self.u256.unpacked())
+			DalekEdPrivateKey::from_bytes(&self.u256.data_u8())
 		})
 	}
 
@@ -254,7 +254,7 @@ impl PrivateKey {
 
 	#[wasm_bindgen]
 	pub fn edwards(&self) -> U256 {
-		U256::new(self.u256.unpacked().as_ref()).unwrap()
+		U256::new(self.u256.data_u8().as_ref()).unwrap()
 	}
 
 	#[wasm_bindgen]

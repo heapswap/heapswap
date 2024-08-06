@@ -123,7 +123,7 @@ impl U256 {
 	}
 
 	pub fn packed(&self) -> &[u64; PACKED_LENGTH] {
-		self.packed.get_or_init(|| U256::pack(self.unpacked()))
+		self.packed.get_or_init(|| U256::pack(self.data_u8()))
 	}
 
 	pub fn popcount(&self) -> &u32 {
@@ -134,7 +134,7 @@ impl U256 {
 	 * Byteable
 		*/
 	pub fn to_bytes(&self) -> Vec<u8> {
-		self.unpacked().to_vec()
+		self.data_u8().to_vec()
 	}
 
 	pub fn from_bytes(bytes: &[u8]) -> Result<U256, U256Error> {
@@ -180,12 +180,12 @@ impl U256 {
 	#[wasm_bindgen]
 	pub fn xor(&self, other: &U256) -> U256 {
 		//U256::new_from_packed(&arr::xor(self.packed(), other.packed()))
-		U256::new(arr::xor(self.unpacked(), other.unpacked()))
+		U256::new(arr::xor(self.data_u8(), other.data_u8()))
 	}
 
 	#[wasm_bindgen(js_name = xorLeadingZeroes)]
 	pub fn xor_leading_zeroes(&self, other: &U256) -> u32 {
-		arr::xor_leading_zeroes(self.unpacked(), other.unpacked())
+		arr::xor_leading_zeroes(self.data_u8(), other.data_u8())
 	}
 
 	#[wasm_bindgen]
@@ -211,7 +211,7 @@ impl U256 {
 
 	#[wasm_bindgen(js_name = toBytes)]
 	pub fn _js_to_bytes(&self) -> Uint8Array {
-		Uint8Array::from(self.unpacked().to_vec().as_slice())
+		Uint8Array::from(self.data_u8().to_vec().as_slice())
 	}
 
 	#[wasm_bindgen(js_name = fromBytes)]
@@ -230,7 +230,7 @@ impl U256 {
 	#[wasm_bindgen(js_name = toString)]
 	pub fn to_string(&self) -> String {
 		self.string
-			.get_or_init(|| arr::to_base32(self.unpacked()))
+			.get_or_init(|| arr::to_base32(self.data_u8()))
 			.clone()
 	}
 
@@ -266,7 +266,7 @@ impl U256 {
 
 impl PartialEq for U256 {
 	fn eq(&self, other: &Self) -> bool {
-		self.unpacked() == other.unpacked()
+		self.data_u8() == other.data_u8()
 	}
 }
 
@@ -290,6 +290,6 @@ impl From<&str> for U256 {
 
 impl Clone for U256 {
 	fn clone(&self) -> Self {
-		U256::new(self.unpacked().clone())
+		U256::new(self.data_u8().clone())
 	}
 }

@@ -114,7 +114,7 @@ impl Address {
 	}
 
 	pub fn packed(&self) -> &PackedAddress {
-		self.packed.get_or_init(|| pack(self.unpacked()))
+		self.packed.get_or_init(|| pack(self.data_u8()))
 	}
 
 	pub fn from_unpacked(unpacked: UnpackedAddress) -> Self {

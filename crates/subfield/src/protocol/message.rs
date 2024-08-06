@@ -50,7 +50,7 @@ pub struct SubfieldEntry {
 }
 
 /**
- * Put Data
+ * Put
 */
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct PutRequest {
@@ -80,7 +80,7 @@ pub struct SignedPutRequest {
 pub struct PutResponse {}
 
 /**
- * Get Data
+ * Get
 */
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct GetRequest {

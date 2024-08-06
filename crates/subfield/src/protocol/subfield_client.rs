@@ -75,9 +75,9 @@ request: SubfieldRequest,
 				// create and sign the request
 				let unsigned_message_bytes =
 					bincode::serialize(&unsigned_put_request).unwrap();
-				let put_request = SubfieldRequest::Put(PutRequest {
-					unsigned_request: unsigned_put_request,
-					author_data_signature: author
+				let put_request = SubfieldRequest::Put(SignedPutRequest {
+					put_request: unsigned_put_request,
+					author_signature: author
 						.keypair()
 						.sign(&unsigned_message_bytes),
 				});

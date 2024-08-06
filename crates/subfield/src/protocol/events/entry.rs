@@ -103,7 +103,7 @@ impl SubfieldEntry {
 			self.subfield().signer().as_ref().unwrap().clone(),
 		);
 		let verified = signer.verify(
-			self.subfield().hash().unpacked(),
+			self.subfield().hash().data_u8(),
 			self.entry().public_data().signer_signature(),
 		);
 		match verified {
@@ -130,7 +130,7 @@ impl SubfieldEntry {
 			self.subfield().cosigner().as_ref().unwrap().clone(),
 		);
 		let verified = cosigner.verify(
-			self.subfield().hash().unpacked(),
+			self.subfield().hash().data_u8(),
 			self.entry()
 				.public_data()
 				.cosigner_signature()

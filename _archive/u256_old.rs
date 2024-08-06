@@ -106,7 +106,7 @@ impl U256 {
 	}
 
 	pub fn packed(&self) -> &[u64; PACKED_LENGTH] {
-		self.packed.get_or_init(|| U256::pack(self.unpacked()))
+		self.packed.get_or_init(|| U256::pack(self.data_u8()))
 	}
 
 	pub fn popcount(&self) -> &u32 {
@@ -118,11 +118,11 @@ impl U256 {
 		*/
 
 	pub fn xor(&self, other: &U256) -> U256 {
-		U256::new(arr::xor(self.unpacked(), other.unpacked()))
+		U256::new(arr::xor(self.data_u8(), other.data_u8()))
 	}
 
 	pub fn xor_leading_zeroes(&self, other: &U256) -> u32 {
-		arr::xor_leading_zeroes(self.unpacked(), other.unpacked())
+		arr::xor_leading_zeroes(self.data_u8(), other.data_u8())
 	}
 
 	pub fn hamming(&self, other: &U256) -> u32 {
@@ -142,7 +142,7 @@ impl U256 {
 
 impl Byteable<U256Error> for U256 {
 	fn to_bytes(&self) -> Vec<u8> {
-		self.unpacked().to_vec()
+		self.data_u8().to_vec()
 	}
 
 	fn from_bytes(bytes: &[u8]) -> Result<U256, U256Error> {
@@ -155,7 +155,7 @@ impl Byteable<U256Error> for U256 {
 impl Stringable<U256Error> for U256 {
 	fn to_string(&self) -> String {
 		self.string
-			.get_or_init(|| arr::to_base32(self.unpacked()))
+			.get_or_init(|| arr::to_base32(self.data_u8()))
 			.clone()
 	}
 
@@ -179,7 +179,7 @@ impl Stringable<U256Error> for U256 {
 */
 impl PartialEq for U256 {
 	fn eq(&self, other: &Self) -> bool {
-		self.unpacked() == other.unpacked()
+		self.data_u8() == other.data_u8()
 	}
 }
 
@@ -209,7 +209,7 @@ impl From<&str> for U256 {
 */
 impl Clone for U256 {
 	fn clone(&self) -> Self {
-		U256::new(self.unpacked().clone())
+		U256::new(self.data_u8().clone())
 	}
 }
 

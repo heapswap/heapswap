@@ -18,7 +18,10 @@ pub use libp2p;
 pub use once_cell::sync::{Lazy, OnceCell};
 pub use reqwest;
 // pub use serde::{Deserialize, Deserializer, Serialize, Serializer};
-pub use serde::{de::DeserializeOwned, Deserialize, Serialize};
+pub use serde::{de::DeserializeOwned, Deserialize, Deserializer, Serialize, Serializer};
+pub use getset::{
+	Getters, Setters,
+};
 pub use std::sync::Arc;
 pub use strum;
 pub use tracing;
@@ -41,8 +44,9 @@ pub use {
 */
 pub mod arr;
 pub mod crypto;
-pub mod subfield;
 
+mod protocol;
+pub use protocol::*;
 mod misc;
 pub use misc::*;
 pub mod constants;

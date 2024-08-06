@@ -91,7 +91,7 @@ impl JacDHT {
 	*/
 
 	fn add_remote_node_by_dist(&mut self, remote_node: RemoteNode) {
-		let key_arr = remote_node.public_key().u256().unpacked().clone();
+		let key_arr = remote_node.public_key().u256().data_u8().clone();
 
 		// Add to remote_nodes_by_dist
 		self.remote_nodes_by_dist
@@ -102,7 +102,7 @@ impl JacDHT {
 	}
 
 	fn add_remote_node_by_ping(&mut self, remote_node: RemoteNode) {
-		let key_arr = remote_node.public_key().u256().unpacked().clone();
+		let key_arr = remote_node.public_key().u256().data_u8().clone();
 
 		// Add to remote_nodes_by_dist
 		self.remote_nodes_by_ping
@@ -116,7 +116,7 @@ impl JacDHT {
 	 * Update Node
 		*/
 	fn update_remote_node_by_dist(&mut self, remote_node: RemoteNode) {
-		let key_arr = remote_node.public_key().u256().unpacked().clone();
+		let key_arr = remote_node.public_key().u256().data_u8().clone();
 
 		// Modify remote_nodes_by_dist
 		self.remote_nodes_by_dist.change_priority(
@@ -129,7 +129,7 @@ impl JacDHT {
 	}
 
 	fn update_remote_node_by_ping(&mut self, remote_node: RemoteNode) {
-		let key_arr = remote_node.public_key().u256().unpacked().clone();
+		let key_arr = remote_node.public_key().u256().data_u8().clone();
 
 		// Modify remote_nodes_by_dist
 		self.remote_nodes_by_ping
@@ -187,7 +187,7 @@ impl JacDHT {
 		//    (&mut self.remote_nodes_by_ping, self.max_ping_nodes)
 		//};
 
-		let key_arr = remote_node.public_key().u256().unpacked().clone();
+		let key_arr = remote_node.public_key().u256().data_u8().clone();
 
 		// Return None if the node is already in the JacDHT
 		if self.remote_nodes.contains_key(&key_arr) {
@@ -303,7 +303,7 @@ impl JacDHT {
 		&mut self,
 		remote_node: &RemoteNode,
 	) -> Option<RemoteNode> {
-		let key_arr = remote_node.public_key().u256().unpacked().clone();
+		let key_arr = remote_node.public_key().u256().data_u8().clone();
 
 		let removed = self.remote_nodes.remove(&key_arr);
 		if removed.is_some() {

@@ -1,10 +1,11 @@
 [package]
-name = "heapswap_server"
+name = "heapswap"
 version = "0.1.0"
+authors = ["kahnpoint <96557890+kahnpoint@users.noreply.github.com>"]
 edition = "2021"
 
 [dependencies]
-heapswap_core = { path = "../core", features = ["server"] }
+subfield = { path = "../subfield", features = ["server"] }
 #
 ## Networking
 ##

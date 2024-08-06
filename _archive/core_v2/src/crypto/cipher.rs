@@ -77,7 +77,7 @@ impl Cipher {
 
 	#[wasm_bindgen(constructor)]
 	pub fn new(secret: SecretKey) -> Cipher {
-		let cipher = ChaCha20Poly1305::new(secret.unpacked().into());
+		let cipher = ChaCha20Poly1305::new(secret.data_u8().into());
 
 		Cipher { secret, cipher }
 	}

@@ -1,7 +1,8 @@
 {
 	"rust-analyzer.linkedProjects": [
 		"Cargo.toml",
-		"crates/core/Cargo.toml"
+		"crates/subfield/Cargo.toml",
+		"crates/heapswap/Cargo.toml",
 		//"crates/browser/Cargo.toml",
 		//{ "root": "crates/browser", "target": "wasm32-unknown-unknown" },
 		//"crates/server/Cargo.toml",

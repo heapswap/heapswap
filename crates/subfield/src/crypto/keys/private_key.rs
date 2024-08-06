@@ -70,7 +70,7 @@ impl PrivateKey {
 		*/
 	pub fn ed(&self) -> &DalekEdPrivateKey {
 		self.ed.get_or_init(|| {
-			DalekEdPrivateKey::from_bytes(&self.u256.unpacked())
+			DalekEdPrivateKey::from_bytes(&self.u256.data_u8())
 		})
 	}
 
@@ -123,7 +123,7 @@ impl PrivateKey {
 impl Libp2pKeypairable<KeyError> for PrivateKey {
 	fn to_libp2p_keypair(&self) -> libp2p::identity::Keypair {
 		libp2p::identity::Keypair::ed25519_from_bytes(
-			self.u256().unpacked().clone(),
+			self.u256().data_u8().clone(),
 		)
 		.unwrap()
 	}

@@ -154,7 +154,7 @@ impl Keypair {
 	) -> Result<Uint8Array, KeyError> {
 		Ok(Uint8Array::from(
 			libp2p::identity::Keypair::ed25519_from_bytes(
-				self.private_key().u256().unpacked().clone(),
+				self.private_key().u256().data_u8().clone(),
 			)
 			.map_err(|_| KeyError::InvalidPrivateKey)?
 			.to_protobuf_encoding()
