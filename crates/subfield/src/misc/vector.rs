@@ -38,8 +38,8 @@ impl<const N: usize> Vector<N> {
 	pub fn from_u8(data_u8: [u8; N]) -> Vector<N> {
 		let data_i64: Vec<i64> = data_u8.iter().map(|&x| x as i64).collect();
 		Vector { 
-			data_i64: Array::from_vec(data_i64.clone()), 
 			data_u8: data_u8, 
+			data_i64: Array::from_vec(data_i64.clone()),
 			magnitude: Self::calculate_magnitude(&data_i64),
 			string: OnceCell::new()
 		}
@@ -74,10 +74,7 @@ impl<const N: usize> Vector<N> {
 	pub fn data_u8(&self) -> &[u8; N] {
 		&self.data_u8
 	}
-	
-	pub fn data_i64(&self) -> &Array<i64, Ix1> {
-		&self.data_i64
-	}
+
 
 	/**
 	 * Distance
@@ -95,13 +92,64 @@ impl<const N: usize> Vector<N> {
 		self.calculate_dot_product(other) as f64 / (self.magnitude * other.magnitude)
 	}
 	
+	pub fn xor(&self, other: &Vector<N>) -> Vector<N> {
+		let data_u8: [u8; N] = self.data_u8.iter()
+			.zip(other.data_u8.iter())
+			.map(|(&a, &b)| a ^ b)
+			.collect::<Vec<u8>>()
+			.try_into()
+			.map_err(|_| VectorError::InvalidLength)
+			.unwrap(); // This unwrap is safe because the length is guaranteed to be N
+		Vector::<N>::from_u8(data_u8)
+	}
+	
+	pub fn xor_count(&self, other: &Vector<N>) -> usize {
+		self.data_u8.iter()
+		.zip(other.data_u8.iter())
+		.map(|(&a, &b)| (a ^ b).count_ones() as usize)
+		.sum()
+	}
+	
+	pub fn leading_zeros(&self) -> usize {
+		let mut zeroes = 0;
+		for i in 0..N {
+			if self.data_u8[i] == 0 {
+				zeroes += 8;
+			} else {
+				zeroes += self.data_u8[i].leading_zeros() as usize;
+				break;
+			}
+		}
+		return zeroes
+	}
+	
+	pub fn xor_leading_zeros(&self, other: &Vector<N>) -> usize {
+		let mut zeroes = 0;
+		for i in 0..N {
+			let xored = self.data_u8[i] ^ other.data_u8[i];	
+			if xored == 0 {
+				zeroes += 8;
+			} else {
+				zeroes += xored.leading_zeros() as usize;
+			}
+		}
+		return zeroes
+	}
+	
+	
+	/**
+	 * Hashing
+	*/
 	pub fn hash(data: &[u8]) -> Vector<32> {
-		let _hash: [u8; 32] = blake3::hash(data).into();
-		Vector::<32>::from_u8(_hash)
+		crypto::hash(data)
 	}
 
-	pub fn verify(data: &[u8], data_hash: Vector<32>) -> bool {
-		Vector::<32>::hash(data) == data_hash
+	pub fn verify_hash(data: &[u8], data_hash: Vector<32>) -> bool {
+		crypto::verify_hash(data, data_hash)
+	}
+	
+	pub fn hash_self(&self) -> Vector<32> {
+		crypto::hash(&self.data_u8)
 	}
 }
 
@@ -210,8 +258,12 @@ impl<const N: usize> Serialize for Vector<N> {
 	where
 		S: Serializer,
 	{
-		let string_repr = self.to_string();
-		serializer.serialize_str(&string_repr)
+		// convert to base32
+		// let string_repr = self.to_string();
+		// serializer.serialize_str(&string_repr)
+		
+		// do not convert to base32
+		serializer.serialize_bytes(&self.to_vec())
 	}
 }
 
@@ -220,11 +272,25 @@ impl<'de, const N: usize> Deserialize<'de> for Vector<N> {
 	where
 		D: Deserializer<'de>,
 	{
-		let string_repr = String::deserialize(deserializer)
-			.map_err(serde::de::Error::custom)?;
-		Vector::<N>::from_string(&string_repr).map_err(serde::de::Error::custom)
+		// convert to base32
+		// let string_repr = String::deserialize(deserializer)
+		// 	.map_err(serde::de::Error::custom)?;
+		// Vector::<N>::from_string(&string_repr).map_err(serde::de::Error::custom)
+		
+		// do not convert to base32
+		let data_u8: Vec<u8> = Vec::<u8>::deserialize(deserializer).unwrap();
+		Vector::<N>::from_vec(data_u8).map_err(serde::de::Error::custom)
 	}
 }
+
+#[test]
+fn test_serialize_deserialize(){
+	let vector = Vector::<32>::random();
+	let serialized = serialize(&vector).unwrap();
+	let deserialized: Vector<32> = deserialize(&serialized).unwrap();
+	assert_eq!(vector, deserialized);
+}
+
 
 /*
 #[test]

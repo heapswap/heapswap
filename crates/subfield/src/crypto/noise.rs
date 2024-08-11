@@ -234,7 +234,7 @@ fn test_noise() {
 	// handshake
 	let initiator_message = initiator.handshake_step_1().unwrap();
 	let responder_message = responder.handshake_step_2(&initiator_message).unwrap();
-	initiator.handshake_step_3(&responder_message).unwrap();
+	let _ = initiator.handshake_step_3(&responder_message).unwrap();
 	
 	// encrypt from initiator to responder
 	let data = b"hello world";

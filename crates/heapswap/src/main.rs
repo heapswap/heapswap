@@ -4,6 +4,9 @@
 #![allow(unused_parens)]
 #![allow(dead_code)]
 
+fn main() {}
+
+/*
 use subfield::libp2p::futures::FutureExt;
 use subfield::libp2p::multiaddr::{Multiaddr, Protocol};
 use subfield::store::SubfieldStoreConfig;
@@ -34,7 +37,9 @@ use {
 	tokio::{net::TcpListener, time::Duration},
 	tower_http::cors::{Any, CorsLayer},
 };
+*/
 
+/*
 #[derive(Clone)]
 pub struct AppState {
 	swarm_tx: Transmitter<SubfieldRequest>,
@@ -240,3 +245,4 @@ async fn get_peers(State(state): State<AppState>) -> Json<Vec<String>> {
 
 	Json(peers)
 }
+*/

@@ -46,9 +46,8 @@ pub use {
 */
 pub mod arr;
 pub mod crypto;
+pub mod subfield;
 
-mod protocol;
-pub use protocol::*;
 mod misc;
 pub use misc::*;
 pub mod constants;
