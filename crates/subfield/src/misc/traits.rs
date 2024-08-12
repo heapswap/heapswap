@@ -5,6 +5,11 @@ pub trait Randomable: Sized {
 	fn random() -> Self;
 }
 
+// Able to be randomly generated
+pub trait RandomLengthable: Sized {
+	fn random_length(length: usize) -> Self;
+}
+
 // Able to be converted to and from bytes
 pub trait Byteable<E>: Sized {
 	fn to_bytes(&self) -> Bytes;
@@ -18,7 +23,6 @@ pub trait Vecable<E>: Sized {
 	fn from_arr(arr: &[u8]) -> Result<Self, E>;
 }
 
-
 // Able to be converted to and from a string
 pub trait Stringable<E>: Sized {
 	fn to_string(&self) -> String;
@@ -31,4 +35,12 @@ pub trait Libp2pKeypairable<E>: Sized {
 	fn from_libp2p_keypair(
 		libp2p_keypair: libp2p::identity::Keypair,
 	) -> Result<Self, E>;
+}
+
+/**
+ * Has data of 32 bytes
+*/
+pub type U256 = [u8; 32];
+pub trait U256able {
+	fn u256(&self) -> &U256;
 }

@@ -5,7 +5,7 @@ use crate::*;
  * Request
 */
 #[derive(Serialize, Deserialize, Debug, Clone)]
-pub enum SubfieldPubsubRequest {	
+pub enum SubfieldPubsubRequest {
 	// Pubsub
 	// Publish(PublishRequest),
 	// Subscribe(SubscribeRequest),

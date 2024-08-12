@@ -1,13 +1,13 @@
-use crate::arr;
-use crate::vector::*;
+use crate::*;
 use chacha20poly1305::{
-	aead::{Aead, AeadCore, KeyInit, OsRng},
+	aead::{generic_array::GenericArray, Aead, AeadCore, KeyInit, OsRng},
 	ChaCha20Poly1305,
 };
+use subfield_proto::versioned_bytes::VersionedBytes;
 
 pub type Plaintext = Vec<u8>;
 pub type Ciphertext = Vec<u8>;
-pub type SecretKey = U256; //[u8; 32];
+pub type SecretKey = VersionedBytes; //[u8; 32];
 pub type SecretKeyArray = [u8; 32];
 const NONCE_LENGTH: usize = 12;
 pub type Nonce = Vec<u8>; // [u8; NONCE_LENGTH];
@@ -20,7 +20,7 @@ pub enum CipherError {
 }
 
 pub struct Cipher {
-	secret: U256,
+	secret: VersionedBytes,
 	cipher: ChaCha20Poly1305,
 }
 
@@ -30,15 +30,16 @@ impl Cipher {
 		*/
 
 	pub fn new(secret: SecretKey) -> Cipher {
-		let cipher = ChaCha20Poly1305::new(secret.data_u8().into());
+		let cipher =
+			ChaCha20Poly1305::new(&GenericArray::from(secret.u256().clone()));
 
 		Cipher { secret, cipher }
 	}
 
 	pub fn random() -> Cipher {
-		Cipher::new(U256::random())
+		Cipher::new(VersionedBytes::random())
 	}
-	
+
 	/**
 	 * Getters
 		*/

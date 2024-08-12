@@ -1,3 +1,4 @@
+use crate::*;
 use std::convert::From;
 use std::iter::Once;
 
@@ -9,6 +10,7 @@ use getset::{CopyGetters, Getters, MutGetters, Setters};
 use rand::rngs::OsRng;
 use rand::RngCore;
 use serde::{Deserialize, Serialize};
+use subfield_proto::versioned_bytes::VersionedBytes;
 
 use crate::arr::{hamming, xor};
 use crate::traits::*;
@@ -25,50 +27,53 @@ use x25519_dalek::{
 
 pub use super::common::*;
 use crate::arr;
-use crate::vector::*;
+use crate::versioned_bytes::*;
 use std::fmt;
 
-#[derive(Clone, Getters, Serialize, Deserialize)]
+#[derive(Clone, Getters)]
 pub struct PublicKey {
-	#[getset(get = "pub")]
-	u256: U256, // edwards25519 public key
-	#[serde(skip)]
+	versioned_bytes: VersionedBytes, // edwards25519 public key
 	ed: OnceCell<DalekEdPublicKey>,
-	#[serde(skip)]
 	x: OnceCell<DalekXPublicKey>,
-}
-
-impl fmt::Debug for PublicKey {
-	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-		f.debug_struct("PublicKey")
-			.field("u256", &self.u256)
-			.finish()
-	}
 }
 
 /**
  * PublicKey
 */
 impl PublicKey {
-	pub fn new(ed: PublicKeyArr) -> PublicKey {
-		Self::from_u256(U256::new(ed))
-	}
-
-	pub fn from_u256(u256: U256) -> Self {
+	pub fn new(versioned_bytes: VersionedBytes) -> PublicKey {
 		PublicKey {
-			u256,
+			versioned_bytes,
 			ed: OnceCell::new(),
 			x: OnceCell::new(),
 		}
 	}
 
+	pub fn from_u256(u256: U256) -> Self {
+		Self::new(VersionedBytes {
+			version: 0,
+			data: u256.to_vec(),
+		})
+	}
+
 	/**
 	 * Getters
 		*/
+	pub fn version(&self) -> u32 {
+		self.versioned_bytes.version
+	}
+
+	pub fn versioned_bytes(&self) -> &VersionedBytes {
+		&self.versioned_bytes
+	}
+
+	pub fn u256(&self) -> &U256 {
+		self.versioned_bytes.u256()
+	}
+
 	pub fn ed(&self) -> &DalekEdPublicKey {
-		self.ed.get_or_init(|| {
-			DalekEdPublicKey::from_bytes(&self.u256.data_u8()).unwrap()
-		})
+		self.ed
+			.get_or_init(|| DalekEdPublicKey::from_bytes(&self.u256()).unwrap())
 	}
 
 	pub fn x(&self) -> &DalekXPublicKey {
@@ -91,24 +96,21 @@ impl PublicKey {
 			Err(_) => Ok(false),
 		}
 	}
-
 }
 
 /**
- * Vecable
+ * Byteable
 */
-impl Vecable<KeyError> for PublicKey {
-	fn to_vec(&self) -> Vec<u8> {
-		self.u256.to_vec()
+impl Byteable<KeyError> for PublicKey {
+	fn to_bytes(&self) -> Bytes {
+		self.versioned_bytes.to_bytes()
 	}
-	
-	fn from_vec(vec: Vec<u8>) -> Result<PublicKey, KeyError> {
-		Self::from_arr(&vec)
-	}
-	
-	fn from_arr(arr: &[u8]) -> Result<Self, KeyError> {
-		let u256 = U256::from_arr(arr).map_err(|_| KeyError::InvalidPublicKey)?;
-		Ok(PublicKey::from_u256(u256))
+
+	fn from_bytes(bytes: Bytes) -> Result<Self, KeyError> {
+		Ok(PublicKey::new(
+			VersionedBytes::from_bytes(bytes)
+				.map_err(|_| KeyError::InvalidPublicKey)?,
+		))
 	}
 }
 
@@ -117,11 +119,13 @@ impl Vecable<KeyError> for PublicKey {
 */
 impl Stringable<KeyError> for PublicKey {
 	fn to_string(&self) -> String {
-		self.u256.to_string()
+		self.versioned_bytes.to_string()
 	}
-	
+
 	fn from_string(string: &str) -> Result<Self, KeyError> {
-		let u256 = U256::from_string(string).map_err(|_| KeyError::InvalidPublicKey)?;
-		Ok(PublicKey::from_u256(u256))
+		Ok(PublicKey::new(
+			VersionedBytes::from_string(string)
+				.map_err(|_| KeyError::InvalidPublicKey)?,
+		))
 	}
 }

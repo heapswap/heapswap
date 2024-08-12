@@ -17,6 +17,11 @@ use libp2p::{
 	swarm::{NetworkBehaviour, SwarmEvent},
 	yamux, Multiaddr, Swarm, SwarmBuilder, Transport as _, TransportExt,
 };
+use std::collections::hash_map::DefaultHasher;
+use std::error::Error;
+use std::hash::{Hash, Hasher};
+use std::sync::Arc;
+use std::time::Duration;
 #[cfg(feature = "browser")]
 use {
 	libp2p::websocket_websys,
@@ -29,11 +34,6 @@ use {
 	// libp2p_webrtc as webrtc,
 	tracing_subscriber::EnvFilter,
 };
-use std::collections::hash_map::DefaultHasher;
-use std::error::Error;
-use std::hash::{Hash, Hasher};
-use std::sync::Arc;
-use std::time::Duration;
 
 pub type SubfieldSwarm = Swarm<SubfieldBehaviour>;
 pub type SubfieldSwarmEvent = SwarmEvent<SubfieldBehaviourEvent>;
@@ -72,8 +72,8 @@ pub async fn create_swarm(
 	swarm_config: SubfieldSwarmConfig,
 ) -> eyre::Result<SubfieldSwarm> {
 	#![allow(unused_assignments)]
-	let mut swarm: Result<Swarm<SubfieldBehaviour>, EReport>
-	= Err(eyr!("Failed to create swarm"));
+	let mut swarm: Result<Swarm<SubfieldBehaviour>, EReport> =
+		Err(eyr!("Failed to create swarm"));
 	#[cfg(feature = "browser")]
 	{
 		swarm = create_client(swarm_config).await;
@@ -98,7 +98,6 @@ async fn create_client(
 
 	#[cfg(target_arch = "wasm32")]
 	{
-
 		let keypair = swarm_config.keypair.to_libp2p_keypair();
 
 		let mut swarm = SwarmBuilder::with_existing_identity(keypair.clone())

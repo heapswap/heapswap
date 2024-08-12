@@ -9,6 +9,7 @@ use getset::{CopyGetters, Getters, MutGetters, Setters};
 use rand::rngs::OsRng;
 use rand::RngCore;
 use serde::{Deserialize, Serialize};
+use subfield_proto::versioned_bytes::VersionedBytes;
 
 use crate::arr::{hamming, xor};
 use crate::traits::*;
@@ -24,7 +25,7 @@ use x25519_dalek::{
 };
 
 use crate::arr;
-use crate::vector::*;
+use crate::versioned_bytes::*;
 
 /**
  * Types
@@ -41,7 +42,7 @@ pub type DalekEdPublicKeyArr = [u8; PUBLIC_KEY_LENGTH];
 
 pub type Signature = [u8; SIGNATURE_LENGTH];
 
-pub type SharedSecret = U256;
+pub type SharedSecret = VersionedBytes;
 
 /**
  * Errors

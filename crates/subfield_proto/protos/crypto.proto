@@ -1,0 +1,10 @@
+syntax = "proto3";
+
+package crypto;
+
+import "versioned_bytes.proto";
+
+message Keypair {
+  versioned_bytes.VersionedBytes public_key = 1;
+  versioned_bytes.VersionedBytes private_key = 2;
+}

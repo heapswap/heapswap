@@ -43,7 +43,8 @@ browser = [
 # path = "src/main.rs"
 # required-features = ["server"]
 [dependencies]
-# subfield_proto = { path = "../subfield_proto" }
+subfield_proto = { path = "../subfield_proto" }
+prost = { workspace = true }
 #
 ## Networking
 ##
@@ -128,19 +129,24 @@ once_cell.workspace = true
 getset.workspace = true
 num-traits.workspace = true
 strum.workspace = true
-ndarray = { workspace = true, features = ["serde"]}
-ndarray-rand = { workspace = true}
+ndarray = { workspace = true, features = ["serde"] }
+ndarray-rand = { workspace = true }
 chrono.workspace = true
 
 [dev-dependencies]
 timeit.workspace = true
 
 [build]
+
 # rustflags = ["-Z", "threads=8"]
-
-
 [target.'cfg(target_arch = "wasm32")'.dependencies]
-gluesql = { workspace = true, features = ["idb-storage", "shared-memory-storage"] }
+gluesql = { workspace = true, features = [
+	"idb-storage",
+	"shared-memory-storage"
+] }
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
-gluesql = { workspace = true, features = ["sled-storage", "shared-memory-storage"] }
+gluesql = { workspace = true, features = [
+	"sled-storage",
+	"shared-memory-storage"
+] }

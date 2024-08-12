@@ -1,7 +1,6 @@
 use super::super::*;
 use crate::arr;
 use crate::crypto::*;
-use crate::vector::*;
 use crate::*;
 use futures::task::{Context, Poll, Waker};
 use futures::{Stream, StreamExt};
@@ -31,10 +30,10 @@ use std::{io, time::Duration};
 */
 #[derive(NetworkBehaviour)]
 pub struct SubfieldBehaviour {
-	
 	// subfield
-	pub subfield: Behaviour<subfield::SubfieldRequest, subfield::SubfieldResponse>,
-	
+	pub subfield:
+		Behaviour<subfield::SubfieldRequest, subfield::SubfieldResponse>,
+
 	// networking
 	pub ping: ping::Behaviour,
 	pub dcutr: dcutr::Behaviour,

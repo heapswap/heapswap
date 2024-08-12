@@ -1,0 +1,10 @@
+syntax = "proto3";
+package system_action;
+
+enum SystemAction {
+  Ping = 0;
+  Pong = 1;
+
+  NearestNodes = 10; // local
+  NearestNode = 11; // global
+}

@@ -4,52 +4,52 @@ package crypto;
 
 /**
  * Keys (256-bit)
-*/
+ */
 
 message PublicKey {
-	uint64 u0 = 1;
-	uint64 u1 = 2;
-	uint64 u2 = 3;
-	uint64 u3 = 4;
+  uint64 u0 = 1;
+  uint64 u1 = 2;
+  uint64 u2 = 3;
+  uint64 u3 = 4;
 }
 
 message PrivateKey {
-	uint64 u0 = 1;
-	uint64 u1 = 2;
-	uint64 u2 = 3;
-	uint64 u3 = 4;
+  uint64 u0 = 1;
+  uint64 u1 = 2;
+  uint64 u2 = 3;
+  uint64 u3 = 4;
 }
 
 message KeyPair {
-	PublicKey public_key = 1;
-	PrivateKey private_key = 2;
+  PublicKey public_key = 1;
+  PrivateKey private_key = 2;
 }
 
 /**
  * Hash (256-bit)
-*/
+ */
 message Hash {
-	uint64 u0 = 1;
-	uint64 u1 = 2;
-	uint64 u2 = 3;
-	uint64 u3 = 4;
+  uint64 u0 = 1;
+  uint64 u1 = 2;
+  uint64 u2 = 3;
+  uint64 u3 = 4;
 }
 
 /**
  * Signature (512-bit)
-*/
-message Signature {	
-	bytes bytes = 5;
+ */
+message Signature {
+  bytes bytes = 5;
 }
 
 /**
-  * Cipher
-*/
+ * Cipher
+ */
 message EncryptedBytes {
-	bytes nonce = 1;
-	bytes bytes = 6;
+  bytes nonce = 1;
+  bytes bytes = 6;
 }
 
 message DecryptedBytes {
-	bytes bytes = 6;
+  bytes bytes = 6;
 }

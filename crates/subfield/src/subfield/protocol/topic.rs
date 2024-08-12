@@ -1,12 +1,11 @@
 use super::*;
-use crate::vector::U256;
 use crate::*;
 use getset::{Getters, Setters};
 
 /**
  * A Subtopic represents one of the three fields that make up a SubfieldTopic
 */
-pub type Subtopic = Option<U256>;
+pub type Subtopic = Option<Versioned>;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum SubfieldTopicError {

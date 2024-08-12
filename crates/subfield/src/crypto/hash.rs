@@ -1,10 +1,15 @@
-use crate::arr;
-use crate::vector::*;
+use subfield_proto::versioned_bytes::VersionedBytes;
 
-pub type Hash = U256;
+use crate::arr;
+use crate::versioned_bytes::*;
+
+pub type Hash = VersionedBytes;
 
 pub fn hash(data: &[u8]) -> Hash {
-	U256::from_u8(*blake3::hash(data).as_bytes())
+	VersionedBytes {
+		version: 0,
+		data: blake3::hash(data).as_bytes().to_vec(),
+	}
 }
 
 pub fn hash_verify(data: &[u8], data_hash: Hash) -> bool {

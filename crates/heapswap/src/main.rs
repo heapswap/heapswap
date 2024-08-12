@@ -134,7 +134,7 @@ fn main() -> EResult<()> {
 			let swarm_tx = tx.clone();
 
 			let threadsafe_swarm_cloned = threadsafe_swarm.clone();
-				
+
 			let store_threadsafe = Arc::new(Mutex::new(
 				store::SubfieldStore::new(SubfieldStoreConfig{
 					location: "".to_string(),

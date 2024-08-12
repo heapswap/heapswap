@@ -24,7 +24,6 @@ pub enum SubfieldRecordResponse {
 	// Delete(DeleteResponse),
 }
 
-
 /**
  * Put
 */

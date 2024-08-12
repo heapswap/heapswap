@@ -1,3 +1,4 @@
+use crate::*;
 use std::convert::From;
 use std::iter::Once;
 
@@ -9,6 +10,7 @@ use getset::{CopyGetters, Getters, MutGetters, Setters};
 use rand::rngs::OsRng;
 use rand::RngCore;
 use serde::{Deserialize, Serialize};
+use subfield_proto::versioned_bytes::VersionedBytes;
 
 use crate::arr::{hamming, xor};
 use crate::traits::*;
@@ -25,53 +27,58 @@ use x25519_dalek::{
 };
 
 use crate::arr;
-use crate::vector::*;
+use crate::versioned_bytes::*;
 
 use super::common::*;
 use super::public_key::*;
 
-#[derive(Clone, Getters, Serialize, Deserialize)]
+pub type PrivateKeyBytes = VersionedBytes;
+
+#[derive(Clone, Getters)]
 pub struct PrivateKey {
-	#[getset(get = "pub")]
-	u256: U256, // edwards25519 private key
-	#[serde(skip)]
+	versioned_bytes: VersionedBytes,
 	ed: OnceCell<DalekEdPrivateKey>,
-	#[serde(skip)]
 	x: OnceCell<DalekXPrivateKey>,
 }
 
-impl fmt::Debug for PrivateKey {
-	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-		f.debug_struct("PrivateKey")
-			.field("u256", &self.u256)
-			.finish()
-	}
-}
-
 impl PrivateKey {
-	pub fn new(ed: PrivateKeyArr) -> PrivateKey {
-		Self::from_u256(U256::new(ed))
-	}
-
-	pub fn from_u256(u256: U256) -> Self {
+	pub fn new(versioned_bytes: PrivateKeyBytes) -> PrivateKey {
 		PrivateKey {
-			u256,
+			versioned_bytes,
 			ed: OnceCell::new(),
 			x: OnceCell::new(),
 		}
 	}
 
+	pub fn from_u256(u256: U256) -> Self {
+		Self::new(VersionedBytes {
+			version: 0,
+			data: u256.to_vec(),
+		})
+	}
+
 	pub fn random() -> Self {
-		Self::from_u256(U256::random())
+		Self::new(VersionedBytes::random())
 	}
 
 	/**
 	 * Getters
 		*/
+	pub fn version(&self) -> u32 {
+		self.versioned_bytes.version
+	}
+
+	pub fn versioned_bytes(&self) -> &VersionedBytes {
+		&self.versioned_bytes
+	}
+
+	pub fn u256(&self) -> &U256 {
+		self.versioned_bytes.u256()
+	}
+
 	pub fn ed(&self) -> &DalekEdPrivateKey {
-		self.ed.get_or_init(|| {
-			DalekEdPrivateKey::from_bytes(&self.u256.data_u8())
-		})
+		self.ed
+			.get_or_init(|| DalekEdPrivateKey::from_bytes(&self.u256()))
 	}
 
 	pub fn x(&self) -> &DalekXPrivateKey {
@@ -80,12 +87,15 @@ impl PrivateKey {
 	}
 
 	pub fn shared_secret(&self, public_key: &PublicKey) -> SharedSecret {
-		U256::new(self.x().diffie_hellman(public_key.x()).as_bytes().clone())
+		SharedSecret {
+			version: self.version(),
+			data: self.x().diffie_hellman(public_key.x()).as_bytes().to_vec(),
+		}
 	}
 
 	pub fn public_key(&self) -> PublicKey {
 		let public_key = self.ed().verifying_key().to_bytes();
-		PublicKey::new(public_key)
+		PublicKey::from_u256(public_key)
 	}
 
 	/**
@@ -97,21 +107,19 @@ impl PrivateKey {
 	}
 }
 
-
 /**
- * Vecable
+ * Byteable
 */
-impl Vecable<KeyError> for PrivateKey {
-	fn to_vec(&self) -> Vec<u8> {
-		self.u256.to_vec()
+impl Byteable<KeyError> for PrivateKey {
+	fn to_bytes(&self) -> Bytes {
+		self.versioned_bytes.to_bytes()
 	}
-	
-	fn from_vec(vec: Vec<u8>) -> Result<PrivateKey, KeyError> {
-		Self::from_arr(&vec)
-	}
-	fn from_arr(arr: &[u8]) -> Result<Self, KeyError> {
-		let u256 =	 U256::from_arr(arr).map_err(|_| KeyError::InvalidPrivateKey)?;
-		Ok(PrivateKey::from_u256(u256))
+
+	fn from_bytes(bytes: Bytes) -> Result<Self, KeyError> {
+		Ok(PrivateKey::new(
+			VersionedBytes::from_bytes(bytes)
+				.map_err(|_| KeyError::InvalidPrivateKey)?,
+		))
 	}
 }
 
@@ -120,12 +128,14 @@ impl Vecable<KeyError> for PrivateKey {
 */
 impl Stringable<KeyError> for PrivateKey {
 	fn to_string(&self) -> String {
-		self.u256.to_string()
+		self.versioned_bytes.to_string()
 	}
-	
+
 	fn from_string(string: &str) -> Result<Self, KeyError> {
-		let u256 = U256::from_string(string).map_err(|_| KeyError::InvalidPrivateKey)?;
-		Ok(PrivateKey::from_u256(u256))
+		Ok(PrivateKey::new(
+			VersionedBytes::from_string(string)
+				.map_err(|_| KeyError::InvalidPrivateKey)?,
+		))
 	}
 }
 
@@ -134,10 +144,8 @@ impl Stringable<KeyError> for PrivateKey {
 */
 impl Libp2pKeypairable<KeyError> for PrivateKey {
 	fn to_libp2p_keypair(&self) -> libp2p::identity::Keypair {
-		libp2p::identity::Keypair::ed25519_from_bytes(
-			self.u256().data_u8().clone(),
-		)
-		.unwrap()
+		libp2p::identity::Keypair::ed25519_from_bytes(self.u256().clone())
+			.unwrap()
 	}
 
 	fn from_libp2p_keypair(
@@ -146,8 +154,10 @@ impl Libp2pKeypairable<KeyError> for PrivateKey {
 		let ed25519_keypair = libp2p_keypair
 			.try_into_ed25519()
 			.map_err(|_| KeyError::InvalidPrivateKey)?;
-		let private_key = PrivateKey::from_vec(ed25519_keypair.to_bytes().to_vec())
-			.map_err(|_| KeyError::InvalidPrivateKey)?;
+		let private_key = PrivateKey::from_bytes(Bytes::from(
+			ed25519_keypair.to_bytes().to_vec(),
+		))
+		.map_err(|_| KeyError::InvalidPrivateKey)?;
 		Ok(private_key)
 	}
 }

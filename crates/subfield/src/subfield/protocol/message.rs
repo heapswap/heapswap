@@ -15,7 +15,6 @@ pub enum SubfieldRequest {
 	System(SubfieldSystemRequest),
 	Record(SubfieldRecordRequest),
 	Pubsub(SubfieldPubsubRequest),
-	
 }
 impl _SubfieldMessageTrait for SubfieldRequest {}
 

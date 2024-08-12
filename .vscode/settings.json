@@ -2,7 +2,7 @@
 	"rust-analyzer.linkedProjects": [
 		"Cargo.toml",
 		"crates/subfield/Cargo.toml",
-		"crates/heapswap/Cargo.toml",
+		"crates/heapswap/Cargo.toml"
 		// "crates/subfield_proto/Cargo.toml",
 		// "crates/subfield_macro_proto_ext/Cargo.toml",
 		// "crates/subfield_macro_proto_ext_proc/Cargo.toml",
@@ -22,5 +22,10 @@
 		"unlinked-file"
 	],
 	"rust-analyzer.cargo.buildScripts.enable": true,
-	"git.ignoreLimitWarning": true
+	"git.ignoreLimitWarning": true,
+	"protoc": {
+        "options": [
+            "--proto_path=crates/subfield_proto/protos"
+        ]
+    }
 }

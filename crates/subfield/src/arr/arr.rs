@@ -37,6 +37,12 @@ pub fn from_base32(data: &str) -> Result<Vrr, ArrError> {
 		.ok_or(ArrError::InvalidBase32)
 }
 
+pub fn from_proto<M: prost::Message>(proto: &M) -> Vec<u8> {
+	let mut buf = Vec::new();
+	proto.encode(&mut buf).expect("Failed to encode proto");
+	buf
+}
+
 /*
  * Operations
 */

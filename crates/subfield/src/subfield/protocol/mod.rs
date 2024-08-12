@@ -1,7 +1,7 @@
 mod author;
 pub use author::*;
 
-mod topic; 
+mod topic;
 pub use topic::*;
 
 mod entry;

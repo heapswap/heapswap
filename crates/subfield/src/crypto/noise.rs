@@ -55,10 +55,9 @@ pub struct Noise {
 }
 
 impl Noise {
-	
 	/**
 	 * Constructors
-	*/
+		*/
 	pub fn new(
 		role: NoiseRole,
 		keypair: Keypair,
@@ -73,25 +72,24 @@ impl Noise {
 		}
 	}
 
-	
 	/**
 	 * Getters
-	*/
+		*/
 	pub fn keypair(&self) -> Keypair {
 		self.keypair.clone()
 	}
-	
+
 	/**
 	 * Initiator
-	*/
+		*/
 	pub fn initiator() -> Noise {
 		let keypair = Keypair::random();
 		Noise::initiator_from_keypair(keypair)
 	}
-	
+
 	pub fn initiator_from_keypair(keypair: Keypair) -> Noise {
 		let state = Builder::new(NOISE_PARAMS.clone())
-			.local_private_key(keypair.private_key().u256().data_u8())
+			.local_private_key(keypair.private_key().u256())
 			//.remote_public_key(keypair.public_key().u256().data_u8())
 			.build_initiator()
 			.unwrap();
@@ -109,14 +107,14 @@ impl Noise {
 
 	pub fn responder_from_keypair(keypair: Keypair) -> Noise {
 		let state = Builder::new(NOISE_PARAMS.clone())
-			.local_private_key(keypair.private_key().u256().data_u8())
+			.local_private_key(keypair.private_key().u256())
 			//.remote_public_key(keypair.public_key().u256().data_u8())
 			.build_responder()
 			.unwrap();
 
 		Noise::new(NoiseRole::Responder, keypair, state)
 	}
-	
+
 	/**
 	 * Handshake
 		*/
@@ -165,18 +163,21 @@ impl Noise {
 
 	// Step 3
 	// Initiator: Read the second handshake message
-	pub fn handshake_step_3(&mut self, message: &[u8]) -> Result<(), NoiseError> {
+	pub fn handshake_step_3(
+		&mut self,
+		message: &[u8],
+	) -> Result<(), NoiseError> {
 		let _ = self.decrypt_handshake(message)?;
 		self.into_transport_mode();
 		Ok(())
 	}
-	
+
 	// into transport mode
 	fn into_transport_mode(&mut self) {
 		let handshake_option = self.handshake.get_mut().unwrap();
 		// Replace the handshake with a dummy
 		let dummy_handshake_state = Builder::new(NOISE_PARAMS.clone())
-			.local_private_key(self.keypair.private_key().u256().data_u8())
+			.local_private_key(self.keypair.private_key().u256())
 			.build_initiator()
 			.unwrap();
 		let handshake =
@@ -230,18 +231,19 @@ impl Noise {
 fn test_noise() {
 	let mut initiator = Noise::initiator();
 	let mut responder = Noise::responder();
-	
+
 	// handshake
 	let initiator_message = initiator.handshake_step_1().unwrap();
-	let responder_message = responder.handshake_step_2(&initiator_message).unwrap();
+	let responder_message =
+		responder.handshake_step_2(&initiator_message).unwrap();
 	let _ = initiator.handshake_step_3(&responder_message).unwrap();
-	
+
 	// encrypt from initiator to responder
 	let data = b"hello world";
 	let encrypted = initiator.encrypt(data).unwrap();
 	let decrypted = responder.decrypt(&encrypted).unwrap();
 	assert_eq!(data.to_vec(), decrypted);
-	
+
 	// encrypt from responder to initiator
 	let data = b"hello world";
 	let encrypted = responder.encrypt(data).unwrap();

@@ -1,6 +1,6 @@
+use crate::*;
 use std::convert::From;
 use std::iter::Once;
-
 //use bytes::Bytes;
 //use crypto_bigint::{Encoding, Random, Uint8Array};
 //use derive_more::{Display, Error};
@@ -9,6 +9,7 @@ use getset::{CopyGetters, Getters, MutGetters, Setters};
 use rand::rngs::OsRng;
 use rand::RngCore;
 use serde::{Deserialize, Serialize};
+use subfield_proto::versioned_bytes::VersionedBytes;
 
 use crate::arr::{hamming, xor};
 use crate::traits::*;
@@ -27,10 +28,12 @@ use super::private_key::*;
 use super::public_key::*;
 use super::{common::*, private_key};
 use crate::arr;
-use crate::vector::*;
+use crate::versioned_bytes::*;
+use subfield_proto::crypto::Keypair as ProtoKeypair;
 
-#[derive(Debug, Clone, Serialize, Deserialize, Getters)]
+#[derive(Clone, Getters)]
 pub struct Keypair {
+	proto: ProtoKeypair,
 	#[getset(get = "pub")]
 	private_key: PrivateKey,
 	#[getset(get = "pub")]
@@ -45,9 +48,33 @@ impl Keypair {
 		let public_key = private_key.public_key();
 
 		Keypair {
+			proto: ProtoKeypair {
+				private_key: Some(private_key.versioned_bytes().clone()),
+				public_key: Some(public_key.versioned_bytes().clone()),
+			},
 			private_key,
 			public_key,
 		}
+	}
+
+	pub fn from_proto(
+		proto_keypair: ProtoKeypair,
+	) -> Result<Keypair, KeyError> {
+		Ok(Keypair {
+			proto: proto_keypair.clone(),
+			private_key: PrivateKey::new(
+				proto_keypair
+					.private_key
+					.ok_or(KeyError::InvalidPrivateKey)?,
+			),
+			public_key: PublicKey::new(
+				proto_keypair.public_key.ok_or(KeyError::InvalidPublicKey)?,
+			),
+		})
+	}
+
+	pub fn proto(&self) -> &ProtoKeypair {
+		&self.proto
 	}
 
 	pub fn random() -> Self {
@@ -70,7 +97,7 @@ impl Keypair {
 				arr::to_base32(&private_key.verifying_key().to_bytes());
 
 			if public_key_string.starts_with(prefix) {
-				return Ok(Keypair::new(PrivateKey::new(
+				return Ok(Keypair::new(PrivateKey::from_u256(
 					private_key.to_bytes(),
 				)));
 			}
@@ -103,37 +130,42 @@ impl Keypair {
 */
 impl Stringable<KeyError> for Keypair {
 	fn to_string(&self) -> String {
-		arr::to_base32(&self.to_vec())
+		format!(
+			"{}::{}",
+			self.proto.private_key.as_ref().unwrap().to_string(),
+			self.proto.public_key.as_ref().unwrap().to_string()
+		)
 	}
 
 	fn from_string(string: &str) -> Result<Keypair, KeyError> {
-		let string_bytes =
-			arr::from_base32(string).map_err(|_| KeyError::InvalidKeypair)?;
-
-		Self::from_arr(&string_bytes)
+		let parts = string.split("::").collect::<Vec<&str>>();
+		Ok(Keypair::from_proto(ProtoKeypair {
+			private_key: Some(
+				VersionedBytes::from_string(parts[0])
+					.map_err(|_| KeyError::InvalidPrivateKey)?,
+			),
+			public_key: Some(
+				VersionedBytes::from_string(parts[1])
+					.map_err(|_| KeyError::InvalidPublicKey)?,
+			),
+		})
+		.map_err(|_| KeyError::InvalidKeypair)?)
 	}
 }
 
 /**
- * Vecable
+ * Byteable
 */
-impl Vecable<KeyError> for Keypair {
-	fn to_vec(&self) -> Vec<u8> {
-		let mut bytes = self.private_key().to_vec().to_vec();
-		bytes.extend(self.public_key().to_vec().to_vec());
-		bytes
+impl Byteable<KeyError> for Keypair {
+	fn to_bytes(&self) -> Bytes {
+		Bytes::from(arr::from_proto::<ProtoKeypair>(&self.proto))
 	}
 
-	fn from_vec(bytes: Vec<u8>) -> Result<Keypair, KeyError> {
-		Self::from_arr(&bytes)
-	}
-	
-	fn from_arr(arr: &[u8]) -> Result<Keypair, KeyError> {
-		let private_key = PrivateKey::from_arr(&arr[..SECRET_KEY_LENGTH])
-			.map_err(|_| KeyError::InvalidPrivateKey)?;
-		let public_key = private_key.public_key();
-
-		Ok(Keypair::new(private_key))
+	fn from_bytes(bytes: Bytes) -> Result<Keypair, KeyError> {
+		Keypair::from_proto(
+			ProtoKeypair::decode(&mut bytes.as_ref())
+				.map_err(|_| KeyError::InvalidKeypair)?,
+		)
 	}
 }
 
@@ -160,6 +192,10 @@ fn test_sign_and_verify() {
 	let signature = keypair.sign(message);
 	assert!(keypair.public_key().verify(message, &signature).unwrap());
 
+	for i in 0..100 {
+		let keypair = Keypair::random();
+		println!("{}", keypair.private_key().to_string());
+	}
 }
 
 #[test]
