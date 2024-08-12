@@ -86,9 +86,9 @@ base32 = { version = "0.5.0" } # Base32
 #protobuf = { version = "3.5.0", features = ["with-bytes"] } # Protocol Buffers
 #protobuf_json_mapping = { version = "3.5.0" } # JSON mapping for Protocol Buffers
 #protobuf-codegen = { version = "3.5.0" } # Code generation for Protocol Buffers
-prost = { version = "0.12" } # Tokio/bytes protobufs
-prost-types = { version = "0.12" } # Well-known protobuf types
-prost-build = { version = "0.12.6" }
+prost = { version = "0.13.1" } # Tokio/bytes protobufs
+prost-types = { version = "0.13.1" } # Well-known protobuf types
+prost-build = { version = "0.13.1" }
 # cbor4ii = {version = "0.3.2"} # Concise Binary Object Representation
 #
 ## Networking
@@ -191,6 +191,12 @@ gluesql = { version = "0.15.0", default-features = false }
 #] } # ONNX Runtime
 #tokenizers = { version = "0.19.1" } # Tokenizers
 #
+## Macros
+##
+proc-macro2 = "1.0.86"
+syn = "2.0.74"
+quote = "1.0.36"
+#
 ## Platform-specific
 ##
 ### Wasm
@@ -268,3 +274,5 @@ chrono = { version = "0.4.38", features = ["serde"] } # Time
 ordered-float = { version = "4.2.1" }
 #num-traits = {version = "0.2.19"}
 pin-utils = { version = "0.1.0" }
+
+

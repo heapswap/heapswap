@@ -43,6 +43,7 @@ browser = [
 # path = "src/main.rs"
 # required-features = ["server"]
 [dependencies]
+# subfield_proto = { path = "../subfield_proto" }
 #
 ## Networking
 ##

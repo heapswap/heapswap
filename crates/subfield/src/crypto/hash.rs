@@ -7,6 +7,6 @@ pub fn hash(data: &[u8]) -> Hash {
 	U256::from_u8(*blake3::hash(data).as_bytes())
 }
 
-pub fn verify_hash(data: &[u8], data_hash: Hash) -> bool {
+pub fn hash_verify(data: &[u8], data_hash: Hash) -> bool {
 	hash(data) == data_hash
 }

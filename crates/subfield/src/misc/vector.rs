@@ -19,10 +19,10 @@ pub type U1024 = Vector<128>;
 pub struct Vector<const N: usize>
 {
 	// #[serde(skip)]
-	data_i64: Array<i64, Ix1>,
+	// data_i64: Array<i64, Ix1>,
 	// #[serde(with = "serde_bytes")]
 	data_u8: [u8; N],
-	magnitude: f64,
+	// magnitude: f64,
 	// #[serde(skip)]
 	string: OnceCell<String>,
 }
@@ -36,11 +36,11 @@ impl<const N: usize> Vector<N> {
 	}
 	
 	pub fn from_u8(data_u8: [u8; N]) -> Vector<N> {
-		let data_i64: Vec<i64> = data_u8.iter().map(|&x| x as i64).collect();
+		// let data_i64: Vec<i64> = data_u8.iter().map(|&x| x as i64).collect();
 		Vector { 
 			data_u8: data_u8, 
-			data_i64: Array::from_vec(data_i64.clone()),
-			magnitude: Self::calculate_magnitude(&data_i64),
+			// data_i64: Array::from_vec(data_i64.clone()),
+			// magnitude: Self::calculate_magnitude(&data_i64),
 			string: OnceCell::new()
 		}
 	}
@@ -67,9 +67,9 @@ impl<const N: usize> Vector<N> {
 	/**
 	 * Getters
 	*/
-	pub fn magnitude(&self) -> f64 {
-		self.magnitude
-	}
+	// pub fn magnitude(&self) -> f64 {
+	// 	self.magnitude
+	// }
 	
 	pub fn data_u8(&self) -> &[u8; N] {
 		&self.data_u8
@@ -79,18 +79,18 @@ impl<const N: usize> Vector<N> {
 	/**
 	 * Distance
 	*/
-	fn calculate_magnitude(data_i64: &[i64]) -> f64 {
-		(data_i64.iter().map(|&x| x * x).sum::<i64>() as f64).sqrt()
-	}
+	// fn calculate_magnitude(data_i64: &[i64]) -> f64 {
+	// 	(data_i64.iter().map(|&x| x * x).sum::<i64>() as f64).sqrt()
+	// }
 
-	fn calculate_dot_product(&self, other: &Vector<N>) -> i64 {
-		// self.data_i64.iter().zip(other.data_i64.iter()).map(|(&a, &b)| a as i64 * b as i64).sum()
-		self.data_i64.dot(&other.data_i64).into()
-	}
+	// fn calculate_dot_product(&self, other: &Vector<N>) -> i64 {
+	// 	// self.data_i64.iter().zip(other.data_i64.iter()).map(|(&a, &b)| a as i64 * b as i64).sum()
+	// 	self.data_i64.dot(&other.data_i64).into()
+	// }
 	
-	pub fn cosine_similarity(&self, other: &Vector<N>) -> f64 {
-		self.calculate_dot_product(other) as f64 / (self.magnitude * other.magnitude)
-	}
+	// pub fn cosine_similarity(&self, other: &Vector<N>) -> f64 {
+	// 	self.calculate_dot_product(other) as f64 / (self.magnitude * other.magnitude)
+	// }
 	
 	pub fn xor(&self, other: &Vector<N>) -> Vector<N> {
 		let data_u8: [u8; N] = self.data_u8.iter()
@@ -131,6 +131,7 @@ impl<const N: usize> Vector<N> {
 				zeroes += 8;
 			} else {
 				zeroes += xored.leading_zeros() as usize;
+				break;
 			}
 		}
 		return zeroes
@@ -144,15 +145,18 @@ impl<const N: usize> Vector<N> {
 		crypto::hash(data)
 	}
 
-	pub fn verify_hash(data: &[u8], data_hash: Vector<32>) -> bool {
-		crypto::verify_hash(data, data_hash)
+	pub fn hash_verify(&self, data: &[u8]) -> Result<bool, VectorError> {
+		if self.data_u8.len() != 32 {
+			return Err(VectorError::InvalidLength);
+		}
+		Ok(crypto::hash(data).data_u8() == &self.data_u8[..32])
 	}
 	
 	pub fn hash_self(&self) -> Vector<32> {
 		crypto::hash(&self.data_u8)
 	}
 }
-
+	
 /**
  * Arrable
 */
