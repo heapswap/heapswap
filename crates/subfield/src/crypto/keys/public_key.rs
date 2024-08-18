@@ -10,7 +10,6 @@ use getset::{CopyGetters, Getters, MutGetters, Setters};
 use rand::rngs::OsRng;
 use rand::RngCore;
 use serde::{Deserialize, Serialize};
-use subfield_proto::versioned_bytes::VersionedBytes;
 
 use crate::arr::{hamming, xor};
 use crate::traits::*;
@@ -30,10 +29,12 @@ use crate::arr;
 use crate::versioned_bytes::*;
 use std::fmt;
 
-#[derive(Clone, Getters)]
+#[derive(Clone, Getters, Serialize, Deserialize)]
 pub struct PublicKey {
-	versioned_bytes: VersionedBytes, // edwards25519 public key
+	data: V256, // edwards public key
+	#[serde(skip)]
 	ed: OnceCell<DalekEdPublicKey>,
+	#[serde(skip)]
 	x: OnceCell<DalekXPublicKey>,
 }
 
@@ -41,39 +42,26 @@ pub struct PublicKey {
  * PublicKey
 */
 impl PublicKey {
-	pub fn new(versioned_bytes: VersionedBytes) -> PublicKey {
+	pub fn new(data: V256) -> PublicKey {
 		PublicKey {
-			versioned_bytes,
+			data,
 			ed: OnceCell::new(),
 			x: OnceCell::new(),
 		}
 	}
 
-	pub fn from_u256(u256: U256) -> Self {
-		Self::new(VersionedBytes {
-			version: 0,
-			data: u256.to_vec(),
-		})
-	}
-
 	/**
 	 * Getters
 		*/
-	pub fn version(&self) -> u32 {
-		self.versioned_bytes.version
-	}
 
-	pub fn versioned_bytes(&self) -> &VersionedBytes {
-		&self.versioned_bytes
-	}
-
-	pub fn u256(&self) -> &U256 {
-		self.versioned_bytes.u256()
+	pub fn data(&self) -> &V256 {
+		&self.data
 	}
 
 	pub fn ed(&self) -> &DalekEdPublicKey {
-		self.ed
-			.get_or_init(|| DalekEdPublicKey::from_bytes(&self.u256()).unwrap())
+		self.ed.get_or_init(|| {
+			DalekEdPublicKey::from_bytes(&self.data().data()).unwrap()
+		})
 	}
 
 	pub fn x(&self) -> &DalekXPublicKey {
@@ -91,26 +79,13 @@ impl PublicKey {
 		message: &[u8],
 		signature: &Signature,
 	) -> Result<bool, KeyError> {
-		match self.ed().verify(message, &DalekSignature::from(signature)) {
+		match self
+			.ed()
+			.verify(message, &DalekSignature::from(signature.data()))
+		{
 			Ok(_) => Ok(true),
 			Err(_) => Ok(false),
 		}
-	}
-}
-
-/**
- * Byteable
-*/
-impl Byteable<KeyError> for PublicKey {
-	fn to_bytes(&self) -> Bytes {
-		self.versioned_bytes.to_bytes()
-	}
-
-	fn from_bytes(bytes: Bytes) -> Result<Self, KeyError> {
-		Ok(PublicKey::new(
-			VersionedBytes::from_bytes(bytes)
-				.map_err(|_| KeyError::InvalidPublicKey)?,
-		))
 	}
 }
 
@@ -119,12 +94,12 @@ impl Byteable<KeyError> for PublicKey {
 */
 impl Stringable<KeyError> for PublicKey {
 	fn to_string(&self) -> String {
-		self.versioned_bytes.to_string()
+		self.data.to_string()
 	}
 
 	fn from_string(string: &str) -> Result<Self, KeyError> {
 		Ok(PublicKey::new(
-			VersionedBytes::from_string(string)
+			V256::from_string(string)
 				.map_err(|_| KeyError::InvalidPublicKey)?,
 		))
 	}

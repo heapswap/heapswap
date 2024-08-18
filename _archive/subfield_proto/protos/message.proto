@@ -14,7 +14,8 @@ message Message {
     record_action.RecordAction record = 4;
     pubsub_action.PubsubAction pubsub = 5;
   }
-  subkey.Subkey subkey = 6;
+  subkey.Subkey subkey = 6; // the topic/address to send the message to
+  subkey.SubkeyField subkey_field = 7; // which subkey field to use for routing
 }
 
 message SignedMessage {

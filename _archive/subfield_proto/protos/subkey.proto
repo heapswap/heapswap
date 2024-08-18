@@ -9,3 +9,9 @@ message Subkey {
   versioned_bytes.VersionedBytes cosigner = 2;
   versioned_bytes.VersionedBytes tangent = 3;
 }
+
+enum SubkeyField {
+  Signer = 0;
+  Cosigner = 1;
+  Tangent = 2;
+}

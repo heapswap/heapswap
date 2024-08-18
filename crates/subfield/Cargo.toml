@@ -17,19 +17,19 @@ server = [
 	# "tower-http",
 	"tracing-subscriber",
 	# "dioxus/axum",
-	"libp2p/mdns",
-	"libp2p/tokio",
-	"libp2p/websocket",
+	# "libp2p/mdns",
+	# "libp2p/tokio",
+	# "libp2p/websocket",
 	# "libp2p/webrtc",
-	"libp2p/tcp",
-	"libp2p/tls",
-	"libp2p/dns",
-	"libp2p/relay",
-	"libp2p/quic",
+	# "libp2p/tcp",
+	# "libp2p/tls",
+	# "libp2p/dns",
+	# "libp2p/relay",
+	# "libp2p/quic",
 ]
 browser = [
-	"libp2p/wasm-bindgen",
-	"libp2p/websocket-websys",
+	# "libp2p/wasm-bindgen",
+	# "libp2p/websocket-websys",
 	# "libp2p-webrtc-websys",
 	"gloo",
 ]
@@ -43,53 +43,53 @@ browser = [
 # path = "src/main.rs"
 # required-features = ["server"]
 [dependencies]
-subfield_proto = { path = "../subfield_proto" }
-prost = { workspace = true }
+# subfield_proto = { path = "../subfield_proto" }
+# prost = { workspace = true }
 #
 ## Networking
-##
-libp2p = { workspace = true, features = [
-	# 	"async-std",
-	"autonat",
-	"cbor",
-	"dcutr",
-	# 	"dns",
-	# 	"ecdsa",
-	"ed25519",
-	"gossipsub",
-	"identify",
-	# 	"json",
-	"kad",
-	"macros",
-	# 	"mdns",
-	# 	"memory-connection-limits",
-	# 	"metrics",
-	"noise",
-	"ping",
-	# 	"plaintext",
-	# 	"pnet",
-	# 	"quic",
-	#    "relay",
-	# 	"rendezvous",
-	"request-response",
-	# 	"rsa",
-	# 	"secp256k1",
-	"serde",
-	# 	"tcp",
-	# 	"tls",
-	# 	"tokio",
-	# 	"uds",
-	# 	"wasm-bindgen",
-	# 	"websocket-websys",
-	# 	"websocket",
-	# 	"webtransport-websys",
-	"yamux",
-	# 	"upnp",
+# ##
+# libp2p = { workspace = true, features = [
+# 	# 	"async-std",
+# 	"autonat",
+# 	"cbor",
+# 	"dcutr",
+# 	# 	"dns",
+# 	# 	"ecdsa",
+# 	"ed25519",
+# 	"gossipsub",
+# 	"identify",
+# 	# 	"json",
+# 	"kad",
+# 	"macros",
+# 	# 	"mdns",
+# 	# 	"memory-connection-limits",
+# 	# 	"metrics",
+# 	"noise",
+# 	"ping",
+# 	# 	"plaintext",
+# 	# 	"pnet",
+# 	# 	"quic",
+# 	#    "relay",
+# 	# 	"rendezvous",
+# 	"request-response",
+# 	# 	"rsa",
+# 	# 	"secp256k1",
+# 	"serde",
+# 	# 	"tcp",
+# 	# 	"tls",
+# 	# 	"tokio",
+# 	# 	"uds",
+# 	# 	"wasm-bindgen",
+# 	# 	"websocket-websys",
+# 	# 	"websocket",
+# 	# 	"webtransport-websys",
+# 	"yamux",
+# 	# 	"upnp",
 
-] }
-libp2p-webrtc-websys = { workspace = true, optional = true }
-libp2p-websocket-websys = { workspace = true, optional = true }
-libp2p-webrtc = { workspace = true, optional = true }
+# ] }
+# libp2p-webrtc-websys = { workspace = true, optional = true }
+# libp2p-websocket-websys = { workspace = true, optional = true }
+# libp2p-webrtc = { workspace = true, optional = true }
 reqwest = { workspace = true }
 # Crypto
 #crypto-bigint.workspace = true
@@ -132,6 +132,7 @@ strum.workspace = true
 ndarray = { workspace = true, features = ["serde"] }
 ndarray-rand = { workspace = true }
 chrono.workspace = true
+ordered-float.workspace = true
 
 [dev-dependencies]
 timeit.workspace = true

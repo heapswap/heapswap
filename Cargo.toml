@@ -271,6 +271,6 @@ getset = { version = "0.1.2" }
 #num-bigint = { version = "0.4.5" } # Bigints
 num-traits = { version = "0.2" } # Traits for numeric types
 chrono = { version = "0.4.38", features = ["serde"] } # Time
-ordered-float = { version = "4.2.1" }
+ordered-float = { version = "4.2.2" }
 #num-traits = {version = "0.2.19"}
 pin-utils = { version = "0.1.0" }

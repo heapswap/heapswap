@@ -9,10 +9,10 @@ use getset::{CopyGetters, Getters, MutGetters, Setters};
 use rand::rngs::OsRng;
 use rand::RngCore;
 use serde::{Deserialize, Serialize};
-use subfield_proto::versioned_bytes::VersionedBytes;
 
 use crate::arr::{hamming, xor};
 use crate::traits::*;
+use crate::versioned_bytes::*;
 use ed25519_dalek::{
 	Signature as DalekSignature, Signer, SigningKey as DalekEdPrivateKey,
 	Verifier, VerifyingKey as DalekEdPublicKey,
@@ -40,9 +40,8 @@ pub type PublicKeyArr = [u8; PUBLIC_KEY_LENGTH];
 pub type DalekXPublicKeyArr = [u8; PUBLIC_KEY_LENGTH];
 pub type DalekEdPublicKeyArr = [u8; PUBLIC_KEY_LENGTH];
 
-pub type Signature = [u8; SIGNATURE_LENGTH];
-
-pub type SharedSecret = VersionedBytes;
+pub type SharedSecret = V256;
+pub type Signature = V512;
 
 /**
  * Errors

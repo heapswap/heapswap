@@ -37,11 +37,13 @@ pub fn from_base32(data: &str) -> Result<Vrr, ArrError> {
 		.ok_or(ArrError::InvalidBase32)
 }
 
+/*
 pub fn from_proto<M: prost::Message>(proto: &M) -> Vec<u8> {
 	let mut buf = Vec::new();
 	proto.encode(&mut buf).expect("Failed to encode proto");
 	buf
 }
+*/
 
 /*
  * Operations
@@ -59,10 +61,6 @@ pub fn id() -> ArrId {
 	let mut id = [0u8; 32];
 	rand::thread_rng().fill_bytes(&mut id);
 	id
-}
-
-pub fn concat(data: &[&Arr]) -> Vrr {
-	data.iter().flat_map(|x| x.iter()).copied().collect()
 }
 
 // Generic XOR function

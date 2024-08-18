@@ -1,13 +1,13 @@
+use crate::versioned_bytes::*;
 use crate::*;
 use chacha20poly1305::{
 	aead::{generic_array::GenericArray, Aead, AeadCore, KeyInit, OsRng},
 	ChaCha20Poly1305,
 };
-use subfield_proto::versioned_bytes::VersionedBytes;
 
 pub type Plaintext = Vec<u8>;
 pub type Ciphertext = Vec<u8>;
-pub type SecretKey = VersionedBytes; //[u8; 32];
+pub type SecretKey = V256;
 pub type SecretKeyArray = [u8; 32];
 const NONCE_LENGTH: usize = 12;
 pub type Nonce = Vec<u8>; // [u8; NONCE_LENGTH];
@@ -20,7 +20,7 @@ pub enum CipherError {
 }
 
 pub struct Cipher {
-	secret: VersionedBytes,
+	secret: V256,
 	cipher: ChaCha20Poly1305,
 }
 
@@ -31,13 +31,13 @@ impl Cipher {
 
 	pub fn new(secret: SecretKey) -> Cipher {
 		let cipher =
-			ChaCha20Poly1305::new(&GenericArray::from(secret.u256().clone()));
+			ChaCha20Poly1305::new(&GenericArray::from(secret.data().clone()));
 
 		Cipher { secret, cipher }
 	}
 
 	pub fn random() -> Cipher {
-		Cipher::new(VersionedBytes::random())
+		Cipher::new(V256::random())
 	}
 
 	/**
@@ -83,7 +83,7 @@ impl Cipher {
 			.unwrap();
 
 		// Concatenate nonce and encrypted data
-		arr::concat(&[&nonce, encrypted_data.as_slice()])
+		[&nonce, encrypted_data.as_slice()].concat()
 	}
 }
 

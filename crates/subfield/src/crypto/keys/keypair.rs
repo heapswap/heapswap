@@ -9,7 +9,6 @@ use getset::{CopyGetters, Getters, MutGetters, Setters};
 use rand::rngs::OsRng;
 use rand::RngCore;
 use serde::{Deserialize, Serialize};
-use subfield_proto::versioned_bytes::VersionedBytes;
 
 use crate::arr::{hamming, xor};
 use crate::traits::*;
@@ -29,11 +28,9 @@ use super::public_key::*;
 use super::{common::*, private_key};
 use crate::arr;
 use crate::versioned_bytes::*;
-use subfield_proto::crypto::Keypair as ProtoKeypair;
 
-#[derive(Clone, Getters)]
+#[derive(Clone, Getters, Serialize, Deserialize)]
 pub struct Keypair {
-	proto: ProtoKeypair,
 	#[getset(get = "pub")]
 	private_key: PrivateKey,
 	#[getset(get = "pub")]
@@ -48,33 +45,9 @@ impl Keypair {
 		let public_key = private_key.public_key();
 
 		Keypair {
-			proto: ProtoKeypair {
-				private_key: Some(private_key.versioned_bytes().clone()),
-				public_key: Some(public_key.versioned_bytes().clone()),
-			},
 			private_key,
 			public_key,
 		}
-	}
-
-	pub fn from_proto(
-		proto_keypair: ProtoKeypair,
-	) -> Result<Keypair, KeyError> {
-		Ok(Keypair {
-			proto: proto_keypair.clone(),
-			private_key: PrivateKey::new(
-				proto_keypair
-					.private_key
-					.ok_or(KeyError::InvalidPrivateKey)?,
-			),
-			public_key: PublicKey::new(
-				proto_keypair.public_key.ok_or(KeyError::InvalidPublicKey)?,
-			),
-		})
-	}
-
-	pub fn proto(&self) -> &ProtoKeypair {
-		&self.proto
 	}
 
 	pub fn random() -> Self {
@@ -97,9 +70,10 @@ impl Keypair {
 				arr::to_base32(&private_key.verifying_key().to_bytes());
 
 			if public_key_string.starts_with(prefix) {
-				return Ok(Keypair::new(PrivateKey::from_u256(
-					private_key.to_bytes(),
-				)));
+				return Ok(Keypair::new(PrivateKey::new(V256::new(
+					0,
+					private_key.to_bytes().try_into().unwrap(),
+				))));
 			}
 		}
 	}
@@ -125,77 +99,12 @@ impl Keypair {
 	}
 }
 
-/**
- * Stringable
-*/
-impl Stringable<KeyError> for Keypair {
-	fn to_string(&self) -> String {
-		format!(
-			"{}::{}",
-			self.proto.private_key.as_ref().unwrap().to_string(),
-			self.proto.public_key.as_ref().unwrap().to_string()
-		)
-	}
-
-	fn from_string(string: &str) -> Result<Keypair, KeyError> {
-		let parts = string.split("::").collect::<Vec<&str>>();
-		Ok(Keypair::from_proto(ProtoKeypair {
-			private_key: Some(
-				VersionedBytes::from_string(parts[0])
-					.map_err(|_| KeyError::InvalidPrivateKey)?,
-			),
-			public_key: Some(
-				VersionedBytes::from_string(parts[1])
-					.map_err(|_| KeyError::InvalidPublicKey)?,
-			),
-		})
-		.map_err(|_| KeyError::InvalidKeypair)?)
-	}
-}
-
-/**
- * Byteable
-*/
-impl Byteable<KeyError> for Keypair {
-	fn to_bytes(&self) -> Bytes {
-		Bytes::from(arr::from_proto::<ProtoKeypair>(&self.proto))
-	}
-
-	fn from_bytes(bytes: Bytes) -> Result<Keypair, KeyError> {
-		Keypair::from_proto(
-			ProtoKeypair::decode(&mut bytes.as_ref())
-				.map_err(|_| KeyError::InvalidKeypair)?,
-		)
-	}
-}
-
-/**
- * Libp2pKeypairable
-*/
-impl Libp2pKeypairable<KeyError> for Keypair {
-	fn to_libp2p_keypair(&self) -> libp2p::identity::Keypair {
-		self.private_key().to_libp2p_keypair()
-	}
-
-	fn from_libp2p_keypair(
-		libp2p_keypair: libp2p::identity::Keypair,
-	) -> Result<Keypair, KeyError> {
-		PrivateKey::from_libp2p_keypair(libp2p_keypair)
-			.map(|private_key| Keypair::new(private_key))
-	}
-}
-
 #[test]
 fn test_sign_and_verify() {
 	let keypair = Keypair::random();
 	let message = b"hello world";
 	let signature = keypair.sign(message);
 	assert!(keypair.public_key().verify(message, &signature).unwrap());
-
-	for i in 0..100 {
-		let keypair = Keypair::random();
-		println!("{}", keypair.private_key().to_string());
-	}
 }
 
 #[test]
@@ -205,4 +114,11 @@ fn test_shared_secret() {
 	let alice_shared_secret = alice.shared_secret(&bob.public_key());
 	let bob_shared_secret = bob.shared_secret(&alice.public_key());
 	assert_eq!(alice_shared_secret, bob_shared_secret);
+}
+
+#[test]
+fn test_vanity() {
+	let prefix = "aa";
+	let keypair = Keypair::vanity(prefix).unwrap();
+	assert!(keypair.public_key().to_string().starts_with(prefix));
 }
