@@ -12,7 +12,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::arr::{hamming, xor};
 use crate::traits::*;
-use crate::versioned_bytes::*;
+use crate::*;
 use ed25519_dalek::{
 	Signature as DalekSignature, Signer, SigningKey as DalekEdPrivateKey,
 	Verifier, VerifyingKey as DalekEdPublicKey,
@@ -25,7 +25,7 @@ use x25519_dalek::{
 };
 
 use crate::arr;
-use crate::versioned_bytes::*;
+use crate::*;
 
 /**
  * Types

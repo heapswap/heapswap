@@ -26,12 +26,12 @@ use x25519_dalek::{
 
 pub use super::common::*;
 use crate::arr;
-use crate::versioned_bytes::*;
+use crate::*;
 use std::fmt;
 
 #[derive(Clone, Getters, Serialize, Deserialize)]
 pub struct PublicKey {
-	data: V256, // edwards public key
+	v256: V256, // edwards public key
 	#[serde(skip)]
 	ed: OnceCell<DalekEdPublicKey>,
 	#[serde(skip)]
@@ -42,9 +42,9 @@ pub struct PublicKey {
  * PublicKey
 */
 impl PublicKey {
-	pub fn new(data: V256) -> PublicKey {
+	pub fn new(v256: V256) -> PublicKey {
 		PublicKey {
-			data,
+			v256,
 			ed: OnceCell::new(),
 			x: OnceCell::new(),
 		}
@@ -53,14 +53,9 @@ impl PublicKey {
 	/**
 	 * Getters
 		*/
-
-	pub fn data(&self) -> &V256 {
-		&self.data
-	}
-
 	pub fn ed(&self) -> &DalekEdPublicKey {
 		self.ed.get_or_init(|| {
-			DalekEdPublicKey::from_bytes(&self.data().data()).unwrap()
+			DalekEdPublicKey::from_bytes(&self.v256().bytes()).unwrap()
 		})
 	}
 
@@ -81,11 +76,26 @@ impl PublicKey {
 	) -> Result<bool, KeyError> {
 		match self
 			.ed()
-			.verify(message, &DalekSignature::from(signature.data()))
+			.verify(message, &DalekSignature::from(signature.bytes()))
 		{
 			Ok(_) => Ok(true),
 			Err(_) => Ok(false),
 		}
+	}
+}
+
+impl HasV256 for PublicKey {
+	fn v256(&self) -> &V256 {
+		&self.v256
+	}
+}
+
+/**
+ * Hash
+*/
+impl std::hash::Hash for PublicKey {
+	fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
+		self.v256.hash(state);
 	}
 }
 
@@ -94,7 +104,7 @@ impl PublicKey {
 */
 impl Stringable<KeyError> for PublicKey {
 	fn to_string(&self) -> String {
-		self.data.to_string()
+		self.v256.to_string()
 	}
 
 	fn from_string(string: &str) -> Result<Self, KeyError> {
@@ -104,3 +114,15 @@ impl Stringable<KeyError> for PublicKey {
 		))
 	}
 }
+
+/**
+ * Equality
+*/
+impl PartialEq for PublicKey {
+	fn eq(&self, other: &Self) -> bool {
+		self.v256.version() == other.v256.version()
+			&& self.v256.bytes() == other.v256.bytes()
+	}
+}
+
+impl Eq for PublicKey {}

@@ -1,9 +1,8 @@
-mod swarm;
-pub use swarm::*;
+mod node;
+pub use node::*;
 mod store;
 pub use store::*;
 // mod protocol;
 // pub use protocol::*;
 
-mod node;
-pub use node::*;
+pub mod kad;

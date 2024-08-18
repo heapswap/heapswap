@@ -27,7 +27,7 @@ use super::private_key::*;
 use super::public_key::*;
 use super::{common::*, private_key};
 use crate::arr;
-use crate::versioned_bytes::*;
+use crate::*;
 
 #[derive(Clone, Getters, Serialize, Deserialize)]
 pub struct Keypair {

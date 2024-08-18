@@ -133,6 +133,7 @@ ndarray = { workspace = true, features = ["serde"] }
 ndarray-rand = { workspace = true }
 chrono.workspace = true
 ordered-float.workspace = true
+priority-queue.workspace = true
 
 [dev-dependencies]
 timeit.workspace = true

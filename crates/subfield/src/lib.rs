@@ -21,6 +21,7 @@ pub use getset::{Getters, Setters};
 pub use once_cell::sync::{Lazy, OnceCell};
 pub use reqwest;
 // pub use prost::Message;
+pub use dashmap::{DashMap, DashSet};
 pub use ordered_float::OrderedFloat;
 pub use rand::{thread_rng, Rng};
 pub use serde::{
@@ -47,9 +48,8 @@ pub use {
 /**
  * Exports
 */
-pub mod arr;
 pub mod crypto;
-// pub mod subfield;
+pub mod subfield;
 
 mod misc;
 pub use misc::*;

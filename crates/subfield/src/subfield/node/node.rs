@@ -1,4 +1,4 @@
-use super::super::*;
+use super::*;
 use crate::*;
 
 #[derive(Debug)]
@@ -6,26 +6,44 @@ pub enum NodeError {
 	InvalidSwarmConfig,
 }
 
-pub struct Node {
-	swarm: Arc<Mutex<swarm::SubfieldSwarm>>,
-	swarm_config: swarm::SubfieldSwarmConfig,
+#[derive(Clone, Getters)]
+pub struct RemoteNode {
+	#[getset(get = "pub")]
+	public_key: crypto::PublicKey,
+	#[getset(get = "pub", set = "pub")]
+	ping_ms: u64,
 }
 
-impl Node {
-	pub async fn new(
-		swarm_config: swarm::SubfieldSwarmConfig,
-	) -> Result<Self, NodeError> {
-		let swarm: Arc<Mutex<libp2p::Swarm<SubfieldBehaviour>>> =
-			Arc::new(Mutex::new(
-				swarm::create_swarm(swarm_config.clone())
-					.await
-					.map_err(|e| NodeError::InvalidSwarmConfig)?,
-			));
-		Ok(Self {
-			swarm,
-			swarm_config,
-		})
+impl RemoteNode {
+	pub fn new(public_key: crypto::PublicKey, ping_ms: u64) -> Self {
+		Self {
+			public_key,
+			ping_ms,
+		}
+	}
+}
+
+#[derive(Clone, Getters)]
+pub struct LocalNode {
+	#[getset(get = "pub")]
+	public_key: crypto::PublicKey,
+	#[getset(get = "pub")]
+	private_key: crypto::PrivateKey,
+}
+
+impl LocalNode {
+	pub fn new(private_key: crypto::PrivateKey) -> Self {
+		let public_key = private_key.public_key();
+		Self {
+			public_key,
+			private_key,
+		}
 	}
 
-	pub fn listen(&self) {}
+	pub fn to_remote_node(&self) -> RemoteNode {
+		RemoteNode {
+			public_key: self.public_key.clone(),
+			ping_ms: 0,
+		}
+	}
 }

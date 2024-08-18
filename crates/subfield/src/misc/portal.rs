@@ -4,6 +4,9 @@ use futures::channel::mpsc::{unbounded, UnboundedReceiver, UnboundedSender};
 pub type Transmitter<T> = UnboundedSender<T>;
 pub type Receiver<R> = UnboundedReceiver<R>;
 
+/**
+ * Unidirectional channel
+*/
 pub fn portal<U>() -> (Transmitter<U>, Receiver<U>) {
 	let (tx, rx) = unbounded::<U>();
 	(tx, rx)
@@ -45,6 +48,9 @@ where
 	}
 }
 
+/**
+ * Bidirectional channel
+*/
 struct Portals<L, R>
 where
 	L: Clone,

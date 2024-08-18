@@ -26,14 +26,14 @@ use x25519_dalek::{
 };
 
 use crate::arr;
-use crate::versioned_bytes::*;
+use crate::*;
 
 use super::common::*;
 use super::public_key::*;
 
 #[derive(Clone, Getters, Serialize, Deserialize)]
 pub struct PrivateKey {
-	data: V256, // edwards private key
+	v256: V256, // edwards private key
 	#[serde(skip)]
 	ed: OnceCell<DalekEdPrivateKey>,
 	#[serde(skip)]
@@ -41,9 +41,9 @@ pub struct PrivateKey {
 }
 
 impl PrivateKey {
-	pub fn new(data: V256) -> PrivateKey {
+	pub fn new(v256: V256) -> PrivateKey {
 		PrivateKey {
-			data,
+			v256,
 			ed: OnceCell::new(),
 			x: OnceCell::new(),
 		}
@@ -53,13 +53,9 @@ impl PrivateKey {
 	 * Getters
 		*/
 
-	pub fn data(&self) -> &V256 {
-		&self.data
-	}
-
 	pub fn ed(&self) -> &DalekEdPrivateKey {
 		self.ed
-			.get_or_init(|| DalekEdPrivateKey::from_bytes(&self.data().data()))
+			.get_or_init(|| DalekEdPrivateKey::from_bytes(&self.v256().bytes()))
 	}
 
 	pub fn x(&self) -> &DalekXPrivateKey {
@@ -73,12 +69,12 @@ impl PrivateKey {
 
 	pub fn public_key(&self) -> PublicKey {
 		let public_key = self.ed().verifying_key().to_bytes();
-		PublicKey::new(V256::new(*self.data.version(), public_key))
+		PublicKey::new(V256::new(*self.v256.version(), public_key))
 	}
 
 	pub fn shared_secret(&self, public_key: &PublicKey) -> SharedSecret {
 		SharedSecret::new(
-			*self.data.version(),
+			*self.v256.version(),
 			self.x()
 				.diffie_hellman(public_key.x())
 				.as_bytes()
@@ -90,7 +86,7 @@ impl PrivateKey {
 
 	pub fn sign(&self, message: &[u8]) -> Signature {
 		Signature::new(
-			*self.data.version(),
+			*self.v256.version(),
 			self.ed()
 				.sign(message.to_vec().as_slice())
 				.to_bytes()
@@ -110,11 +106,20 @@ impl Randomable for PrivateKey {
 }
 
 /**
+ * Hash
+*/
+impl std::hash::Hash for PrivateKey {
+	fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
+		self.v256.hash(state);
+	}
+}
+
+/**
  * Stringable
 */
 impl Stringable<KeyError> for PrivateKey {
 	fn to_string(&self) -> String {
-		self.data.to_string()
+		self.v256.to_string()
 	}
 
 	fn from_string(string: &str) -> Result<Self, KeyError> {
@@ -124,3 +129,21 @@ impl Stringable<KeyError> for PrivateKey {
 		))
 	}
 }
+
+impl HasV256 for PrivateKey {
+	fn v256(&self) -> &V256 {
+		&self.v256
+	}
+}
+
+/**
+ * Equality
+*/
+impl PartialEq for PrivateKey {
+	fn eq(&self, other: &Self) -> bool {
+		self.v256.version() == other.v256.version()
+			&& self.v256.bytes() == other.v256.bytes()
+	}
+}
+
+impl Eq for PrivateKey {}
