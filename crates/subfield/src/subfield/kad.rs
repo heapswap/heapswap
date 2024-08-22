@@ -30,7 +30,7 @@ pub enum NearestNodeResult {
 }
 
 #[derive(Clone, Getters)]
-struct Kad {
+pub struct Kad {
 	#[getset(get = "pub")]
 	config: KadConfig,
 

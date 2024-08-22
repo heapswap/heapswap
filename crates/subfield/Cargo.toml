@@ -26,6 +26,8 @@ server = [
 	# "libp2p/dns",
 	# "libp2p/relay",
 	# "libp2p/quic",
+	# "poem",
+	# "poem-openapi"
 ]
 browser = [
 	# "libp2p/wasm-bindgen",
@@ -91,6 +93,8 @@ browser = [
 # libp2p-websocket-websys = { workspace = true, optional = true }
 # libp2p-webrtc = { workspace = true, optional = true }
 reqwest = { workspace = true }
+reqwest-websocket = { workspace = true }
+yamux = { workspace = true }
 # Crypto
 #crypto-bigint.workspace = true
 #num-bigint.workspace = true
@@ -134,6 +138,7 @@ ndarray-rand = { workspace = true }
 chrono.workspace = true
 ordered-float.workspace = true
 priority-queue.workspace = true
+itertools.workspace = true
 
 [dev-dependencies]
 timeit.workspace = true

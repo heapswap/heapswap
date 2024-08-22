@@ -12,6 +12,13 @@ pub fn portal<U>() -> (Transmitter<U>, Receiver<U>) {
 	(tx, rx)
 }
 
+// pub fn portals<T>() -> (Portal<T,T>, Portal<T,T>)
+// where
+// 	T: Clone,
+// {
+// 	Portals::new().split()
+// }
+
 pub fn portals<L, R>() -> (Portal<R, L>, Portal<L, R>)
 where
 	L: Clone,
@@ -19,6 +26,8 @@ where
 {
 	Portals::new().split()
 }
+
+
 
 pub struct Portal<T, R>
 where

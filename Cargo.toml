@@ -94,35 +94,35 @@ prost-build = { version = "0.13.1" }
 ## Networking
 ##
 reqwest = { version = "0.12.5", features = ["json"] } # HTTP client
-reqwest-websocket = { version = "0.4.0" } # Websocket support for reqwest
-#poem = { version = "3.0.1", features = [
-#	"server",
-#	"websocket",
-#	"static-files"
-#] } # Web framework
-#poem-openapi = { version = "5.0.2", features = [
-#	"chrono",
-#	"rapidoc",
-#	"hostname",
-#	"websocket",
-#	"static-files"
-#] }
+reqwest-websocket = { version = "0.4.1" } # Websocket support for reqwest
+poem = { version = "3.0.1", features = [
+	"server",
+	"websocket",
+	"static-files"
+] } # Web framework
+poem-openapi = { version = "5.0.2", features = [
+	"chrono",
+	"rapidoc",
+	"hostname",
+	"websocket",
+	"static-files"
+] }
 #poem-grpc = { version = "0.4.1" }
 #poem-grpc-build = { version = "0.4.0" }
-headers = { version = "0.4" }
-axum = { version = "0.7.5", features = [
-	"json",
-	"macros",
-	"ws",
-	#"form",
-	#"multipart",
-	#"query"
+# headers = { version = "0.4" }
+# axum = { version = "0.7.5", features = [
+# 	"json",
+# 	"macros",
+# 	"ws",
+# 	#"form",
+# 	#"multipart",
+# 	#"query"
 
-] }
-axum-extra = { version = "0.9.3", features = ["typed-header"] }
-tower = { version = "0.4", features = ["util"] }
-tower-http = { version = "0.5.0", features = ["fs", "trace", "cors"] }
-http = { version = "1.1.0" }
+# ] }
+# axum-extra = { version = "0.9.3", features = ["typed-header"] }
+# tower = { version = "0.4", features = ["util"] }
+# tower-http = { version = "0.5.0", features = ["fs", "trace", "cors"] }
+# http = { version = "1.1.0" }
 tokio-tungstenite = { version = "0.23.1" }
 #tokio_tungstenite_wasm = { verison = "0.3.1" }
 yamux = { version = "0.13.3" } # Multiplexing

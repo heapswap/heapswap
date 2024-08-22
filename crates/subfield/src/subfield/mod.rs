@@ -5,4 +5,7 @@ pub use store::*;
 // mod protocol;
 // pub use protocol::*;
 
-pub mod kad;
+mod kad;
+pub use kad::*;
+mod handler;
+pub use handler::*;
