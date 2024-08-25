@@ -30,6 +30,7 @@ use crate::arr;
 use crate::*;
 
 #[derive(Clone, Getters, Serialize, Deserialize)]
+#[wasm_bindgen]
 pub struct Keypair {
 	#[getset(get = "pub")]
 	private_key: PrivateKey,
@@ -72,7 +73,7 @@ impl Keypair {
 			if public_key_string.starts_with(prefix) {
 				return Ok(Keypair::new(PrivateKey::new(V256::new(
 					0,
-					private_key.to_bytes().try_into().unwrap(),
+					private_key.to_bytes().as_slice().try_into().unwrap(),
 				))));
 			}
 		}
@@ -99,6 +100,32 @@ impl Keypair {
 	}
 }
 
+#[cfg(feature = "libp2p")]
+impl Libp2pKeypairable<KeyError> for Keypair {
+	fn to_libp2p_keypair(&self) -> Result<libp2p::identity::Keypair, KeyError> {
+		self.private_key().to_libp2p_keypair()
+	}
+
+	fn from_libp2p_keypair(
+		keypair: libp2p::identity::Keypair,
+	) -> Result<Self, KeyError> {
+		let private_key = PrivateKey::from_libp2p_keypair(keypair)?;
+		let public_key = private_key.public_key();
+		Ok(Keypair {
+			private_key,
+			public_key,
+		})
+	}
+}
+
+impl PartialEq for Keypair {
+	fn eq(&self, other: &Self) -> bool {
+		self.private_key == other.private_key
+			&& self.public_key == other.public_key
+	}
+}
+impl Eq for Keypair {}
+
 #[test]
 fn test_sign_and_verify() {
 	let keypair = Keypair::random();
@@ -121,4 +148,14 @@ fn test_vanity() {
 	let prefix = "aa";
 	let keypair = Keypair::vanity(prefix).unwrap();
 	assert!(keypair.public_key().to_string().starts_with(prefix));
+}
+
+#[cfg(feature = "libp2p")]
+#[test]
+fn test_libp2p_keypair() {
+	let keypair: Keypair = Keypair::random();
+	let libp2p_keypair = keypair.to_libp2p_keypair().unwrap();
+	let keypair_from_libp2p: Keypair =
+		Keypair::from_libp2p_keypair(libp2p_keypair).unwrap();
+	assert!(keypair == keypair_from_libp2p);
 }

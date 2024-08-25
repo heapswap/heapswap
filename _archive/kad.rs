@@ -46,6 +46,10 @@ impl Kad {
 			buckets: vec![vec![]; 256],
 		}
 	}
+	
+	fn bucket_counts(&self) -> Vec<usize> {
+		self.buckets.iter().map(|bucket| bucket.len()).collect::<Vec<_>>()
+	}
 
 	fn calculate_distance(&self, key: &V256) -> u32 {
 		self.config
@@ -156,10 +160,64 @@ fn sort_bucket_by_ping_increasing(bucket: &mut Vec<RemoteNode>) {
 
 #[test]
 fn test_kad() {
+	let K = 4;
 	let config = KadConfig {
 		local_node: LocalNode::new(crypto::PrivateKey::random()),
 		alpha: 3,
 		beta: 3,
-		k: 20,
+		k: K,
 	};
+	
+	let mut local_kad = Kad::new(config);
+	
+	let nodespace = 1000;
+	
+	let remote_nodes = (0..nodespace).map(|i| {
+		let ping_ms = rand::thread_rng().gen_range(0..100);
+		RemoteNode::new(crypto::PublicKey::random(), ping_ms)
+	}).collect::<Vec<_>>();
+	
+	for node in remote_nodes {
+		local_kad.try_add_node(node);
+	}
+	
+	// println!("{:?}", local_kad.bucket_counts());
+	// test that all buckets have at most K nodes
+	for bucket in local_kad.buckets() {
+		assert!(bucket.len() <= K as usize);
+	}
+	
+	// find the nearest node to a random key
+	let key = V256::random();
+	match local_kad.find_nearest_node(&key) {
+		NearestNodeResult::Found(node) => {
+			let leading_zeros = node.public_key().v256().xor_leading_zeros(&key);
+			println!("Nearest node leading zeros: {:?}", leading_zeros);
+		}
+		NearestNodeResult::SelfIsNearest => {
+			panic!("Self is nearest");
+		}
+		NearestNodeResult::NoneFound => {
+			panic!("No nearest node found");
+		}
+	}
+	
+	// find the nearest node to a key that is very close to self
+	let mut key_bytes = key.bytes().clone();
+	key_bytes[0] = 0;
+	key_bytes[1] = 0;
+	let key = V256::new(0, key_bytes);
+	
+	
+	match local_kad.find_nearest_node(&key) {
+		NearestNodeResult::Found(node) => {
+			panic!("Found node: {:?}", node.public_key().to_string());
+		}
+		NearestNodeResult::SelfIsNearest => {
+			println!("Self is nearest");
+		}
+		NearestNodeResult::NoneFound => {
+			panic!("No nearest node found");
+		}
+	}
 }

@@ -33,7 +33,11 @@ pub struct SubfieldBehaviour {
 	// subfield
 	pub subfield:
 		Behaviour<subfield::SubfieldRequest, subfield::SubfieldResponse>,
-
+	
+	// utils
+	kad: kad::Behaviour<MemoryStore>,
+	gossipsub: gossipsub::Behaviour,
+		
 	// networking
 	pub ping: ping::Behaviour,
 	pub dcutr: dcutr::Behaviour,
@@ -76,14 +80,14 @@ impl SubfieldBehaviour {
 		};
 
 		// Set the Kademlia mode
-		// #[cfg(feature = "browser")]
-		// {
-		// 	behaviour.subfield.set_mode(Some(kad::Mode::Client));
-		// }
-		// #[cfg(feature = "server")]
-		// {
-		// 	behaviour.subfield.set_mode(Some(kad::Mode::Server));
-		// }
+		#[cfg(feature = "browser")]
+		{
+			behaviour.subfield.set_mode(Some(kad::Mode::Client));
+		}
+		#[cfg(feature = "server")]
+		{
+			behaviour.subfield.set_mode(Some(kad::Mode::Server));
+		}
 
 		behaviour
 	}

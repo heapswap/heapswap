@@ -27,8 +27,6 @@ where
 	Portals::new().split()
 }
 
-
-
 pub struct Portal<T, R>
 where
 	T: Clone,

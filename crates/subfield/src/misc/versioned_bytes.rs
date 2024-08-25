@@ -1,14 +1,10 @@
 use std::hash::Hash;
-
 use crate::*;
 
-pub type V96 = VersionedBytes<12>;
-pub type V256 = VersionedBytes<32>;
-pub type V512 = VersionedBytes<64>;
+pub type V96 = VersionedBytes;
+pub type V256 = VersionedBytes;
+pub type V512 = VersionedBytes;
 
-pub trait HasV256 {
-	fn v256(&self) -> &V256;
-}
 
 #[derive(Debug, strum::Display)]
 pub enum VersionedBytesError {
@@ -17,28 +13,29 @@ pub enum VersionedBytesError {
 }
 
 #[derive(Debug, Serialize, Deserialize, Getters)]
-pub struct VersionedBytes<const DIM: usize> {
+#[wasm_bindgen]
+pub struct VersionedBytes {
 	#[getset(get = "pub")]
 	version: u16,
 	#[getset(get = "pub")]
 	#[serde(with = "serde_bytes")]
-	bytes: [u8; DIM],
+	bytes: Vec<u8>,
 	#[serde(skip)]
 	string: OnceCell<String>,
 }
 
-impl<const DIM: usize> VersionedBytes<DIM> {
-	pub fn new(version: u16, bytes: [u8; DIM]) -> Self {
+impl VersionedBytes {
+	pub fn new(version: u16, bytes: &[u8]) -> Self {
 		Self {
 			version,
-			bytes,
+			bytes: bytes.to_vec(),
 			string: OnceCell::new(),
 		}
 	}
 
 	pub fn leading_zeros(&self) -> u32 {
 		let mut count = 0;
-		for i in 0..DIM {
+		for i in 0..self.bytes.len() {
 			if self.bytes[i] == 0 {
 				count += 8;
 			} else {
@@ -51,7 +48,7 @@ impl<const DIM: usize> VersionedBytes<DIM> {
 
 	pub fn xor_leading_zeros(&self, other: &Self) -> u32 {
 		let mut count = 0;
-		for i in 0..DIM {
+		for i in 0..self.bytes.len() {
 			let xor = self.bytes[i] ^ other.bytes[i];
 			if xor == 0 {
 				count += 8;
@@ -62,12 +59,31 @@ impl<const DIM: usize> VersionedBytes<DIM> {
 		}
 		count
 	}
+	
+	/**
+	 * Random - workaround for wasm not supporting generics
+	*/
+	
+	pub fn random96() -> Self {
+		let bytes: Vec<u8> = arr::random(12).try_into().unwrap();
+		VersionedBytes::new(0, bytes.as_slice())
+	}
+
+	pub fn random256() -> Self {
+		let bytes: Vec<u8> = arr::random(32).try_into().unwrap();
+		VersionedBytes::new(0, bytes.as_slice())
+	}
+
+	pub fn random512() -> Self {
+		let bytes: Vec<u8> = arr::random(64).try_into().unwrap();
+		VersionedBytes::new(0, bytes.as_slice())
+	}
 }
 
 /**
  * Stringable
 */
-impl<const DIM: usize> Stringable<VersionedBytesError> for VersionedBytes<DIM> {
+impl Stringable<VersionedBytesError> for VersionedBytes {
 	fn to_string(&self) -> String {
 		self.string
 			.get_or_init(|| arr::to_base32((&self.to_vec()).as_ref()))
@@ -77,14 +93,10 @@ impl<const DIM: usize> Stringable<VersionedBytesError> for VersionedBytes<DIM> {
 	fn from_string(s: &str) -> Result<Self, VersionedBytesError> {
 		let vec = arr::from_base32(s)
 			.map_err(|_| VersionedBytesError::InvalidBase32)?;
-		let arr: [u8; DIM] = vec
-			.as_slice()
-			.try_into()
-			.map_err(|_| VersionedBytesError::InvalidVersion)?;
-		VersionedBytes::from_arr(&arr)
+		VersionedBytes::from_arr(&vec)
 	}
 }
-impl<const DIM: usize> Into<String> for VersionedBytes<DIM> {
+impl Into<String> for VersionedBytes {
 	fn into(self) -> String {
 		self.to_string()
 	}
@@ -93,7 +105,7 @@ impl<const DIM: usize> Into<String> for VersionedBytes<DIM> {
 /**
  * Vecable
 */
-impl<const DIM: usize> Vecable<VersionedBytesError> for VersionedBytes<DIM> {
+impl Vecable<VersionedBytesError> for VersionedBytes {
 	fn from_arr(arr: &[u8]) -> Result<Self, VersionedBytesError> {
 		let (bytes, version) = arr.split_at(arr.len() - 2);
 		let version = u16::from_le_bytes(version.try_into().unwrap());
@@ -109,7 +121,7 @@ impl<const DIM: usize> Vecable<VersionedBytesError> for VersionedBytes<DIM> {
 /**
  * Byteable
 */
-impl<const DIM: usize> Byteable<VersionedBytesError> for VersionedBytes<DIM> {
+impl Byteable<VersionedBytesError> for VersionedBytes {
 	fn to_bytes(&self) -> Bytes {
 		Bytes::from(self.to_vec())
 	}
@@ -120,36 +132,26 @@ impl<const DIM: usize> Byteable<VersionedBytesError> for VersionedBytes<DIM> {
 }
 
 /**
- * Randomable
-*/
-impl<const DIM: usize> Randomable for VersionedBytes<DIM> {
-	fn random() -> Self {
-		let bytes: [u8; DIM] = arr::random(DIM).try_into().unwrap();
-		VersionedBytes::new(0, bytes)
-	}
-}
-
-/**
  * Equality
 */
-impl<const DIM: usize> PartialEq for VersionedBytes<DIM> {
+impl PartialEq for VersionedBytes {
 	fn eq(&self, other: &Self) -> bool {
 		self.version == other.version && self.bytes == other.bytes
 	}
 }
 
-impl<const DIM: usize> Eq for VersionedBytes<DIM> {}
+impl Eq for VersionedBytes {}
 
 /**
  * Impls
 */
-impl<const DIM: usize> From<String> for VersionedBytes<DIM> {
+impl From<String> for VersionedBytes {
 	fn from(string: String) -> Self {
 		VersionedBytes::from_string(&string).unwrap()
 	}
 }
 
-impl<const DIM: usize> From<&str> for VersionedBytes<DIM> {
+impl From<&str> for VersionedBytes {
 	fn from(string: &str) -> Self {
 		VersionedBytes::from_string(string).unwrap()
 	}
@@ -158,16 +160,16 @@ impl<const DIM: usize> From<&str> for VersionedBytes<DIM> {
 /**
  * Clone
 */
-impl<const DIM: usize> Clone for VersionedBytes<DIM> {
+impl Clone for VersionedBytes {
 	fn clone(&self) -> Self {
-		VersionedBytes::new(self.version, self.bytes.clone())
+		VersionedBytes::new(self.version, &self.bytes)
 	}
 }
 
 /**
  * Hash
 */
-impl<const DIM: usize> Hash for VersionedBytes<DIM> {
+impl Hash for VersionedBytes {
 	fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
 		self.bytes.hash(state);
 	}
@@ -175,7 +177,7 @@ impl<const DIM: usize> Hash for VersionedBytes<DIM> {
 
 #[test]
 fn test_versioned_bytes() {
-	let vec256 = V256::random();
+	let vec256 = VersionedBytes::random256();
 	let vec256_serialized = serialize(&vec256).unwrap();
 	// assert_eq!(vec256_serialized.len(), 32 + 2);
 	assert_eq!(vec256, deserialize(&vec256_serialized).unwrap());

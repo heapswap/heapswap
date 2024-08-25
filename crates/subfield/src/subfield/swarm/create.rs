@@ -29,8 +29,7 @@ use {
 };
 #[cfg(feature = "server")]
 use {
-	libp2p::{mdns, quic},
-	libp2p::{tcp, websocket},
+	libp2p::{mdns, tcp, websocket},
 	// libp2p_webrtc as webrtc,
 	tracing_subscriber::EnvFilter,
 };
@@ -159,7 +158,7 @@ async fn create_client(
 async fn create_server(
 	swarm_config: SubfieldSwarmConfig,
 ) -> eyre::Result<SubfieldSwarm> {
-	let keypair = swarm_config.keypair.to_libp2p_keypair();
+	let keypair = swarm_config.keypair.to_libp2p_keypair().unwrap();
 
 	let mut swarm =
 		libp2p::SwarmBuilder::with_existing_identity(keypair.clone())

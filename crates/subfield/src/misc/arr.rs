@@ -2,6 +2,7 @@ use base32::Alphabet;
 use num_traits::PrimInt;
 use rand::{Rng, RngCore};
 //use std::convert::TryInto;
+use crate::*;
 use std::ops::BitXor;
 
 /**
@@ -20,6 +21,8 @@ pub type Vrr = Vec<u8>;
  * Conversions
 */
 
+// string
+
 pub fn to_string(arr: &Arr) -> String {
 	String::from_utf8(arr.to_vec()).unwrap()
 }
@@ -28,13 +31,36 @@ pub fn from_string(data: &String) -> Vrr {
 	data.clone().into_bytes()
 }
 
+// to base32
+
 pub fn to_base32(data: &[u8]) -> String {
 	base32::encode(Alphabet::Rfc4648Lower { padding: false }, &data)
+}
+
+#[wasm_bindgen(js_name = "toBase32")]
+pub fn _js_to_base32(data: Uint8Array) -> String {
+	to_base32(&data.to_vec())
 }
 
 pub fn from_base32(data: &str) -> Result<Vrr, ArrError> {
 	base32::decode(Alphabet::Rfc4648Lower { padding: false }, data)
 		.ok_or(ArrError::InvalidBase32)
+}
+
+#[wasm_bindgen(js_name = "fromBase32")]
+pub fn _js_from_base32(data: &str) -> Result<Uint8Array, JsValue> {
+	from_base32(data)
+		.map(|v| Uint8Array::from(v.as_slice()).into())
+		.map_err(|e| JsValue::from_str(&format!("{:?}", e)))
+}
+
+pub fn is_valid_base32(data: &str) -> bool {
+	from_base32(data).is_ok()
+}
+
+#[wasm_bindgen(js_name = "isValidBase32")]
+pub fn _js_is_valid_base32(data: &str) -> bool {
+	is_valid_base32(data)
 }
 
 /*

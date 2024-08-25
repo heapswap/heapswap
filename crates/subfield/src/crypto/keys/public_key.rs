@@ -1,18 +1,13 @@
 use crate::*;
 use std::convert::From;
 use std::iter::Once;
-
-//use bytes::Bytes;
-//use crypto_bigint::{Encoding, Random, Uint8Array};
-//use derive_more::{Display, Error};
-use getset::{CopyGetters, Getters, MutGetters, Setters};
+pub use super::common::*;
+use std::fmt;
 
 use rand::rngs::OsRng;
 use rand::RngCore;
 use serde::{Deserialize, Serialize};
 
-use crate::arr::{hamming, xor};
-use crate::traits::*;
 use ed25519_dalek::{
 	Signature as DalekSignature, Signer, SigningKey as DalekEdPrivateKey,
 	Verifier, VerifyingKey as DalekEdPublicKey,
@@ -24,10 +19,7 @@ use x25519_dalek::{
 	StaticSecret as DalekXPrivateKey,
 };
 
-pub use super::common::*;
-use crate::arr;
-use crate::*;
-use std::fmt;
+
 
 #[derive(Clone, Getters, Serialize, Deserialize)]
 pub struct PublicKey {
@@ -55,7 +47,7 @@ impl PublicKey {
 		*/
 	pub fn ed(&self) -> &DalekEdPublicKey {
 		self.ed.get_or_init(|| {
-			DalekEdPublicKey::from_bytes(&self.v256().bytes()).unwrap()
+			DalekEdPublicKey::from_bytes(&self.v256().bytes().as_slice().try_into().unwrap()).unwrap()
 		})
 	}
 
@@ -76,7 +68,10 @@ impl PublicKey {
 	) -> Result<bool, KeyError> {
 		match self
 			.ed()
-			.verify(message, &DalekSignature::from(signature.bytes()))
+			.verify(message, &DalekSignature::from(
+				&<[_; SIGNATURE_LENGTH]>::try_from(signature.bytes().as_slice())
+					.map_err(|_| KeyError::InvalidSignature)?
+			))
 		{
 			Ok(_) => Ok(true),
 			Err(_) => Ok(false),
@@ -112,6 +107,15 @@ impl Stringable<KeyError> for PublicKey {
 			V256::from_string(string)
 				.map_err(|_| KeyError::InvalidPublicKey)?,
 		))
+	}
+}
+
+/**
+ * Randomable (nonsense, only used for testing)
+*/
+impl Randomable for PublicKey {
+	fn random() -> Self {
+		PublicKey::new(V256::random256())
 	}
 }
 

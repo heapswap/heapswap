@@ -1,7 +1,7 @@
 use crate::*;
 use crate::*;
 use chacha20poly1305::{
-	aead::{generic_array::GenericArray, Aead, AeadCore, KeyInit, OsRng},
+	aead::{generic_array, Aead, AeadCore, KeyInit, OsRng},
 	ChaCha20Poly1305,
 };
 
@@ -30,14 +30,15 @@ impl Cipher {
 		*/
 
 	pub fn new(secret: SecretKey) -> Cipher {
+		let key: [u8; 32] = secret.bytes().clone().try_into().unwrap();
 		let cipher =
-			ChaCha20Poly1305::new(&GenericArray::from(secret.bytes().clone()));
+			ChaCha20Poly1305::new(&generic_array::GenericArray::<u8, generic_array::typenum::U32>::from(key));
 
 		Cipher { secret, cipher }
 	}
 
 	pub fn random() -> Cipher {
-		Cipher::new(V256::random())
+		Cipher::new(V256::random256())
 	}
 
 	/**

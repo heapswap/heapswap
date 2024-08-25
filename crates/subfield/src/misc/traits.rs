@@ -1,3 +1,4 @@
+use crate::*;
 use bytes::Bytes;
 
 // Able to be randomly generated
@@ -31,7 +32,18 @@ pub trait Stringable<E>: Sized {
 /**
  * Has data of 32 bytes
 */
-pub type U256 = [u8; 32];
-pub trait U256able {
-	fn u256(&self) -> &U256;
+// pub type U256 = [u8; 32];
+// pub trait U256able {
+// 	fn u256(&self) -> &U256;
+// }
+pub trait HasV256 {
+	fn v256(&self) -> &V256;
+}
+
+#[cfg(feature = "libp2p")]
+pub trait Libp2pKeypairable<E>: Sized {
+	fn to_libp2p_keypair(&self) -> Result<libp2p::identity::Keypair, E>;
+	fn from_libp2p_keypair(
+		keypair: libp2p::identity::Keypair,
+	) -> Result<Self, E>;
 }
