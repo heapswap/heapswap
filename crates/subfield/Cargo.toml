@@ -143,6 +143,7 @@ eyre.workspace = true
 # WASM
 gloo = { workspace = true }
 wasm-bindgen = { workspace = true }
+wasm-bindgen-futures = { workspace = true }
 web-sys = { workspace = true }
 js-sys = { workspace = true }
 console_error_panic_hook = { workspace = true }
@@ -164,6 +165,7 @@ itertools.workspace = true
 
 [dev-dependencies]
 timeit.workspace = true
+wasm-bindgen-test = { workspace = true }
 
 [build] 
 

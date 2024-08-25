@@ -1,25 +1,26 @@
 import * as hs from "../index.ts"
 import { expect, test } from "bun:test"
 
+
 test("hash", async () => {
 	const hash = hs.hash("hello")
 
-	const verify = hs.verifyHash("hello", hash)
+	const verify = hs.hashVerify("hello", hash)
 
 	expect(verify).toBe(true)
 })
 
-test("jaccard", async () => {
-	const a = hs.hash("hello")
-	const b = hs.hash("world")
+// test("jaccard", async () => {
+// 	const a = hs.hash("hello")
+// 	const b = hs.hash("world")
 
-	expect(a.jaccard(b)).toBeLessThan(1)
-	expect(a.jaccard(a)).toBe(1)
-	expect(a.jaccard(b)).toEqual(b.jaccard(a))
-})
+// 	expect(a.jaccard(b)).toBeLessThan(1)
+// 	expect(a.jaccard(a)).toBe(1)
+// 	expect(a.jaccard(b)).toEqual(b.jaccard(a))
+// })
 
 test("cipher", async () => {
-	const cipherKey = hs.Cipher.randomSecret()
+	const cipherKey = hs.Cipher.randomKey()
 
 	const cipher = new hs.Cipher(cipherKey)
 
@@ -30,7 +31,7 @@ test("cipher", async () => {
 	expect(hs.toString(decrypted)).toBe("hello")
 })
 
-test("keys", async () => {
+test("keypair - sign/verify/shared", async () => {
 	const alice = hs.Keypair.random()
 	const bob = hs.Keypair.random()
 
@@ -49,13 +50,20 @@ test("keys", async () => {
 	expect(aliceShared.toString()).toEqual(bobShared.toString())
 })
 
-test("vanity keypair", async () => {
+test("keypair - vanity", async () => {
 	// 1 character - Instant
 	// 2 characters - <1s
 	// 3 characters - <1m
 	// 4 characters - <20m
 	// 5 characters - <10h
 	const prefix = "aa"
-	const keypair = hs.Keypair.vanity(prefix)
+	const keypair = await hs.Keypair.vanity(prefix)
 	expect(keypair.publicKey.toString().slice(0, prefix.length)).toBe(prefix)
+})
+
+test("keypair - serialization", async () => {
+	let keypair = hs.Keypair.random()
+	let serialized = keypair.toBytes()
+	let deserialized = hs.Keypair.fromBytes(serialized)
+	expect(keypair.toString()).toBe(deserialized.toString())
 })

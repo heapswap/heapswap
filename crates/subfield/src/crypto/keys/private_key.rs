@@ -42,6 +42,10 @@ pub struct PrivateKey {
 }
 
 impl PrivateKey {
+	
+	/**
+	 * Constructors
+	*/
 	pub fn new(v256: V256) -> PrivateKey {
 		PrivateKey {
 			v256,
@@ -130,6 +134,19 @@ impl Stringable<KeyError> for PrivateKey {
 }
 
 /**
+ * Vecable
+*/
+impl Vecable<KeyError> for PrivateKey {
+	fn to_vec(&self) -> Vec<u8> {
+		self.v256().to_vec()
+	}
+	
+	fn from_arr(arr: &[u8]) -> Result<Self, KeyError> {
+		Ok(PrivateKey::new(V256::from_arr(arr).map_err(|_| KeyError::InvalidPrivateKey)?))
+	}
+}
+
+/**
  * Libp2pKeypairable
 */
 #[cfg(feature = "libp2p")]
@@ -182,3 +199,84 @@ impl PartialEq for PrivateKey {
 }
 
 impl Eq for PrivateKey {}
+
+#[wasm_bindgen]
+impl PrivateKey {
+	
+	/**
+	 * Constructors
+	*/
+	
+	#[wasm_bindgen(constructor)]
+	pub fn _js_new(v256: V256) -> Self {
+		PrivateKey::new(v256)
+	}
+	
+	#[wasm_bindgen(js_name = "random")]
+	pub fn _js_random() -> Self {
+		PrivateKey::random()
+	}
+	
+	/**
+	 * Getters
+	*/
+	
+	#[wasm_bindgen(getter, js_name = "ed")]
+	pub fn _js_ed(&self) -> Uint8Array {
+		self.ed().to_bytes().as_slice().into()
+	}
+	
+	#[wasm_bindgen(getter, js_name = "x")]
+	pub fn _js_x(&self) -> Uint8Array {
+		self.x().to_bytes().as_slice().into()
+	}
+	
+	/**
+	 * Operations
+	*/
+		
+	#[wasm_bindgen(js_name = "publicKey")]
+	pub fn _js_public_key(&self) -> PublicKey {
+		self.public_key()
+	}
+	
+	#[wasm_bindgen(js_name = "sharedSecret")]
+	pub fn _js_shared_secret(&self, public_key: &PublicKey) -> SharedSecret {
+		self.shared_secret(public_key)
+	}
+	
+	#[wasm_bindgen(js_name = "sign")]
+	pub fn _js_sign(&self, message: Uint8Array) -> Signature {
+		self.sign(message.to_vec().as_slice())
+	}
+	
+	/**
+	 * Byteable
+	*/
+	
+	#[wasm_bindgen(js_name = "toBytes")]
+	pub fn _js_to_bytes(&self) -> Uint8Array {
+		self.v256()._js_to_bytes()
+	}
+	
+	#[wasm_bindgen(js_name = "fromBytes")]
+	pub fn _js_from_bytes(bytes: Uint8Array) -> Self {
+		PrivateKey::new(V256::_js_from_bytes(bytes))
+	}
+	
+	/**
+	 * Stringable
+	*/
+	
+	#[wasm_bindgen(js_name = "toString")]
+	pub fn _js_to_string(&self) -> String {
+		self.v256().to_string()
+	}
+	
+	#[wasm_bindgen(js_name = "fromString")]
+	pub fn _js_from_string(string: String) -> Self {
+		PrivateKey::new(V256::from_string(&string).unwrap())
+	}
+	
+	
+}

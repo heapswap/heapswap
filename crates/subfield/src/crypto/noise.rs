@@ -38,6 +38,7 @@ pub enum NoiseError {
 	FailedToDecrypt,
 }
 
+#[wasm_bindgen]
 #[derive(Eq, PartialEq)]
 pub enum NoiseRole {
 	Initiator,
@@ -46,6 +47,7 @@ pub enum NoiseRole {
 
 pub type NoiseKeypairString = String;
 
+#[wasm_bindgen]
 pub struct Noise {
 	role: NoiseRole,
 	keypair: Keypair,
@@ -59,7 +61,7 @@ impl Noise {
 	/**
 	 * Constructors
 		*/
-	pub fn new(
+	fn new(
 		role: NoiseRole,
 		keypair: Keypair,
 		handshake_state: HandshakeState,
@@ -73,16 +75,6 @@ impl Noise {
 		}
 	}
 
-	/**
-	 * Getters
-		*/
-	pub fn keypair(&self) -> Keypair {
-		self.keypair.clone()
-	}
-
-	/**
-	 * Initiator
-		*/
 	pub fn initiator() -> Noise {
 		let keypair = Keypair::random();
 		Noise::initiator_from_keypair(keypair)
@@ -98,9 +90,6 @@ impl Noise {
 		Noise::new(NoiseRole::Initiator, keypair, state)
 	}
 
-	/**
-	 * Responder
-		*/
 	pub fn responder() -> Noise {
 		let keypair = Keypair::random();
 		Noise::responder_from_keypair(keypair)
@@ -115,6 +104,14 @@ impl Noise {
 
 		Noise::new(NoiseRole::Responder, keypair, state)
 	}
+	
+	
+	/**
+	 * Getters
+		*/
+		pub fn keypair(&self) -> Keypair {
+			self.keypair.clone()
+		}
 
 	/**
 	 * Handshake
@@ -250,4 +247,72 @@ fn test_noise() {
 	let encrypted = responder.encrypt(data).unwrap();
 	let decrypted = initiator.decrypt(&encrypted).unwrap();
 	assert_eq!(data.to_vec(), decrypted);
+}
+
+#[wasm_bindgen]
+impl Noise {
+	/**
+	 * Constructors
+	*/
+	#[wasm_bindgen(js_name = "initiator")]
+	pub fn _js_initiator() -> Noise {
+		Noise::initiator()
+	}
+
+	#[wasm_bindgen(js_name = "responder")]
+	pub fn _js_responder() -> Noise {
+		Noise::responder()
+	}
+
+	#[wasm_bindgen(js_name = "initiatorFromKeypair")]
+	pub fn _js_initiator_from_keypair(keypair: Keypair) -> Noise {
+		Noise::initiator_from_keypair(keypair)
+	}
+
+	#[wasm_bindgen(js_name = "responderFromKeypair")]
+	pub fn _js_responder_from_keypair(keypair: Keypair) -> Noise {
+		Noise::responder_from_keypair(keypair)
+	}
+	
+	/**
+	 * Getters
+	*/
+	#[wasm_bindgen(getter, js_name = "keypair")]
+	pub fn _js_keypair(&self) -> Keypair {
+		self.keypair()
+	}
+	
+	/**
+	 * Handshake
+	*/
+	#[wasm_bindgen(js_name = "handshakeStep1")]
+	pub fn _js_handshake_step_1(&mut self) -> Uint8Array {
+		self.handshake_step_1().unwrap().as_slice().into()
+	}
+	
+	#[wasm_bindgen(js_name = "handshakeStep2")]
+	pub fn _js_handshake_step_2(&mut self, message: Uint8Array) -> Uint8Array {
+		self.handshake_step_2(&message.to_vec().as_slice()).unwrap().as_slice().into()
+	}
+	
+	#[wasm_bindgen(js_name = "handshakeStep3")]
+	pub fn _js_handshake_step_3(&mut self, message: Uint8Array) {
+		self.handshake_step_3(&message.to_vec().as_slice()).unwrap();
+	}
+	
+	/**
+	 * Encrypt
+	*/
+	#[wasm_bindgen(js_name = "encrypt")]
+	pub fn _js_encrypt(&mut self, data: Uint8Array) -> Uint8Array {
+		self.encrypt(&data.to_vec().as_slice()).unwrap().as_slice().into()
+	}
+	
+	/**
+	 * Decrypt
+	*/
+	#[wasm_bindgen(js_name = "decrypt")]
+	pub fn _js_decrypt(&mut self, data: Uint8Array) -> Uint8Array {
+		self.decrypt(&data.to_vec().as_slice()).unwrap().as_slice().into()
+	}
 }

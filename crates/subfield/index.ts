@@ -1,10 +1,9 @@
 import { keys } from "@libp2p/crypto"
 
-import init from "./pkg/heapswap_core"
-import * as hs from "./pkg/heapswap_core"
-export * from "./pkg/heapswap_core"
-export { init }
+import init, * as hs from "./pkg"
+export * from "./pkg"
 
+// initialize the wasm module
 await init()
 
 // string encoding
@@ -25,5 +24,5 @@ export const toLibp2pKeypair = (
 export const fromLibp2pKeypair = (
 	keypair: keys.Ed25519PrivateKey
 ): hs.Keypair => {
-	return new hs.Keypair(new hs.PrivateKey(keypair.bytes))
+	return new hs.Keypair(hs.PrivateKey.fromBytes(keypair.bytes))
 }

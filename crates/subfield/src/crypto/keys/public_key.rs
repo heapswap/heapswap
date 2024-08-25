@@ -22,6 +22,7 @@ use x25519_dalek::{
 
 
 #[derive(Clone, Getters, Serialize, Deserialize)]
+#[wasm_bindgen]
 pub struct PublicKey {
 	v256: V256, // edwards public key
 	#[serde(skip)]
@@ -111,6 +112,19 @@ impl Stringable<KeyError> for PublicKey {
 }
 
 /**
+ * Vecable
+*/
+impl Vecable<KeyError> for PublicKey {
+	fn to_vec(&self) -> Vec<u8> {
+		self.v256().to_vec()
+	}
+	
+	fn from_arr(arr: &[u8]) -> Result<Self, KeyError> {
+		Ok(PublicKey::new(V256::from_arr(arr).map_err(|_| KeyError::InvalidPublicKey)?))
+	}
+}
+
+/**
  * Randomable (nonsense, only used for testing)
 */
 impl Randomable for PublicKey {
@@ -130,3 +144,67 @@ impl PartialEq for PublicKey {
 }
 
 impl Eq for PublicKey {}
+
+
+#[wasm_bindgen]
+impl PublicKey {
+	
+	/**
+	 * Constructor
+	*/
+	#[wasm_bindgen(constructor)]
+	pub fn _js_new(v256: V256) -> Self {
+		PublicKey::new(v256)
+	}
+	
+	/**
+	 * Getters
+	*/
+	#[wasm_bindgen(getter, js_name = "ed")]
+	pub fn _js_ed(&self) -> Uint8Array {
+		self.ed().to_bytes().as_slice().into()
+	}
+	
+	#[wasm_bindgen(getter, js_name = "x")]
+	pub fn _js_x(&self) -> Uint8Array {
+		self.x().to_bytes().as_slice().into()
+	}
+	
+	/**
+	 * Verify
+	*/
+	#[wasm_bindgen(js_name = "verify")]
+	pub fn _js_verify(
+		&self,
+		message: &[u8],
+		signature: &Signature,
+	) -> bool {
+		self.verify(message, signature).unwrap()
+	}
+	
+	/**
+	 * Byteable
+	*/
+	#[wasm_bindgen(js_name = "toBytes")]
+	pub fn _js_to_bytes(&self) -> Uint8Array {
+		self.v256()._js_to_bytes()
+	}
+	
+	#[wasm_bindgen(js_name = "fromBytes")]
+	pub fn _js_from_bytes(bytes: Uint8Array) -> Self {
+		PublicKey::new(V256::_js_from_bytes(bytes))
+	}
+	
+	/**
+	 * Stringable
+	*/
+	#[wasm_bindgen(js_name = "toString")]
+	pub fn _js_to_string(&self) -> String {
+		self.v256()._js_to_string()
+	}
+	
+	#[wasm_bindgen(js_name = "fromString")]
+	pub fn _js_from_string(string: &str) -> Self {
+		PublicKey::new(V256::_js_from_string(string))
+	}
+}

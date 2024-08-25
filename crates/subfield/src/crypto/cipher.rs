@@ -19,6 +19,7 @@ pub enum CipherError {
 	InvalidKey,
 }
 
+#[wasm_bindgen]
 pub struct Cipher {
 	secret: V256,
 	cipher: ChaCha20Poly1305,
@@ -36,9 +37,14 @@ impl Cipher {
 
 		Cipher { secret, cipher }
 	}
+	
+		
+	pub fn random_key() -> SecretKey {
+		V256::random256()
+	}
 
 	pub fn random() -> Cipher {
-		Cipher::new(V256::random256())
+		Cipher::new(Cipher::random_key())
 	}
 
 	/**
@@ -95,4 +101,54 @@ fn test_cipher() {
 	let ciphertext = cipher.encrypt(plaintext);
 	let decrypted = cipher.decrypt(&ciphertext).unwrap();
 	assert_eq!(plaintext.to_vec(), decrypted);
+}
+
+
+#[wasm_bindgen]
+impl Cipher {
+	/**
+	 * Constructors
+		*/
+
+	#[wasm_bindgen(constructor)]
+	pub fn _js_new(secret: SecretKey) -> Cipher {
+		Cipher::new(secret)
+	}
+	
+	#[wasm_bindgen(js_name = "randomKey")]
+	pub fn _js_random_key() -> SecretKey {
+		Cipher::random_key()
+	}
+	
+	#[wasm_bindgen(js_name = "random")]
+	pub fn _js_random() -> Cipher {
+		Cipher::random()
+	}
+	
+	/**
+	 * Getters
+		*/
+	#[wasm_bindgen(getter, js_name = "secret")]
+	pub fn _js_secret(&self) -> SecretKey {
+		self.secret().clone()
+	}
+	
+	/**
+	 * Decrypt
+	*/
+	
+	#[wasm_bindgen(js_name = "decrypt")]
+	pub fn _js_decrypt(&self, ciphertext: Uint8Array) -> Uint8Array {
+		self.decrypt(&ciphertext.to_vec()).map(|plaintext| plaintext.as_slice().into()).unwrap_or_else(|_| panic!("Invalid ciphertext"))
+	}
+
+	/**
+	 * Encrypt
+		*/	
+	
+	#[wasm_bindgen(js_name = "encrypt")]
+	pub fn _js_encrypt(&self, plaintext: Uint8Array) -> Uint8Array {
+		self.encrypt(&plaintext.to_vec()).as_slice().into()
+	}
+	
 }

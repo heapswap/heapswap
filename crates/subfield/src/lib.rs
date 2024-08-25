@@ -62,7 +62,7 @@ pub mod constants;
 pub use constants::*;
 
 /**
- * Logging
+ * WASM Setup
 */
 use tracing::subscriber::SetGlobalDefaultError;
 use tracing_subscriber::prelude::*;
@@ -82,7 +82,7 @@ pub fn try_set_as_global_default_with_config(
  * WASM Entrypoint
 */
 #[wasm_bindgen(start)]
-fn wasm_start() {
+pub fn start() {
 	// set tracing level
 	console_error_panic_hook::set_once();
 	let level = tracing::Level::INFO;
@@ -90,4 +90,9 @@ fn wasm_start() {
 		.set_max_level(level)
 		.build();
 	let _ = try_set_as_global_default_with_config(tracing_cfg);
+}
+
+#[wasm_bindgen(js_name = "hello")]
+pub fn hello() -> String {
+	"hello".to_string()
 }

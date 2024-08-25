@@ -12,11 +12,14 @@ pub enum VersionedBytesError {
 	InvalidVersion,
 }
 
+type VersionUsize = u16;
+const VERSION_BYTES: usize = 2;
+
 #[derive(Debug, Serialize, Deserialize, Getters)]
 #[wasm_bindgen]
 pub struct VersionedBytes {
 	#[getset(get = "pub")]
-	version: u16,
+	version: VersionUsize,
 	#[getset(get = "pub")]
 	#[serde(with = "serde_bytes")]
 	bytes: Vec<u8>,
@@ -25,7 +28,7 @@ pub struct VersionedBytes {
 }
 
 impl VersionedBytes {
-	pub fn new(version: u16, bytes: &[u8]) -> Self {
+	pub fn new(version: VersionUsize, bytes: &[u8]) -> Self {
 		Self {
 			version,
 			bytes: bytes.to_vec(),
@@ -59,7 +62,7 @@ impl VersionedBytes {
 		}
 		count
 	}
-	
+
 	/**
 	 * Random - workaround for wasm not supporting generics
 	*/
@@ -107,13 +110,13 @@ impl Into<String> for VersionedBytes {
 */
 impl Vecable<VersionedBytesError> for VersionedBytes {
 	fn from_arr(arr: &[u8]) -> Result<Self, VersionedBytesError> {
-		let (bytes, version) = arr.split_at(arr.len() - 2);
-		let version = u16::from_le_bytes(version.try_into().unwrap());
+		let (bytes, version) = arr.split_at(arr.len() - VERSION_BYTES);
+		let version = VersionUsize::from_le_bytes(version.try_into().unwrap());
 		Ok(VersionedBytes::new(version, bytes.try_into().unwrap()))
 	}
 
 	fn to_vec(&self) -> Vec<u8> {
-		let version_bytes: [u8; 2] = self.version.to_le_bytes();
+		let version_bytes: [u8; VERSION_BYTES] = self.version.to_le_bytes();
 		[self.bytes.as_slice(), &version_bytes].concat()
 	}
 }
@@ -181,4 +184,74 @@ fn test_versioned_bytes() {
 	let vec256_serialized = serialize(&vec256).unwrap();
 	// assert_eq!(vec256_serialized.len(), 32 + 2);
 	assert_eq!(vec256, deserialize(&vec256_serialized).unwrap());
+}
+
+#[wasm_bindgen]
+impl VersionedBytes {
+	/**
+	 * Constructors
+	*/
+
+	#[wasm_bindgen(constructor)]
+	pub fn _js_new(version: VersionUsize, bytes: Uint8Array) -> Self {
+		VersionedBytes::new(version, bytes.to_vec().as_slice())
+	}
+	
+	/**
+	 * Getters
+	*/
+	#[wasm_bindgen(getter, js_name = "version")]
+	pub fn _js_version(&self) -> VersionUsize {
+		self.version().clone()
+	}
+	
+	#[wasm_bindgen(getter, js_name = "bytes")]
+	pub fn _js_bytes(&self) -> Uint8Array {
+		self.bytes().clone().as_slice().into()
+	}
+	
+	/**
+	 * Random
+	*/
+	
+	#[wasm_bindgen(js_name = "random96")]
+	pub fn _js_random96() -> Self {
+		VersionedBytes::random96()
+	}
+	
+	#[wasm_bindgen(js_name = "random256")]
+	pub fn _js_random256() -> Self {
+		VersionedBytes::random256()
+	}
+	
+	#[wasm_bindgen(js_name = "random512")]
+	pub fn _js_random512() -> Self {
+		VersionedBytes::random512()
+	}
+	
+	/**
+	 * Byteable
+	*/
+	#[wasm_bindgen(js_name = "toBytes")]
+	pub fn _js_to_bytes(&self) -> Uint8Array {
+		self.to_vec().clone().as_slice().into()
+	}
+	
+	#[wasm_bindgen(js_name = "fromBytes")]
+	pub fn _js_from_bytes(bytes: Uint8Array) -> Self {
+		VersionedBytes::from_bytes(Bytes::from(bytes.to_vec())).unwrap()
+	}
+	
+	/**
+	 * Stringable
+	*/
+	#[wasm_bindgen(js_name = "toString")]
+	pub fn _js_to_string(&self) -> String {
+		self.to_string()
+	}
+	
+	#[wasm_bindgen(js_name = "fromString")]
+	pub fn _js_from_string(string: &str) -> Self {
+		VersionedBytes::from_string(&string).unwrap()
+	}
 }
