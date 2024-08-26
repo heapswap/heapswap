@@ -1,5 +1,5 @@
 #![allow(unused)]
-use poem_grpc_build::compile_protos;
+// use poem_grpc_build::compile_protos;
 use prost_build::Config;
 use std::env;
 use std::fs;
