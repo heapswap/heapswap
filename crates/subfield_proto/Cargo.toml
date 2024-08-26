@@ -6,10 +6,19 @@ edition = "2021"
 [lib]
 path = "src/lib.rs"
 
+[features]
+# server = ["poem", "tokio"]
+# client = ["wasm-bindgen"]
+
 [dependencies]
 prost.workspace = true
+# prost-build.workspace = true
 bytes.workspace = true
-poem-grpc.workspace = true
+# poem-grpc.workspace = true
+
+wasm-bindgen = { workspace = true, optional = true }
+poem = { workspace = true, optional = true }
+tokio = { workspace = true, optional = true }
 
 #protobuf.workspace = true
 # serde.workspace = true
@@ -20,9 +29,20 @@ poem-grpc.workspace = true
 [dev-dependencies]
 rand.workspace = true
 poem.workspace = true
-tokio.workspace = true
+tokio = {workspace = true, features = ["full"]}
 
 [build-dependencies]
 #protobuf-codegen.workspace = true
-# prost-build.workspace = true
+prost-build.workspace = true
 poem-grpc-build.workspace = true
+
+[[bin]]
+name = "proto_client"
+path = "src/client.rs"
+
+[[bin]]
+name = "proto_server"
+path = "src/server.rs"
+
+[target.'cfg(feature = "client")'.build]
+target = "wasm32-unknown-unknown"

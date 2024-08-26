@@ -109,6 +109,7 @@ poem-openapi = { version = "5.0.2", features = [
 ] }
 poem-grpc = { version = "0.4" }
 poem-grpc-build = { version = "0.4" }
+tonic-web-wasm-client = "0.6"
 # headers = { version = "0.4" }
 # axum = { version = "0.7.5", features = [
 # 	"json",

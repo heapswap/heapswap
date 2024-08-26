@@ -179,11 +179,11 @@ impl Protoable<subfield_proto::PrivateKey, KeyError> for PrivateKey {
 	}
 	
 	fn from_proto_bytes(bytes: Bytes) -> Result<Self, KeyError> {
-		Ok(Self::from_proto(proto_deserialize::<subfield_proto::PrivateKey>(bytes).unwrap()).map_err(|_| KeyError::InvalidPrivateKey)?)
+		Ok(Self::from_proto(proto::deserialize::<subfield_proto::PrivateKey>(bytes).unwrap()).map_err(|_| KeyError::InvalidPrivateKey)?)
 	}
 	
 	fn to_proto_bytes(&self) -> Result<Bytes, KeyError> {
-		Ok(proto_serialize::<subfield_proto::PrivateKey>(self.to_proto().map_err(|_| KeyError::InvalidPrivateKey)?).map_err(|_| KeyError::InvalidPrivateKey)?)
+		Ok(proto::serialize::<subfield_proto::PrivateKey>(self.to_proto().map_err(|_| KeyError::InvalidPrivateKey)?).map_err(|_| KeyError::InvalidPrivateKey)?)
 	}
 }
 

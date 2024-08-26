@@ -7,7 +7,8 @@
 
 pub use bincode::{deserialize as bincode_deserialize, serialize as bincode_serialize};
 // pub use subfield_proto::*;
-pub use subfield_proto::{proto_serialize, proto_deserialize};
+pub use subfield_proto as proto;
+// pub use subfield_proto::{proto_serialize, proto_deserialize};
 pub use bytes::{Buf, BufMut, Bytes, BytesMut};
 pub use eyre::{
 	eyre as eyr, Ok as EOk, OptionExt as _, Report as EReport,
@@ -52,17 +53,33 @@ pub use {
 };
 
 /**
- * Exports
+ * Prelude
 */
-pub mod crypto;
-// pub mod subfield;
-// pub mod swarm;
-
-mod misc;
-pub use misc::*;
+pub mod misc;
 pub mod constants;
-pub use constants::*;
+pub mod crypto;
+pub mod store;
+pub mod protocol;
+#[cfg(feature = "client")]
+pub mod client;
+#[cfg(feature = "server")]
+pub mod server;
 
+
+pub mod prelude {
+    pub use crate::misc::*;
+    pub use super::constants::*;
+    pub use super::crypto::*;
+    pub use super::store::*;
+    pub use super::protocol::*;
+    #[cfg(feature = "client")]
+    pub use super::client::*;
+    #[cfg(feature = "server")]
+    pub use super::server::*;
+}
+pub use crate::prelude::*;
+
+// tests
 #[cfg(test)]
 pub mod tests;
 

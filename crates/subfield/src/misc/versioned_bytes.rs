@@ -136,11 +136,11 @@ impl Protoable<subfield_proto::VersionedBytes, VersionedBytesError> for Versione
 	}
 	
 	fn from_proto_bytes(bytes: Bytes) -> Result<Self, VersionedBytesError> {
-		Ok(Self::from_proto(proto_deserialize::<subfield_proto::VersionedBytes>(bytes).unwrap())?)
+		Ok(Self::from_proto(proto::deserialize::<subfield_proto::VersionedBytes>(bytes).unwrap())?)
 	}
 	
 	fn to_proto_bytes(&self) -> Result<Bytes, VersionedBytesError> {
-		Ok(proto_serialize::<subfield_proto::VersionedBytes>(self.to_proto()?).unwrap())
+		Ok(proto::serialize::<subfield_proto::VersionedBytes>(self.to_proto()?).unwrap())
 	}
 }
 

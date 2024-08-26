@@ -15,8 +15,8 @@ fn test_alias_proto() {
 		data: bytes,
 	};
 
-	let serialized = proto_serialize(public_key.clone()).unwrap();
-	let deserialized = proto_deserialize::<subfield_proto::PublicKey>(serialized).unwrap();
+	let serialized = proto::serialize(public_key.clone()).unwrap();
+	let deserialized = proto::deserialize::<subfield_proto::PublicKey>(serialized).unwrap();
 
 	assert_eq!(deserialized, public_key);
 }
