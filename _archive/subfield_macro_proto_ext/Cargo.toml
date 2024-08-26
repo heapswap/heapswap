@@ -1,7 +1,0 @@
-[package]
-name = "subfield_macro_proto_ext"
-version = "0.1.0"
-edition = "2021"
-
-[dependencies]
-subfield_macro_proto_ext_proc = { path = "../subfield_macro_proto_ext_proc" }
