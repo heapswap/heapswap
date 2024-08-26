@@ -1,0 +1,28 @@
+syntax = "proto3";
+
+package service;
+
+import "message_pubsub.proto";
+import "message_record.proto";
+import "message_system.proto";
+
+service SubfieldService {
+  /**
+   * System
+   */
+  rpc Ping(message_system.PingRequest) returns (message_system.PingResponse) {}
+
+  /**
+   * Records
+   */
+  rpc GetRecord(message_record.GetRecordRequest) returns (stream message_record.GetRecordResponse) {}
+  rpc PutRecord(message_record.PutRecordRequest) returns (message_record.PutRecordResponse) {}
+  // rpc UpdateRecord(message_record.UpdateRecordRequest) returns (message_record.UpdateRecordResponse) {}
+  rpc DeleteRecord(message_record.DeleteRecordRequest) returns (message_record.DeleteRecordResponse) {}
+
+  /**
+   * Pubsub
+   */
+  rpc Subscribe(message_pubsub.SubscribeRequest) returns (stream message_pubsub.SubscribeResponse) {}
+  rpc Unsubscribe(message_pubsub.UnsubscribeRequest) returns (message_pubsub.UnsubscribeResponse) {}
+}

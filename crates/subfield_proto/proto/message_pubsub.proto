@@ -1,0 +1,28 @@
+syntax = "proto3";
+
+package message_pubsub;
+
+import "subkey.proto";
+
+enum PubsubAction {
+  Subscribe = 0;
+  Unsubscribe = 1;
+}
+
+/**
+ * Subscribe
+ */
+message SubscribeRequest {
+  subkey.Subkey subkey = 1;
+}
+
+message SubscribeResponse {}
+
+/**
+ * Unsubscribe
+ */
+message UnsubscribeRequest {
+  subkey.Subkey subkey = 1;
+}
+
+message UnsubscribeResponse {}

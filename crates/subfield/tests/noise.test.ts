@@ -1,7 +1,6 @@
 import * as hs from "../index.ts"
 import { expect, test } from "bun:test"
 
-
 test("noise", async () => {
 	const initiator = hs.Noise.initiator()
 	const responder = hs.Noise.responder()

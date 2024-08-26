@@ -5,7 +5,9 @@
 #![allow(unused_parens)]
 #![allow(unused_mut)]
 
-pub use bincode::{deserialize, serialize};
+pub use bincode::{deserialize as bincode_deserialize, serialize as bincode_serialize};
+// pub use subfield_proto::*;
+pub use subfield_proto::{proto_serialize, proto_deserialize};
 pub use bytes::{Buf, BufMut, Bytes, BytesMut};
 pub use eyre::{
 	eyre as eyr, Ok as EOk, OptionExt as _, Report as EReport,
@@ -17,7 +19,7 @@ pub use eyre::{
 // pub use futures::prelude::*;
 pub use lazy_static::lazy_static;
 // pub use libp2p;
-pub use getset::{Getters, Setters, CopyGetters, MutGetters};
+pub use getset::{CopyGetters, Getters, MutGetters, Setters};
 pub use once_cell::sync::{Lazy, OnceCell};
 pub use reqwest;
 // pub use prost::Message;
@@ -60,6 +62,10 @@ mod misc;
 pub use misc::*;
 pub mod constants;
 pub use constants::*;
+
+#[cfg(test)]
+pub mod tests;
+
 
 /**
  * WASM Setup

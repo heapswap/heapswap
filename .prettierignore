@@ -1,5 +1,7 @@
 target/*
 dist/*
+**/pkg/**
 data/*
 src/data/*
 src/schemas/*
+_archive

@@ -1,0 +1,38 @@
+syntax = "proto3";
+
+package record;
+
+import "google/protobuf/timestamp.proto";
+import "subkey.proto";
+import "versioned_bytes.proto";
+
+enum RecordType {
+  Simple = 0; // linear chunk of data
+}
+
+message Record {
+  subkey.Subkey subkey = 1;
+  RecordType record_type = 2;
+  bool is_encrypted = 3;
+
+  google.protobuf.Timestamp created_at = 10;
+  google.protobuf.Timestamp updated_at = 11;
+
+  oneof hash_seed {
+    versioned_bytes.VersionedBytes plain_hash_seed = 20;
+    versioned_bytes.EncryptedVersionedBytes encrypted_hash_seed = 21;
+  }
+
+  oneof data {
+    versioned_bytes.VersionedBytes plain_simple_data = 30;
+    versioned_bytes.EncryptedVersionedBytes encrypted_simple_data = 31;
+  }
+}
+
+message SignedRecord {
+  bytes record_bytes = 1;
+  oneof signature {
+    versioned_bytes.Signature signer_signature = 2;
+    versioned_bytes.Signature cosigner_signature = 3;
+  }
+}

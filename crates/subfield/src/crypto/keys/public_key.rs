@@ -1,8 +1,8 @@
+pub use super::common::*;
 use crate::*;
 use std::convert::From;
-use std::iter::Once;
-pub use super::common::*;
 use std::fmt;
+use std::iter::Once;
 
 use rand::rngs::OsRng;
 use rand::RngCore;
@@ -19,9 +19,7 @@ use x25519_dalek::{
 	StaticSecret as DalekXPrivateKey,
 };
 
-
-
-#[derive(Clone, Getters, Serialize, Deserialize)]
+#[derive(Clone, Getters, Serialize, Deserialize, Debug)]
 #[wasm_bindgen]
 pub struct PublicKey {
 	v256: V256, // edwards public key
@@ -48,7 +46,10 @@ impl PublicKey {
 		*/
 	pub fn ed(&self) -> &DalekEdPublicKey {
 		self.ed.get_or_init(|| {
-			DalekEdPublicKey::from_bytes(&self.v256().bytes().as_slice().try_into().unwrap()).unwrap()
+			DalekEdPublicKey::from_bytes(
+				&self.v256().data().as_slice().try_into().unwrap(),
+			)
+			.unwrap()
 		})
 	}
 
@@ -67,13 +68,15 @@ impl PublicKey {
 		message: &[u8],
 		signature: &Signature,
 	) -> Result<bool, KeyError> {
-		match self
-			.ed()
-			.verify(message, &DalekSignature::from(
-				&<[_; SIGNATURE_LENGTH]>::try_from(signature.bytes().as_slice())
-					.map_err(|_| KeyError::InvalidSignature)?
-			))
-		{
+		match self.ed().verify(
+			message,
+			&DalekSignature::from(
+				&<[_; SIGNATURE_LENGTH]>::try_from(
+					signature.data().as_slice(),
+				)
+				.map_err(|_| KeyError::InvalidSignature)?,
+			),
+		) {
 			Ok(_) => Ok(true),
 			Err(_) => Ok(false),
 		}
@@ -118,9 +121,11 @@ impl Vecable<KeyError> for PublicKey {
 	fn to_vec(&self) -> Vec<u8> {
 		self.v256().to_vec()
 	}
-	
+
 	fn from_arr(arr: &[u8]) -> Result<Self, KeyError> {
-		Ok(PublicKey::new(V256::from_arr(arr).map_err(|_| KeyError::InvalidPublicKey)?))
+		Ok(PublicKey::new(
+			V256::from_arr(arr).map_err(|_| KeyError::InvalidPublicKey)?,
+		))
 	}
 }
 
@@ -139,70 +144,93 @@ impl Randomable for PublicKey {
 impl PartialEq for PublicKey {
 	fn eq(&self, other: &Self) -> bool {
 		self.v256.version() == other.v256.version()
-			&& self.v256.bytes() == other.v256.bytes()
+			&& self.v256.data() == other.v256.data()
 	}
 }
 
 impl Eq for PublicKey {}
 
+/**
+ * Protoable
+*/
+impl Protoable<subfield_proto::PublicKey, KeyError> for PublicKey {
+	fn from_proto(proto: subfield_proto::PublicKey) -> Result<Self, KeyError> {
+		Ok(PublicKey::new(V256::from_proto(subfield_proto::VersionedBytes {
+			version: proto.version,
+			data: proto.data.clone().into(),
+		}).map_err(|_| KeyError::InvalidPublicKey)?))
+	}
+
+	fn to_proto(&self) -> Result<subfield_proto::PublicKey, KeyError> {
+		Ok(subfield_proto::PublicKey {
+			version: *self.v256.version(),
+			data: self.v256.data().clone().into(),
+		})
+	}
+	
+	fn from_proto_bytes(bytes: Bytes) -> Result<Self, KeyError> {
+		Ok(Self::from_proto(proto_deserialize::<subfield_proto::PublicKey>(bytes).unwrap()).map_err(|_| KeyError::InvalidPublicKey)?)
+	}
+	
+	fn to_proto_bytes(&self) -> Result<Bytes, KeyError> {
+		Ok(proto_serialize::<subfield_proto::PublicKey>(self.to_proto().map_err(|_| KeyError::InvalidPublicKey)?).map_err(|_| KeyError::InvalidPublicKey)?)
+	}
+}
+
+
 
 #[wasm_bindgen]
 impl PublicKey {
-	
 	/**
 	 * Constructor
-	*/
+		*/
 	#[wasm_bindgen(constructor)]
 	pub fn _js_new(v256: V256) -> Self {
 		PublicKey::new(v256)
 	}
-	
+
 	/**
 	 * Getters
-	*/
+		*/
 	#[wasm_bindgen(getter, js_name = "ed")]
 	pub fn _js_ed(&self) -> Uint8Array {
 		self.ed().to_bytes().as_slice().into()
 	}
-	
+
 	#[wasm_bindgen(getter, js_name = "x")]
 	pub fn _js_x(&self) -> Uint8Array {
 		self.x().to_bytes().as_slice().into()
 	}
-	
+
 	/**
 	 * Verify
-	*/
+		*/
 	#[wasm_bindgen(js_name = "verify")]
-	pub fn _js_verify(
-		&self,
-		message: &[u8],
-		signature: &Signature,
-	) -> bool {
+	pub fn _js_verify(&self, message: &[u8], signature: &Signature) -> bool {
 		self.verify(message, signature).unwrap()
 	}
-	
+
 	/**
 	 * Byteable
-	*/
+		*/
 	#[wasm_bindgen(js_name = "toBytes")]
 	pub fn _js_to_bytes(&self) -> Uint8Array {
 		self.v256()._js_to_bytes()
 	}
-	
+
 	#[wasm_bindgen(js_name = "fromBytes")]
 	pub fn _js_from_bytes(bytes: Uint8Array) -> Self {
 		PublicKey::new(V256::_js_from_bytes(bytes))
 	}
-	
+
 	/**
 	 * Stringable
-	*/
+		*/
 	#[wasm_bindgen(js_name = "toString")]
 	pub fn _js_to_string(&self) -> String {
 		self.v256()._js_to_string()
 	}
-	
+
 	#[wasm_bindgen(js_name = "fromString")]
 	pub fn _js_from_string(string: &str) -> Self {
 		PublicKey::new(V256::_js_from_string(string))

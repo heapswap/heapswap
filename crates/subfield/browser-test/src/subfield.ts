@@ -1,6 +1,8 @@
-import init from "./wasm/heapswap_core.js"
-import * as _heapswap from "./wasm/heapswap_core.js"
-export * from "./wasm/heapswap_core.js"
+import init from "./wasm/subfield"
+import * as hs from "./wasm/subfield"
+export * from "./wasm/subfield"
+
+await init()
 
 enum LogLevel {
 	Error = "Error",
@@ -23,8 +25,7 @@ async function connect(endpoint?: string, logLevel?: LogLevel) {
 	const multiaddr = await (await fetch(`${endpoint}/multiaddrs`)).text()
 	console.log("connecting to", multiaddr)
 
-	await init()
-	_heapswap.run(multiaddr, logLevel ?? LogLevel.Error)
+	// hs.run(multiaddr, logLevel ?? LogLevel.Error)
 }
 
 export { init, connect, LogLevel }

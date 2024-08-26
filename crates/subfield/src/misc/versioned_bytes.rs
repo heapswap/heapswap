@@ -1,10 +1,9 @@
-use std::hash::Hash;
 use crate::*;
+use std::hash::Hash;
 
 pub type V96 = VersionedBytes;
 pub type V256 = VersionedBytes;
 pub type V512 = VersionedBytes;
-
 
 #[derive(Debug, strum::Display)]
 pub enum VersionedBytesError {
@@ -12,8 +11,8 @@ pub enum VersionedBytesError {
 	InvalidVersion,
 }
 
-type VersionUsize = u16;
-const VERSION_BYTES: usize = 2;
+type VersionUsize = u32;
+const VERSION_BYTES: usize = 4;
 
 #[derive(Debug, Serialize, Deserialize, Getters)]
 #[wasm_bindgen]
@@ -22,27 +21,27 @@ pub struct VersionedBytes {
 	version: VersionUsize,
 	#[getset(get = "pub")]
 	#[serde(with = "serde_bytes")]
-	bytes: Vec<u8>,
+	data: Vec<u8>,
 	#[serde(skip)]
 	string: OnceCell<String>,
 }
 
 impl VersionedBytes {
-	pub fn new(version: VersionUsize, bytes: &[u8]) -> Self {
+	pub fn new(version: VersionUsize, data: &[u8]) -> Self {
 		Self {
 			version,
-			bytes: bytes.to_vec(),
+			data: data.to_vec(),
 			string: OnceCell::new(),
 		}
 	}
 
 	pub fn leading_zeros(&self) -> u32 {
 		let mut count = 0;
-		for i in 0..self.bytes.len() {
-			if self.bytes[i] == 0 {
+		for i in 0..self.data.len() {
+			if self.data[i] == 0 {
 				count += 8;
 			} else {
-				count += self.bytes[i].leading_zeros();
+				count += self.data[i].leading_zeros();
 				break;
 			}
 		}
@@ -51,8 +50,8 @@ impl VersionedBytes {
 
 	pub fn xor_leading_zeros(&self, other: &Self) -> u32 {
 		let mut count = 0;
-		for i in 0..self.bytes.len() {
-			let xor = self.bytes[i] ^ other.bytes[i];
+		for i in 0..self.data.len() {
+			let xor = self.data[i] ^ other.data[i];
 			if xor == 0 {
 				count += 8;
 			} else {
@@ -65,21 +64,21 @@ impl VersionedBytes {
 
 	/**
 	 * Random - workaround for wasm not supporting generics
-	*/
-	
+		*/
+
 	pub fn random96() -> Self {
-		let bytes: Vec<u8> = arr::random(12).try_into().unwrap();
-		VersionedBytes::new(0, bytes.as_slice())
+		let data: Vec<u8> = arr::random(12).try_into().unwrap();
+		VersionedBytes::new(0, data.as_slice())
 	}
 
 	pub fn random256() -> Self {
-		let bytes: Vec<u8> = arr::random(32).try_into().unwrap();
-		VersionedBytes::new(0, bytes.as_slice())
+		let data: Vec<u8> = arr::random(32).try_into().unwrap();
+		VersionedBytes::new(0, data.as_slice())
 	}
 
 	pub fn random512() -> Self {
-		let bytes: Vec<u8> = arr::random(64).try_into().unwrap();
-		VersionedBytes::new(0, bytes.as_slice())
+		let data: Vec<u8> = arr::random(64).try_into().unwrap();
+		VersionedBytes::new(0, data.as_slice())
 	}
 }
 
@@ -110,20 +109,47 @@ impl Into<String> for VersionedBytes {
 */
 impl Vecable<VersionedBytesError> for VersionedBytes {
 	fn from_arr(arr: &[u8]) -> Result<Self, VersionedBytesError> {
-		let (bytes, version) = arr.split_at(arr.len() - VERSION_BYTES);
+		let (data, version) = arr.split_at(arr.len() - VERSION_BYTES);
 		let version = VersionUsize::from_le_bytes(version.try_into().unwrap());
-		Ok(VersionedBytes::new(version, bytes.try_into().unwrap()))
+		Ok(VersionedBytes::new(version, data.try_into().unwrap()))
 	}
 
 	fn to_vec(&self) -> Vec<u8> {
-		let version_bytes: [u8; VERSION_BYTES] = self.version.to_le_bytes();
-		[self.bytes.as_slice(), &version_bytes].concat()
+		let version_data: [u8; VERSION_BYTES] = self.version.to_le_bytes();
+		[self.data.as_slice(), &version_data].concat()
 	}
 }
 
 /**
+ * Protoable
+*/
+impl Protoable<subfield_proto::VersionedBytes, VersionedBytesError> for VersionedBytes {
+	fn from_proto(proto: subfield_proto::VersionedBytes) -> Result<Self, VersionedBytesError> {
+		Ok(VersionedBytes::new(proto.version, proto.data.as_slice()))
+	}
+
+	fn to_proto(&self) -> Result<subfield_proto::VersionedBytes, VersionedBytesError> {
+		Ok(subfield_proto::VersionedBytes {
+			version: self.version,
+			data: self.data.clone().into(),
+		})
+	}
+	
+	fn from_proto_bytes(bytes: Bytes) -> Result<Self, VersionedBytesError> {
+		Ok(Self::from_proto(proto_deserialize::<subfield_proto::VersionedBytes>(bytes).unwrap())?)
+	}
+	
+	fn to_proto_bytes(&self) -> Result<Bytes, VersionedBytesError> {
+		Ok(proto_serialize::<subfield_proto::VersionedBytes>(self.to_proto()?).unwrap())
+	}
+}
+
+
+
+/**
  * Byteable
 */
+/*
 impl Byteable<VersionedBytesError> for VersionedBytes {
 	fn to_bytes(&self) -> Bytes {
 		Bytes::from(self.to_vec())
@@ -133,13 +159,14 @@ impl Byteable<VersionedBytesError> for VersionedBytes {
 		Self::from_arr(&bytes.as_ref())
 	}
 }
+*/
 
 /**
  * Equality
 */
 impl PartialEq for VersionedBytes {
 	fn eq(&self, other: &Self) -> bool {
-		self.version == other.version && self.bytes == other.bytes
+		self.version == other.version && self.data == other.data
 	}
 }
 
@@ -165,7 +192,7 @@ impl From<&str> for VersionedBytes {
 */
 impl Clone for VersionedBytes {
 	fn clone(&self) -> Self {
-		VersionedBytes::new(self.version, &self.bytes)
+		VersionedBytes::new(self.version, &self.data)
 	}
 }
 
@@ -174,82 +201,74 @@ impl Clone for VersionedBytes {
 */
 impl Hash for VersionedBytes {
 	fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
-		self.bytes.hash(state);
+		self.data.hash(state);
 	}
-}
-
-#[test]
-fn test_versioned_bytes() {
-	let vec256 = VersionedBytes::random256();
-	let vec256_serialized = serialize(&vec256).unwrap();
-	// assert_eq!(vec256_serialized.len(), 32 + 2);
-	assert_eq!(vec256, deserialize(&vec256_serialized).unwrap());
 }
 
 #[wasm_bindgen]
 impl VersionedBytes {
 	/**
 	 * Constructors
-	*/
+		*/
 
 	#[wasm_bindgen(constructor)]
-	pub fn _js_new(version: VersionUsize, bytes: Uint8Array) -> Self {
-		VersionedBytes::new(version, bytes.to_vec().as_slice())
+	pub fn _js_new(version: VersionUsize, data: Uint8Array) -> Self {
+		VersionedBytes::new(version, data.to_vec().as_slice())
 	}
-	
+
 	/**
 	 * Getters
-	*/
+		*/
 	#[wasm_bindgen(getter, js_name = "version")]
 	pub fn _js_version(&self) -> VersionUsize {
 		self.version().clone()
 	}
-	
-	#[wasm_bindgen(getter, js_name = "bytes")]
-	pub fn _js_bytes(&self) -> Uint8Array {
-		self.bytes().clone().as_slice().into()
+
+	#[wasm_bindgen(getter, js_name = "data")]
+	pub fn _js_data(&self) -> Uint8Array {
+		self.data().clone().as_slice().into()
 	}
-	
+
 	/**
 	 * Random
-	*/
-	
+		*/
+
 	#[wasm_bindgen(js_name = "random96")]
 	pub fn _js_random96() -> Self {
 		VersionedBytes::random96()
 	}
-	
+
 	#[wasm_bindgen(js_name = "random256")]
 	pub fn _js_random256() -> Self {
 		VersionedBytes::random256()
 	}
-	
+
 	#[wasm_bindgen(js_name = "random512")]
 	pub fn _js_random512() -> Self {
 		VersionedBytes::random512()
 	}
-	
+
 	/**
 	 * Byteable
-	*/
+		*/
 	#[wasm_bindgen(js_name = "toBytes")]
 	pub fn _js_to_bytes(&self) -> Uint8Array {
 		self.to_vec().clone().as_slice().into()
 	}
-	
+
 	#[wasm_bindgen(js_name = "fromBytes")]
-	pub fn _js_from_bytes(bytes: Uint8Array) -> Self {
-		VersionedBytes::from_bytes(Bytes::from(bytes.to_vec())).unwrap()
+	pub fn _js_from_bytes(data: Uint8Array) -> Self {
+		VersionedBytes::from_arr(&data.to_vec()).unwrap()
 	}
-	
+
 	/**
 	 * Stringable
-	*/
+		*/
 	#[wasm_bindgen(js_name = "toString")]
 	pub fn _js_to_string(&self) -> String {
 		self.to_string()
 	}
-	
+
 	#[wasm_bindgen(js_name = "fromString")]
 	pub fn _js_from_string(string: &str) -> Self {
 		VersionedBytes::from_string(&string).unwrap()

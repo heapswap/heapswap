@@ -1,0 +1,16 @@
+syntax = "proto3";
+
+package message_system;
+
+import "google/protobuf/timestamp.proto";
+
+/**
+ * Ping
+ */
+message PingRequest {
+  google.protobuf.Timestamp timestamp = 1;
+}
+
+message PingResponse {
+  google.protobuf.Timestamp timestamp = 1;
+}

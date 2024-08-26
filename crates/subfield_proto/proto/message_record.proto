@@ -1,0 +1,41 @@
+syntax = "proto3";
+
+package message_record;
+
+// import "google/protobuf/timestamp.proto";
+import "record.proto";
+import "subkey.proto";
+import "versioned_bytes.proto";
+
+/**
+ * GetRecord
+ */
+message GetRecordRequest {
+  subkey.Subkey subkey = 1;
+}
+
+message GetRecordResponse {
+  record.SignedRecord signed_record = 1;
+}
+
+/**
+ * PutRecord
+ */
+message PutRecordRequest {
+  record.SignedRecord signed_record = 1;
+}
+
+message PutRecordResponse {}
+
+/**
+ * DeleteRecord
+ */
+message DeleteRecordRequest {
+  subkey.Subkey subkey = 1;
+  oneof signature {
+    versioned_bytes.Signature signer_signature = 2;
+    versioned_bytes.Signature cosigner_signature = 3;
+  }
+}
+
+message DeleteRecordResponse {}

@@ -54,6 +54,7 @@ pub enum SubfieldSwarmMode {
 }
 
 #[derive(Clone)]
+#[wasm_bindgen]
 pub struct SubfieldSwarmConfig {
 	pub mode: SubfieldSwarmMode,
 	pub keypair: crypto::Keypair,
@@ -67,6 +68,7 @@ const IDLE_CONNECTION_TIMEOUT: u64 = 600;
  * Create a Subfield Swarm
  * Switches between client and server based on the feature flags
 */
+#[wasm_bindgen]
 pub async fn create_swarm(
 	swarm_config: SubfieldSwarmConfig,
 ) -> eyre::Result<SubfieldSwarm> {

@@ -1,0 +1,45 @@
+syntax = "proto3";
+
+package versioned_bytes;
+
+message VersionedBytes {
+  uint32 version = 1;
+  bytes data = 3;
+}
+
+message EncryptedVersionedBytes {
+  uint32 version = 1;
+  bytes nonce = 2;
+  bytes data = 3;
+}
+
+/*
+ * The following messages are aliases for the VersionedBytes message.
+ */
+message PublicKey {
+  uint32 version = 1;
+  bytes data = 2;
+}
+
+message PrivateKey {
+  uint32 version = 1;
+  bytes data = 2;
+}
+
+message Hash {
+  uint32 version = 1;
+  bytes data = 2;
+}
+
+message Signature {
+  uint32 version = 1;
+  bytes data = 2;
+}
+
+/**
+ * Crypto
+ */
+message Keypair {
+  PublicKey public_key = 1;
+  PrivateKey private_key = 2;
+}

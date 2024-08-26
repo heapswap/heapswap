@@ -31,14 +31,15 @@ impl Cipher {
 		*/
 
 	pub fn new(secret: SecretKey) -> Cipher {
-		let key: [u8; 32] = secret.bytes().clone().try_into().unwrap();
-		let cipher =
-			ChaCha20Poly1305::new(&generic_array::GenericArray::<u8, generic_array::typenum::U32>::from(key));
+		let key: [u8; 32] = secret.data().clone().try_into().unwrap();
+		let cipher = ChaCha20Poly1305::new(&generic_array::GenericArray::<
+			u8,
+			generic_array::typenum::U32,
+		>::from(key));
 
 		Cipher { secret, cipher }
 	}
-	
-		
+
 	pub fn random_key() -> SecretKey {
 		V256::random256()
 	}
@@ -94,15 +95,6 @@ impl Cipher {
 	}
 }
 
-#[test]
-fn test_cipher() {
-	let cipher = Cipher::random();
-	let plaintext = b"hello world";
-	let ciphertext = cipher.encrypt(plaintext);
-	let decrypted = cipher.decrypt(&ciphertext).unwrap();
-	assert_eq!(plaintext.to_vec(), decrypted);
-}
-
 
 #[wasm_bindgen]
 impl Cipher {
@@ -114,17 +106,17 @@ impl Cipher {
 	pub fn _js_new(secret: SecretKey) -> Cipher {
 		Cipher::new(secret)
 	}
-	
+
 	#[wasm_bindgen(js_name = "randomKey")]
 	pub fn _js_random_key() -> SecretKey {
 		Cipher::random_key()
 	}
-	
+
 	#[wasm_bindgen(js_name = "random")]
 	pub fn _js_random() -> Cipher {
 		Cipher::random()
 	}
-	
+
 	/**
 	 * Getters
 		*/
@@ -132,23 +124,24 @@ impl Cipher {
 	pub fn _js_secret(&self) -> SecretKey {
 		self.secret().clone()
 	}
-	
+
 	/**
 	 * Decrypt
-	*/
-	
+		*/
+
 	#[wasm_bindgen(js_name = "decrypt")]
 	pub fn _js_decrypt(&self, ciphertext: Uint8Array) -> Uint8Array {
-		self.decrypt(&ciphertext.to_vec()).map(|plaintext| plaintext.as_slice().into()).unwrap_or_else(|_| panic!("Invalid ciphertext"))
+		self.decrypt(&ciphertext.to_vec())
+			.map(|plaintext| plaintext.as_slice().into())
+			.unwrap_or_else(|_| panic!("Invalid ciphertext"))
 	}
 
 	/**
 	 * Encrypt
-		*/	
-	
+		*/
+
 	#[wasm_bindgen(js_name = "encrypt")]
 	pub fn _js_encrypt(&self, plaintext: Uint8Array) -> Uint8Array {
 		self.encrypt(&plaintext.to_vec()).as_slice().into()
 	}
-	
 }

@@ -10,6 +10,8 @@ crate-type = ["cdylib", "rlib"]
 [features]
 default = []
 server = [
+	"libp2p-server",
+	"libp2p-common",
 	# "axum",
 	# "axum-extra",
 	# "http",
@@ -18,14 +20,12 @@ server = [
 	# "tokio-tungstenite",
 	# "tower",
 	# "tower-http",
-	# "tracing-subscriber",
-	# "dioxus/axum",
-]
-browser = [
-	# "gloo",
-]
+	# "poem",
+	# "poem-openapi"
 
-libp2p-server= [
+]
+browser = ["libp2p-browser", "libp2p-common"]
+libp2p-server = [
 	"libp2p-common",
 	"server",
 	"libp2p/mdns",
@@ -37,8 +37,7 @@ libp2p-server= [
 	"libp2p/dns",
 	"libp2p/relay",
 	# "libp2p/quic",
-	# "poem",
-	# "poem-openapi"
+
 ]
 libp2p-browser = [
 	"libp2p-common",
@@ -46,6 +45,7 @@ libp2p-browser = [
 	"libp2p/wasm-bindgen",
 	"libp2p/websocket-websys",
 	# "libp2p-webrtc-websys",
+
 ]
 libp2p-common = [
 	# 	"async-std",
@@ -97,7 +97,7 @@ libp2p-common = [
 # path = "src/main.rs"
 # required-features = ["server"]
 [dependencies]
-# subfield_proto = { path = "../subfield_proto" }
+subfield_proto = { path = "../subfield_proto" }
 # prost = { workspace = true }
 #
 ## Networking
@@ -161,13 +161,11 @@ ordered-float.workspace = true
 priority-queue.workspace = true
 itertools.workspace = true
 
-
-
 [dev-dependencies]
 timeit.workspace = true
 wasm-bindgen-test = { workspace = true }
 
-[build] 
+[build]
 
 # rustflags = ["-Z", "threads=8"]
 [target.'cfg(target_arch = "wasm32")'.dependencies]

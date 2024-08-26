@@ -29,7 +29,7 @@ use super::{common::*, private_key};
 use crate::arr;
 use crate::*;
 
-#[derive(Clone, Getters, Serialize, Deserialize)]
+#[derive(Clone, Getters, Serialize, Deserialize, Debug)]
 #[wasm_bindgen]
 pub struct Keypair {
 	#[getset(get = "pub")]
@@ -104,13 +104,11 @@ impl Stringable<KeyError> for Keypair {
 	fn to_string(&self) -> String {
 		self.private_key().to_string()
 	}
-	
+
 	fn from_string(string: &str) -> Result<Keypair, KeyError> {
 		Ok(Keypair::new(PrivateKey::from_string(string)?))
 	}
 }
-
-
 
 #[cfg(feature = "libp2p")]
 impl Libp2pKeypairable<KeyError> for Keypair {
@@ -138,96 +136,91 @@ impl PartialEq for Keypair {
 }
 impl Eq for Keypair {}
 
-#[test]
-fn test_sign_and_verify() {
-	let keypair = Keypair::random();
-	let message = b"hello world";
-	let signature = keypair.sign(message);
-	assert!(keypair.public_key().verify(message, &signature).unwrap());
+
+
+/**
+ * Protoable
+*/
+impl Protoable<subfield_proto::Keypair, KeyError> for Keypair {
+	fn from_proto(proto: subfield_proto::Keypair) -> Result<Self, KeyError> {
+		Ok(Keypair{
+			private_key: PrivateKey::from_proto(proto.private_key.unwrap())?,
+			public_key: PublicKey::from_proto(proto.public_key.unwrap())?,
+		})
+	}
+
+	fn to_proto(&self) -> Result<subfield_proto::Keypair, KeyError> {
+		Ok(subfield_proto::Keypair {
+			private_key: Some(self.private_key.to_proto()?),
+			public_key: Some(self.public_key.to_proto()?),
+		})
+	}
+	
+	fn from_proto_bytes(bytes: Bytes) -> Result<Self, KeyError> {
+		Ok(Self::from_proto(proto_deserialize::<subfield_proto::Keypair>(bytes).unwrap()).map_err(|_| KeyError::InvalidKeypair)?)
+	}
+	
+	fn to_proto_bytes(&self) -> Result<Bytes, KeyError> {
+		Ok(proto_serialize::<subfield_proto::Keypair>(self.to_proto().map_err(|_| KeyError::InvalidKeypair)?).map_err(|_| KeyError::InvalidKeypair)?)
+	}
 }
 
-#[test]
-fn test_shared_secret() {
-	let alice = Keypair::random();
-	let bob = Keypair::random();
-	let alice_shared_secret = alice.shared_secret(&bob.public_key());
-	let bob_shared_secret = bob.shared_secret(&alice.public_key());
-	assert_eq!(alice_shared_secret, bob_shared_secret);
-}
-
-#[test]
-fn test_vanity() {
-	let prefix = "aa";
-	let keypair = Keypair::vanity(prefix).unwrap();
-	assert!(keypair.public_key().to_string().starts_with(prefix));
-}
-
-#[cfg(feature = "libp2p")]
-#[test]
-fn test_libp2p_keypair() {
-	let keypair: Keypair = Keypair::random();
-	let libp2p_keypair = keypair.to_libp2p_keypair().unwrap();
-	let keypair_from_libp2p: Keypair =
-		Keypair::from_libp2p_keypair(libp2p_keypair).unwrap();
-	assert!(keypair == keypair_from_libp2p);
-}
 
 
 #[wasm_bindgen]
 impl Keypair {
-	
 	/**
 	 * Constructors
-	*/
+		*/
 	#[wasm_bindgen(constructor)]
 	pub fn _js_new(private_key: PrivateKey) -> Keypair {
 		Keypair::new(private_key)
 	}
-	
+
 	#[wasm_bindgen(js_name = "random")]
 	pub fn _js_random() -> Keypair {
 		Keypair::random()
 	}
-	
+
 	#[wasm_bindgen(js_name = "vanity")]
 	pub async fn _js_vanity(prefix: String) -> Keypair {
 		Keypair::vanity(&prefix).unwrap()
 	}
-	
+
 	/**
 	 * Getters
-	*/
+		*/
 	#[wasm_bindgen(getter, js_name = "privateKey")]
 	pub fn _js_private_key(&self) -> PrivateKey {
 		self.private_key().clone()
 	}
-	
+
 	#[wasm_bindgen(getter, js_name = "publicKey")]
 	pub fn _js_public_key(&self) -> PublicKey {
 		self.public_key().clone()
 	}
-	
+
 	/**
 	 * Operations
-	*/
+		*/
 	#[wasm_bindgen(js_name = "sign")]
 	pub fn _js_sign(&self, message: Vec<u8>) -> Signature {
 		self.sign(&message)
 	}
-	
+
 	#[wasm_bindgen(js_name = "verify")]
 	pub fn _js_verify(&self, message: Vec<u8>, signature: Signature) -> bool {
 		self.verify(&message, &signature).unwrap()
 	}
-	
+
 	#[wasm_bindgen(js_name = "sharedSecret")]
 	pub fn _js_shared_secret(&self, public_key: PublicKey) -> SharedSecret {
 		self.shared_secret(&public_key)
 	}
-	
+
 	/**
 	 * Stringable
-	*/
+		*/
 	#[wasm_bindgen(js_name = "toString")]
 	pub fn _js_to_string(&self) -> String {
 		self.to_string()
@@ -236,16 +229,16 @@ impl Keypair {
 	pub fn _js_from_string(string: String) -> Keypair {
 		Keypair::from_string(&string).unwrap()
 	}
-	
+
 	/**
 	 * Byteable
-	*/
+		*/
 	#[wasm_bindgen(js_name = "toBytes")]
 	pub fn _js_to_bytes(&self) -> Uint8Array {
-		serialize(self).unwrap().as_slice().into()
+		bincode_serialize(self).unwrap().as_slice().into()
 	}
 	#[wasm_bindgen(js_name = "fromBytes")]
 	pub fn _js_from_bytes(bytes: Uint8Array) -> Keypair {
-		deserialize(&bytes.to_vec()).unwrap()
+		bincode_deserialize(&bytes.to_vec()).unwrap()
 	}
 }

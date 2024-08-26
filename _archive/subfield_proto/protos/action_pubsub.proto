@@ -1,9 +1,0 @@
-syntax = "proto3";
-
-package pubsub_action;
-
-enum PubsubAction {
-  Subscribe = 0;
-  Unsubscribe = 1;
-  Publish = 2;
-}

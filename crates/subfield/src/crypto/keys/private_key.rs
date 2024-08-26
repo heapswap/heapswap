@@ -41,11 +41,17 @@ pub struct PrivateKey {
 	x: OnceCell<DalekXPrivateKey>,
 }
 
+impl std::fmt::Debug for PrivateKey {
+	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+		f.debug_struct("PrivateKey").finish()
+	}
+}
+
+
 impl PrivateKey {
-	
 	/**
 	 * Constructors
-	*/
+		*/
 	pub fn new(v256: V256) -> PrivateKey {
 		PrivateKey {
 			v256,
@@ -59,10 +65,11 @@ impl PrivateKey {
 		*/
 
 	pub fn ed(&self) -> &DalekEdPrivateKey {
-		self.ed
-			.get_or_init(|| DalekEdPrivateKey::from_bytes(
-				 &self.v256().bytes().as_slice().try_into().unwrap()
-			))
+		self.ed.get_or_init(|| {
+			DalekEdPrivateKey::from_bytes(
+				&self.v256().data().as_slice().try_into().unwrap(),
+			)
+		})
 	}
 
 	pub fn x(&self) -> &DalekXPrivateKey {
@@ -84,7 +91,10 @@ impl PrivateKey {
 			*self.v256.version(),
 			self.x()
 				.diffie_hellman(public_key.x())
-				.as_bytes().as_slice().try_into().unwrap()
+				.as_bytes()
+				.as_slice()
+				.try_into()
+				.unwrap(),
 		)
 	}
 
@@ -94,7 +104,9 @@ impl PrivateKey {
 			self.ed()
 				.sign(message.to_vec().as_slice())
 				.to_bytes()
-				.as_slice().try_into().unwrap(),
+				.as_slice()
+				.try_into()
+				.unwrap(),
 		)
 	}
 }
@@ -140,9 +152,38 @@ impl Vecable<KeyError> for PrivateKey {
 	fn to_vec(&self) -> Vec<u8> {
 		self.v256().to_vec()
 	}
-	
+
 	fn from_arr(arr: &[u8]) -> Result<Self, KeyError> {
-		Ok(PrivateKey::new(V256::from_arr(arr).map_err(|_| KeyError::InvalidPrivateKey)?))
+		Ok(PrivateKey::new(
+			V256::from_arr(arr).map_err(|_| KeyError::InvalidPrivateKey)?,
+		))
+	}
+}
+
+/**
+ * Protoable
+*/
+impl Protoable<subfield_proto::PrivateKey, KeyError> for PrivateKey {
+	fn from_proto(proto: subfield_proto::PrivateKey) -> Result<Self, KeyError> {
+		Ok(PrivateKey::new(V256::from_proto(subfield_proto::VersionedBytes {
+			version: proto.version,
+			data: proto.data.clone().into(),
+		}).map_err(|_| KeyError::InvalidPrivateKey)?))
+	}
+
+	fn to_proto(&self) -> Result<subfield_proto::PrivateKey, KeyError> {
+		Ok(subfield_proto::PrivateKey {
+			version: *self.v256.version(),
+			data: self.v256.data().clone().into(),
+		})
+	}
+	
+	fn from_proto_bytes(bytes: Bytes) -> Result<Self, KeyError> {
+		Ok(Self::from_proto(proto_deserialize::<subfield_proto::PrivateKey>(bytes).unwrap()).map_err(|_| KeyError::InvalidPrivateKey)?)
+	}
+	
+	fn to_proto_bytes(&self) -> Result<Bytes, KeyError> {
+		Ok(proto_serialize::<subfield_proto::PrivateKey>(self.to_proto().map_err(|_| KeyError::InvalidPrivateKey)?).map_err(|_| KeyError::InvalidPrivateKey)?)
 	}
 }
 
@@ -153,7 +194,7 @@ impl Vecable<KeyError> for PrivateKey {
 impl Libp2pKeypairable<KeyError> for PrivateKey {
 	fn to_libp2p_keypair(&self) -> Result<libp2p::identity::Keypair, KeyError> {
 		Ok(libp2p::identity::Keypair::ed25519_from_bytes(
-			self.v256().bytes().clone(),
+			self.v256().data().clone(),
 		)
 		.map_err(|_| KeyError::InvalidPrivateKey)?)
 		// .to_protobuf_encoding()
@@ -194,7 +235,7 @@ impl HasV256 for PrivateKey {
 impl PartialEq for PrivateKey {
 	fn eq(&self, other: &Self) -> bool {
 		self.v256.version() == other.v256.version()
-			&& self.v256.bytes() == other.v256.bytes()
+			&& self.v256.data() == other.v256.data()
 	}
 }
 
@@ -202,81 +243,78 @@ impl Eq for PrivateKey {}
 
 #[wasm_bindgen]
 impl PrivateKey {
-	
 	/**
 	 * Constructors
-	*/
-	
+		*/
+
 	#[wasm_bindgen(constructor)]
 	pub fn _js_new(v256: V256) -> Self {
 		PrivateKey::new(v256)
 	}
-	
+
 	#[wasm_bindgen(js_name = "random")]
 	pub fn _js_random() -> Self {
 		PrivateKey::random()
 	}
-	
+
 	/**
 	 * Getters
-	*/
-	
+		*/
+
 	#[wasm_bindgen(getter, js_name = "ed")]
 	pub fn _js_ed(&self) -> Uint8Array {
 		self.ed().to_bytes().as_slice().into()
 	}
-	
+
 	#[wasm_bindgen(getter, js_name = "x")]
 	pub fn _js_x(&self) -> Uint8Array {
 		self.x().to_bytes().as_slice().into()
 	}
-	
+
 	/**
 	 * Operations
-	*/
-		
+		*/
+
 	#[wasm_bindgen(js_name = "publicKey")]
 	pub fn _js_public_key(&self) -> PublicKey {
 		self.public_key()
 	}
-	
+
 	#[wasm_bindgen(js_name = "sharedSecret")]
 	pub fn _js_shared_secret(&self, public_key: &PublicKey) -> SharedSecret {
 		self.shared_secret(public_key)
 	}
-	
+
 	#[wasm_bindgen(js_name = "sign")]
 	pub fn _js_sign(&self, message: Uint8Array) -> Signature {
 		self.sign(message.to_vec().as_slice())
 	}
-	
+
 	/**
 	 * Byteable
-	*/
-	
+		*/
+
 	#[wasm_bindgen(js_name = "toBytes")]
 	pub fn _js_to_bytes(&self) -> Uint8Array {
 		self.v256()._js_to_bytes()
 	}
-	
+
 	#[wasm_bindgen(js_name = "fromBytes")]
 	pub fn _js_from_bytes(bytes: Uint8Array) -> Self {
 		PrivateKey::new(V256::_js_from_bytes(bytes))
 	}
-	
+
 	/**
 	 * Stringable
-	*/
-	
+		*/
+
 	#[wasm_bindgen(js_name = "toString")]
 	pub fn _js_to_string(&self) -> String {
 		self.v256().to_string()
 	}
-	
+
 	#[wasm_bindgen(js_name = "fromString")]
 	pub fn _js_from_string(string: String) -> Self {
 		PrivateKey::new(V256::from_string(&string).unwrap())
 	}
-	
-	
 }

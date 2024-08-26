@@ -82,7 +82,7 @@ impl Noise {
 
 	pub fn initiator_from_keypair(keypair: Keypair) -> Noise {
 		let state = Builder::new(NOISE_PARAMS.clone())
-			.local_private_key(keypair.private_key().v256().bytes())
+			.local_private_key(keypair.private_key().v256().data())
 			//.remote_public_key(keypair.public_key().data().data().data_u8())
 			.build_initiator()
 			.unwrap();
@@ -97,21 +97,20 @@ impl Noise {
 
 	pub fn responder_from_keypair(keypair: Keypair) -> Noise {
 		let state = Builder::new(NOISE_PARAMS.clone())
-			.local_private_key(keypair.private_key().v256().bytes())
+			.local_private_key(keypair.private_key().v256().data())
 			//.remote_public_key(keypair.public_key().data().data().data_u8())
 			.build_responder()
 			.unwrap();
 
 		Noise::new(NoiseRole::Responder, keypair, state)
 	}
-	
-	
+
 	/**
 	 * Getters
 		*/
-		pub fn keypair(&self) -> Keypair {
-			self.keypair.clone()
-		}
+	pub fn keypair(&self) -> Keypair {
+		self.keypair.clone()
+	}
 
 	/**
 	 * Handshake
@@ -175,7 +174,7 @@ impl Noise {
 		let handshake_option = self.handshake.get_mut().unwrap();
 		// Replace the handshake with a dummy
 		let dummy_handshake_state = Builder::new(NOISE_PARAMS.clone())
-			.local_private_key(self.keypair.private_key().v256().bytes())
+			.local_private_key(self.keypair.private_key().v256().data())
 			.build_initiator()
 			.unwrap();
 		let handshake =
@@ -225,35 +224,12 @@ impl Noise {
 	}
 }
 
-#[test]
-fn test_noise() {
-	let mut initiator = Noise::initiator();
-	let mut responder = Noise::responder();
-
-	// handshake
-	let initiator_message = initiator.handshake_step_1().unwrap();
-	let responder_message =
-		responder.handshake_step_2(&initiator_message).unwrap();
-	let _ = initiator.handshake_step_3(&responder_message).unwrap();
-
-	// encrypt from initiator to responder
-	let data = b"hello world";
-	let encrypted = initiator.encrypt(data).unwrap();
-	let decrypted = responder.decrypt(&encrypted).unwrap();
-	assert_eq!(data.to_vec(), decrypted);
-
-	// encrypt from responder to initiator
-	let data = b"hello world";
-	let encrypted = responder.encrypt(data).unwrap();
-	let decrypted = initiator.decrypt(&encrypted).unwrap();
-	assert_eq!(data.to_vec(), decrypted);
-}
 
 #[wasm_bindgen]
 impl Noise {
 	/**
 	 * Constructors
-	*/
+		*/
 	#[wasm_bindgen(js_name = "initiator")]
 	pub fn _js_initiator() -> Noise {
 		Noise::initiator()
@@ -273,46 +249,55 @@ impl Noise {
 	pub fn _js_responder_from_keypair(keypair: Keypair) -> Noise {
 		Noise::responder_from_keypair(keypair)
 	}
-	
+
 	/**
 	 * Getters
-	*/
+		*/
 	#[wasm_bindgen(getter, js_name = "keypair")]
 	pub fn _js_keypair(&self) -> Keypair {
 		self.keypair()
 	}
-	
+
 	/**
 	 * Handshake
-	*/
+		*/
 	#[wasm_bindgen(js_name = "handshakeStep1")]
 	pub fn _js_handshake_step_1(&mut self) -> Uint8Array {
 		self.handshake_step_1().unwrap().as_slice().into()
 	}
-	
+
 	#[wasm_bindgen(js_name = "handshakeStep2")]
 	pub fn _js_handshake_step_2(&mut self, message: Uint8Array) -> Uint8Array {
-		self.handshake_step_2(&message.to_vec().as_slice()).unwrap().as_slice().into()
+		self.handshake_step_2(&message.to_vec().as_slice())
+			.unwrap()
+			.as_slice()
+			.into()
 	}
-	
+
 	#[wasm_bindgen(js_name = "handshakeStep3")]
 	pub fn _js_handshake_step_3(&mut self, message: Uint8Array) {
 		self.handshake_step_3(&message.to_vec().as_slice()).unwrap();
 	}
-	
+
 	/**
 	 * Encrypt
-	*/
+		*/
 	#[wasm_bindgen(js_name = "encrypt")]
 	pub fn _js_encrypt(&mut self, data: Uint8Array) -> Uint8Array {
-		self.encrypt(&data.to_vec().as_slice()).unwrap().as_slice().into()
+		self.encrypt(&data.to_vec().as_slice())
+			.unwrap()
+			.as_slice()
+			.into()
 	}
-	
+
 	/**
 	 * Decrypt
-	*/
+		*/
 	#[wasm_bindgen(js_name = "decrypt")]
 	pub fn _js_decrypt(&mut self, data: Uint8Array) -> Uint8Array {
-		self.decrypt(&data.to_vec().as_slice()).unwrap().as_slice().into()
+		self.decrypt(&data.to_vec().as_slice())
+			.unwrap()
+			.as_slice()
+			.into()
 	}
 }

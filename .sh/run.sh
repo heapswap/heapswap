@@ -21,5 +21,5 @@ else
     -i "src/schemas/*" \
     -i "crates/browser/browser-test" \
     -c \
-    -x "run --bin heapswap_$PACKAGE_NAME"
+    -x "run --bin $PACKAGE_NAME"
 fi
