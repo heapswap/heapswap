@@ -27,6 +27,10 @@ pub struct VersionedBytes {
 }
 
 impl VersionedBytes {
+	
+	/**
+	 * Constructors
+	*/
 	pub fn new(version: VersionUsize, data: &[u8]) -> Self {
 		Self {
 			version,
@@ -35,6 +39,17 @@ impl VersionedBytes {
 		}
 	}
 
+	pub fn zero(version: VersionUsize, len: usize) -> Self {
+		Self::new(version, &vec![0; len])
+	}
+	
+	pub fn one(version: VersionUsize, len: usize) -> Self {
+		Self::new(version, &vec![1; len])
+	}
+	
+	/**
+	 * Operations
+	*/
 	pub fn leading_zeros(&self) -> u32 {
 		let mut count = 0;
 		for i in 0..self.data.len() {
@@ -80,6 +95,8 @@ impl VersionedBytes {
 		let data: Vec<u8> = arr::random(64).try_into().unwrap();
 		VersionedBytes::new(0, data.as_slice())
 	}
+	
+	
 }
 
 /**
@@ -201,7 +218,7 @@ impl Clone for VersionedBytes {
 */
 impl Hash for VersionedBytes {
 	fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
-		self.data.hash(state);
+		self.to_vec().hash(state);
 	}
 }
 

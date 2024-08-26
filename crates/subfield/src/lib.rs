@@ -14,6 +14,8 @@ pub use eyre::{
 	eyre as eyr, Ok as EOk, OptionExt as _, Report as EReport,
 	Result as EResult,
 };
+pub use std::collections::{HashMap, HashSet};
+ 
 /**
  * Reexports
 */

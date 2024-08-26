@@ -24,13 +24,14 @@ use std::sync::Arc;
 use std::time::Duration;
 #[cfg(feature = "browser")]
 use {
-	libp2p::websocket_websys,
-	// libp2p_webrtc_websys as webrtc_websys,
+	// libp2p::websocket_websys,
+	libp2p_webrtc_websys as webrtc_websys,
 };
 #[cfg(feature = "server")]
 use {
-	libp2p::{mdns, tcp, websocket},
-	// libp2p_webrtc as webrtc,
+	libp2p::{mdns, tcp},
+	// libp2p::websocket,
+	libp2p_webrtc as webrtc,
 	tracing_subscriber::EnvFilter,
 };
 
@@ -104,14 +105,22 @@ async fn create_client(
 		let mut swarm = SwarmBuilder::with_existing_identity(keypair.clone())
 			.with_wasm_bindgen()
 			.with_other_transport(|key| {
+				
+				// webtransport
 				// let config = webtransport_websys::Config::new(&key);
 				// let transport = webtransport_websys::Transport::new(config).boxed();
 				// Ok(transport)
-				let transport = websocket_websys::Transport::default()
-					.upgrade(upgrade::Version::V1)
-					.authenticate(noise::Config::new(&key)?)
-					.multiplex(yamux::Config::default())
-					.boxed();
+				
+				// websocket
+				// let transport = websocket_websys::Transport::default()
+				// 	.upgrade(upgrade::Version::V1)
+				// 	.authenticate(noise::Config::new(&key)?)
+				// 	.multiplex(yamux::Config::default())
+				// 	.boxed();
+				
+				// webrtc
+				let transport = libp2p_webrtc_websys::Transport::new(libp2p_webrtc_websys::Config::new(&key));
+				
 				Ok(transport)
 			})?
 			.with_behaviour(|key| Ok(SubfieldBehaviour::new(key)))?
@@ -165,25 +174,27 @@ async fn create_server(
 	let mut swarm =
 		libp2p::SwarmBuilder::with_existing_identity(keypair.clone())
 			.with_tokio()
-			.with_tcp(
-				tcp::Config::default(),
-				noise::Config::new,
-				yamux::Config::default,
-			)?
-			.with_websocket(
-				(libp2p::tls::Config::new, libp2p::noise::Config::new),
-				libp2p::yamux::Config::default,
-			)
-			.await?
-			// .with_other_transport(|id_keys| {
-			// 	Ok(webrtc::tokio::Transport::new(
-			// 		id_keys.clone(),
-			// 		webrtc::tokio::Certificate::generate(
-			// 			&mut rand::thread_rng(),
-			// 		)?,
-			// 	)
-			// 	.map(|(peer_id, conn), _| (peer_id, StreamMuxerBox::new(conn))))
-			// })?
+			// websocket
+			// .with_tcp(
+			// 	tcp::Config::default(),
+			// 	noise::Config::new,
+			// 	yamux::Config::default,
+			// )?
+			// .with_websocket(
+			// 	(libp2p::tls::Config::new, libp2p::noise::Config::new),
+			// 	libp2p::yamux::Config::default,
+			// )
+			// .await?
+			// webrtc
+			.with_other_transport(|id_keys| {
+				Ok(webrtc::tokio::Transport::new(
+					id_keys.clone(),
+					webrtc::tokio::Certificate::generate(
+						&mut rand::thread_rng(),
+					)?,
+				)
+				.map(|(peer_id, conn), _| (peer_id, StreamMuxerBox::new(conn))))
+			})?
 			.with_behaviour(|key| Ok(SubfieldBehaviour::new(key)))
 			.map_err(|e| eyr!(e.to_string()))?
 			.with_swarm_config(|c| {

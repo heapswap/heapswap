@@ -12,7 +12,7 @@ members = ["crates/*"]
 ## Errors
 ##
 eyre = { version = "0.6.12" } # Anyhow fork
-#thiserror = { version = "1.0.60" } # Derive macro for the std::error::Error trait
+thiserror = { version = "1.0.63" } # Derive macro for the std::error::Error trait
 #
 ## Crypto
 ##
@@ -213,8 +213,8 @@ wasm-bindgen-test = { version = "0.3" }
 rayon = { version = "1.10.0" }
 #libp2p-webrtc-websys = {version = "0.3.0-alpha.1"}
 libp2p-websocket-websys = { version = "0.4" }
-libp2p-webrtc = { version = "0.7.1-alpha" } # WebRTC
-libp2p-webrtc-websys = { version = "0.3.0-alpha" } # WebRTC (browser)
+libp2p-webrtc = { version = "0.8.0-alpha" } # WebRTC
+libp2p-webrtc-websys = { version = "0.4.0-alpha" } # WebRTC (browser)
 ### Web
 web-sys = { version = "0.3.69" } # Bindings for all Web APIs
 gloo = { version = "0.11.0" } # Convenience crate for common `web_sys` features

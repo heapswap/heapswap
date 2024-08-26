@@ -53,3 +53,20 @@ fn test_proto_keypair() {
 	let keypair_from_proto = crypto::Keypair::from_proto(keypair_proto).unwrap();
 	assert_eq!(keypair, keypair_from_proto);
 }
+
+#[test]
+fn test_proto_subkey() {
+	let subkey = protocol::Subkey::random();
+	let subkey_proto = subkey.to_proto().unwrap();
+	let subkey_from_proto = protocol::Subkey::from_proto(subkey_proto).unwrap();
+	assert_eq!(subkey, subkey_from_proto);
+}
+
+
+#[test]
+fn test_proto_timestamp() {
+	let timestamp = protocol::now_timestamp_proto();
+	let datetime = protocol::timestamp_proto_to_datetime(timestamp).unwrap();
+	let timestamp_from_datetime = protocol::datetime_to_timestamp_proto(datetime);
+	assert_eq!(timestamp, timestamp_from_datetime);
+}

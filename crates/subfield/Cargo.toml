@@ -23,9 +23,9 @@ server = [
 	# "tokio-tungstenite",
 	# "tower",
 	# "tower-http",
-	"poem",
-	"poem-grpc",
-	"poem-openapi"
+	# "poem",
+	# "poem-grpc",
+	# "poem-openapi"
 
 ]
 
@@ -34,14 +34,12 @@ libp2p-server = [
 	"server",
 	"libp2p/mdns",
 	"libp2p/tokio",
-	"libp2p/websocket",
-	# "libp2p/webrtc",
+	# "libp2p/websocket",
 	"libp2p/tcp",
 	"libp2p/tls",
 	"libp2p/dns",
 	"libp2p/relay",
 	# "libp2p/quic",
-
 ]
 #
 ## Browser
@@ -53,8 +51,8 @@ libp2p-browser = [
 	"libp2p-common",
 	"browser",
 	"libp2p/wasm-bindgen",
-	"libp2p/websocket-websys",
-	# "libp2p-webrtc-websys",
+	# "libp2p/websocket-websys",
+	"libp2p-webrtc-websys",
 
 ]
 #
@@ -115,15 +113,18 @@ subfield_proto = { path = "../subfield_proto" }
 #
 ## Networking
 ##
+# libp2p
 libp2p = { workspace = true, optional = true }
-# libp2p-webrtc-websys = { workspace = true, optional = true }
-# libp2p-websocket-websys = { workspace = true, optional = true }
-# libp2p-webrtc = { workspace = true, optional = true }
+libp2p-webrtc-websys = { workspace = true, optional = true }
+libp2p-websocket-websys = { workspace = true, optional = true }
+libp2p-webrtc = { workspace = true, optional = true }
+# reqwest
 reqwest = { workspace = true }
 reqwest-websocket = { workspace = true }
-poem = { workspace = true, optional = true}
-poem-grpc = { workspace = true, optional = true}
-poem-openapi = { workspace = true, optional = true}
+# poem
+# poem = { workspace = true, optional = true}
+# poem-grpc = { workspace = true, optional = true}
+# poem-openapi = { workspace = true, optional = true}
 # yamux = { workspace = true }
 # Crypto
 #crypto-bigint.workspace = true
@@ -176,6 +177,7 @@ chrono.workspace = true
 ordered-float.workspace = true
 priority-queue.workspace = true
 itertools.workspace = true
+thiserror.workspace = true
 
 [dev-dependencies]
 timeit.workspace = true
