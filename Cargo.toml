@@ -110,19 +110,20 @@ poem-openapi = { version = "5.0.2", features = [
 poem-grpc = { version = "0.4" }
 poem-grpc-build = { version = "0.4" }
 tonic-web-wasm-client = "0.6"
-# headers = { version = "0.4" }
-# axum = { version = "0.7.5", features = [
-# 	"json",
-# 	"macros",
-# 	"ws",
-# 	#"form",
-# 	#"multipart",
-# 	#"query"
-# ] }
-# axum-extra = { version = "0.9.3", features = ["typed-header"] }
-# tower = { version = "0.4", features = ["util"] }
-# tower-http = { version = "0.5.0", features = ["fs", "trace", "cors"] }
-# http = { version = "1.1.0" }
+headers = { version = "0.4" }
+axum = { version = "0.7.5", features = [
+	"json",
+	"macros",
+	"ws",
+	#"form",
+	#"multipart",
+	#"query"
+
+] }
+axum-extra = { version = "0.9.3", features = ["typed-header"] }
+tower = { version = "0.4", features = ["util"] }
+tower-http = { version = "0.5.0", features = ["fs", "trace", "cors"] }
+http = { version = "1.1.0" }
 tokio-tungstenite = { version = "0.23.1" }
 #tokio_tungstenite_wasm = { verison = "0.3.1" }
 yamux = { version = "0.13.3" } # Multiplexing
@@ -213,7 +214,7 @@ wasm-bindgen-test = { version = "0.3" }
 rayon = { version = "1.10.0" }
 #libp2p-webrtc-websys = {version = "0.3.0-alpha.1"}
 libp2p-websocket-websys = { version = "0.4" }
-libp2p-webrtc = { version = "0.8.0-alpha" } # WebRTC
+libp2p-webrtc = { version = "0.7.1-alpha" } # WebRTC
 libp2p-webrtc-websys = { version = "0.4.0-alpha" } # WebRTC (browser)
 ### Web
 web-sys = { version = "0.3.69" } # Bindings for all Web APIs
@@ -275,3 +276,5 @@ chrono = { version = "0.4.38", features = ["serde"] } # Time
 ordered-float = { version = "4.2.2" }
 #num-traits = {version = "0.2.19"}
 pin-utils = { version = "0.1.0" }
+generational-arena = { version = "0.2.9" }
+async-trait = { version = "0.1" }

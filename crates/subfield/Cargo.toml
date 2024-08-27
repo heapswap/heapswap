@@ -24,6 +24,8 @@ server = [
 	# "poem",
 	# "poem-grpc",
 	# "poem-openapi"
+	"libp2p-webrtc/tokio",
+	"libp2p/dns",
 	"libp2p/mdns",
 	"libp2p/tokio",
 	# "libp2p/websocket",
@@ -32,6 +34,7 @@ server = [
 	"libp2p/dns",
 	"libp2p/relay",
 	# "libp2p/quic",
+
 ]
 #
 ## Browser
@@ -159,10 +162,13 @@ ordered-float.workspace = true
 priority-queue.workspace = true
 itertools.workspace = true
 thiserror.workspace = true
+generational-arena.workspace = true
+async-trait.workspace = true
 
 [dev-dependencies]
 timeit.workspace = true
 wasm-bindgen-test = { workspace = true }
+tokio = { workspace = true, features = ["full"] }
 
 [build]
 

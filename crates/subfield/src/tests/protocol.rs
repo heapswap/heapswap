@@ -10,13 +10,10 @@ fn test_subkey_hash_combinations() {
 	);
 	let hashes = subkey.hash_combinations().unwrap();
 	assert_eq!(hashes.len(), 7);
-	
+
 	// all combinations 2^2 - 1 = 3
-	let subkey = Subkey::new(
-		Some(V256::random256()),
-		Some(V256::random256()),
-		None,
-	);
+	let subkey =
+		Subkey::new(Some(V256::random256()), Some(V256::random256()), None);
 	let hashes = subkey.hash_combinations().unwrap();
 	assert_eq!(hashes.len(), 3);
 

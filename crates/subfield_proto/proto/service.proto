@@ -11,11 +11,12 @@ service SubfieldService {
    * System
    */
   rpc Ping(message_system.PingRequest) returns (message_system.PingResponse);
+  rpc Echo(message_system.EchoRequest) returns (message_system.EchoResponse);
 
   /**
    * Records
    */
-  rpc GetRecord(message_record.GetRecordRequest) returns (stream message_record.GetRecordResponse);
+  rpc GetRecord(message_record.GetRecordRequest) returns (message_record.GetRecordResponse);
   rpc PutRecord(message_record.PutRecordRequest) returns (message_record.PutRecordResponse);
   // rpc UpdateRecord(message_record.UpdateRecordRequest) returns (message_record.UpdateRecordResponse);
   rpc DeleteRecord(message_record.DeleteRecordRequest) returns (message_record.DeleteRecordResponse);
@@ -27,10 +28,34 @@ service SubfieldService {
   rpc Unsubscribe(message_pubsub.UnsubscribeRequest) returns (message_pubsub.UnsubscribeResponse);
 }
 
+enum SubfieldMessageDiscriminant {
+  // system
+  Ping = 0;
+  Echo = 1;
+  // records
+  GetRecord = 20;
+  PutRecord = 21;
+  DeleteRecord = 22;
+  // pubsub
+  Subscribe = 30;
+  Unsubscribe = 31;
+}
+
+/*
+   enum SubfieldMessage {
+     SubfieldRpcMessageType type = 1;
+     oneof message {
+       SubfieldRequest request = 2;
+       SubfieldResponse response = 3;
+     }
+   }
+*/
+
 message SubfieldRequest {
   oneof request_type {
     // system
     message_system.PingRequest ping = 1;
+    message_system.EchoRequest echo = 2;
     // record
     message_record.GetRecordRequest get_record = 20;
     message_record.PutRecordRequest put_record = 21;
@@ -45,6 +70,7 @@ message SubfieldResponse {
   oneof response_type {
     // system
     message_system.PingResponse ping = 1;
+    message_system.EchoResponse echo = 2;
     // record
     message_record.GetRecordResponse get_record = 20;
     message_record.PutRecordResponse put_record = 21;
@@ -55,33 +81,32 @@ message SubfieldResponse {
   }
 }
 
-
 /*
-enum SubfieldRequestType {
-  // system
-  PingRequest = 0;
-  
-  // records
-  GetRecordRequest = 10;
-  PutRecordRequest = 11;
-  DeleteRecordRequest = 12;
-  
-  // pubsub
-  SubscribeRequest = 20;
-  UnsubscribeRequest = 21;
-}
+   enum SubfieldRequestType {
+     // system
+     PingRequest = 0;
 
-enum SubfieldResponseType {
-  // system
-  PingResponse = 0;
-  
-  // records
-  GetRecordResponse = 10;
-  PutRecordResponse = 11;
-  DeleteRecordResponse = 12;
-  
-  // pubsub
-  SubscribeResponse = 20;
-  UnsubscribeResponse = 21;
-}
+     // records
+     GetRecordRequest = 10;
+     PutRecordRequest = 11;
+     DeleteRecordRequest = 12;
+
+     // pubsub
+     SubscribeRequest = 20;
+     UnsubscribeRequest = 21;
+   }
+
+   enum SubfieldResponseType {
+     // system
+     PingResponse = 0;
+
+     // records
+     GetRecordResponse = 10;
+     PutRecordResponse = 11;
+     DeleteRecordResponse = 12;
+
+     // pubsub
+     SubscribeResponse = 20;
+     UnsubscribeResponse = 21;
+   }
 */

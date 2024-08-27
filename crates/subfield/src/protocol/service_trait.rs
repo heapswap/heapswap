@@ -1,45 +1,64 @@
 use crate::*;
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
-pub enum SubfieldServiceError {}
+pub enum SubfieldServiceError {
+	NoConnectedPeers,
+	UnexpectedResponseType,
+}
 
+pub type SubfieldServiceResult<T> = Result<T, SubfieldServiceError>;
+pub type SubfieldServiceStreamingResult<T> =
+	Result<Receiver<T>, SubfieldServiceError>;
+
+#[async_trait]
 pub trait SubfieldService {
 	/**
 	 * System
 		*/
-	fn ping(
+	/*
+	async fn ping(
 		&self,
 		request: proto::PingRequest,
-	) -> Result<proto::PingResponse, SubfieldServiceError>;
+	) -> SubfieldServiceResult<proto::PingResponse>;
+	*/
 
-	/**
-	 * Records
-		*/
+	async fn echo(
+		self,
+		request: proto::EchoRequest,
+	) -> SubfieldServiceResult<proto::EchoResponse>;
+
+	/*
+	Records
+	   */
+	/*
 	fn get_record(
 		&self,
 		request: proto::GetRecordRequest,
-	) -> Result<Receiver<proto::GetRecordResponse>, SubfieldServiceError>;
+	) -> SubfieldServiceResult<proto::GetRecordResponse>;
 
 	fn put_record(
 		&self,
 		request: proto::PutRecordRequest,
-	) -> Result<proto::PutRecordResponse, SubfieldServiceError>;
+	) -> SubfieldServiceResult<proto::PutRecordResponse>;
 
 	fn delete_record(
 		&self,
 		request: proto::DeleteRecordRequest,
-	) -> Result<proto::DeleteRecordResponse, SubfieldServiceError>;
+	) -> SubfieldServiceResult<proto::DeleteRecordResponse>;
+	*/
 
-	/**
-	 * Pubsub
-		*/
+	/*
+	Pubsub
+	  */
+	/*
 	fn subscribe(
 		&self,
 		request: proto::SubscribeRequest,
-	) -> Result<Receiver<proto::SubscribeResponse>, SubfieldServiceError>;
+	) -> SubfieldServiceResult<proto::SubscribeResponse>;
 
 	fn unsubscribe(
 		&self,
 		request: proto::UnsubscribeRequest,
-	) -> Result<proto::UnsubscribeResponse, SubfieldServiceError>;
+	) -> SubfieldServiceResult<proto::UnsubscribeResponse>;
+	*/
 }

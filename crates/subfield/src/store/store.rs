@@ -1,3 +1,4 @@
+use crate::*;
 use gluesql::{
 	core::store::{
 		AlterTable, CustomFunction, CustomFunctionMut, Index, IndexMut,
@@ -7,7 +8,7 @@ use gluesql::{
 };
 use std::sync::Arc;
 
-trait FullStore:
+pub trait FullStore:
 	Store
 	+ StoreMut
 	+ AlterTable
@@ -16,6 +17,7 @@ trait FullStore:
 	+ Metadata
 	+ CustomFunction
 	+ CustomFunctionMut
+	+ Send
 {
 }
 
@@ -27,41 +29,52 @@ impl<
 			+ IndexMut
 			+ Metadata
 			+ CustomFunction
-			+ CustomFunctionMut,
+			+ CustomFunctionMut
+			+ Send,
 	> FullStore for T
 {
 }
 
-pub struct SubfieldStoreConfig {
-	pub location: String,
-}
+// pub type ThreadsafeSubfieldStore = Arc<Mutex<SubfieldStore>>;
 
 #[derive(Clone)]
 pub struct SubfieldStore {
-	cache: Arc<dyn FullStore>,
-	perma: Arc<dyn FullStore>,
+	cache: Arc<Mutex<dyn FullStore>>,
+	perma: Arc<Mutex<dyn FullStore>>,
 }
 
 impl SubfieldStore {
-	pub async fn new(config: SubfieldStoreConfig) -> Result<Self, Error> {
-		let cache: Arc<dyn FullStore> = Arc::new(SharedMemoryStorage::new());
+	pub async fn new(config: swarm::SubfieldConfig) -> Result<Self, Error> {
+		let cache: Arc<Mutex<dyn FullStore>> =
+			Arc::new(Mutex::new(SharedMemoryStorage::new()));
 
+		let store_path = config.store_path.clone();
+		
+		
 		#[cfg(not(target_arch = "wasm32"))]
-		let perma: Arc<dyn FullStore> =
-			Arc::new(SledStorage::new(config.location.as_str())?);
+		let perma: Arc<Mutex<dyn FullStore>> = match SledStorage::new(store_path.as_str()) {
+			Ok(store) => Arc::new(Mutex::new(store)),
+			Err(e) => {
+				println!("Failed to create SledStorage: {}", e);
+				Arc::new(Mutex::new(SharedMemoryStorage::new()))
+			}
+		};
 
 		#[cfg(target_arch = "wasm32")]
-		let perma: Arc<dyn FullStore> =
-			Arc::new(IdbStorage::new(Some(config.location.to_string())).await?);
+		let perma: Arc<Mutex<dyn FullStore>> = Arc::new(Mutex::new(
+			IdbStorage::new(Some(store_path.to_string())).await?,
+		));
 
 		Ok(SubfieldStore { cache, perma })
 	}
 
-	fn cache(&self) -> &Arc<dyn FullStore> {
-		&self.cache
+	pub async fn cache(&self) -> MutexGuard<dyn FullStore> {
+		self.cache.lock().await
 	}
 
-	fn perma(&self) -> &Arc<dyn FullStore> {
-		&self.perma
+	pub async fn perma(&self) -> MutexGuard<dyn FullStore> {
+		self.perma.lock().await
 	}
 }
+
+unsafe impl Send for SubfieldStore {}

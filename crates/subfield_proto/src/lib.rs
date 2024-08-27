@@ -7,14 +7,14 @@ pub use prost::Message;
 // use poem_grpc::{Status, Code}	;
 pub use prost::{DecodeError, EncodeError};
 
+pub use crate::google::protobuf::*;
 pub use crate::message_pubsub::*;
 pub use crate::message_record::*;
 pub use crate::message_system::*;
 pub use crate::record::*;
-pub use crate::versioned_bytes::*;
 pub use crate::service::*;
-pub use crate::google::protobuf::*;
 pub use crate::subkey::*;
+pub use crate::versioned_bytes::*;
 
 pub fn serialize<T: Message>(message: &T) -> Result<Bytes, EncodeError> {
 	let mut buf = BytesMut::with_capacity(message.encoded_len());

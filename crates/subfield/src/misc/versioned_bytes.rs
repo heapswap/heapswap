@@ -94,6 +94,14 @@ impl VersionedBytes {
 		let data: Vec<u8> = arr::random(64).try_into().unwrap();
 		VersionedBytes::new(0, data.as_slice())
 	}
+
+	pub fn to_key(&self) -> libp2p::kad::KBucketKey<Vec<u8>> {
+		libp2p::kad::KBucketKey::new(self.to_vec())
+	}
+
+	pub fn from_key(key: libp2p::kad::KBucketKey<Vec<u8>>) -> Self {
+		VersionedBytes::from_arr(key.preimage().as_slice()).unwrap()
+	}
 }
 
 /**
@@ -163,12 +171,10 @@ impl Protoable<subfield_proto::VersionedBytes, VersionedBytesError>
 	}
 
 	fn to_proto_bytes(&self) -> Result<Bytes, VersionedBytesError> {
-		Ok(
-			proto::serialize::<subfield_proto::VersionedBytes>(
-				&self.to_proto()?,
-			)
-			.unwrap(),
+		Ok(proto::serialize::<subfield_proto::VersionedBytes>(
+			&self.to_proto()?,
 		)
+		.unwrap())
 	}
 }
 

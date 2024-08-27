@@ -14,3 +14,14 @@ message PingRequest {
 message PingResponse {
   google.protobuf.Timestamp timestamp = 1;
 }
+
+/**
+ * Echo
+ */
+message EchoRequest {
+  string message = 1;
+}
+
+message EchoResponse {
+  string message = 1;
+}

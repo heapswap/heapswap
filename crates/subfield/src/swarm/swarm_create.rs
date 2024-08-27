@@ -1,3 +1,4 @@
+use super::SubfieldConfig;
 use crate::*;
 
 use futures::{prelude::*, StreamExt};
@@ -9,7 +10,7 @@ use super::swarm_behaviour::*;
 use bytes::Bytes;
 
 use libp2p::{
-	core::Transport,
+	core::Transport as CoreTransport,
 	core::{muxing::StreamMuxerBox, transport, upgrade},
 	gossipsub,
 	kad::QueryResult as KadQueryResult,
@@ -22,24 +23,26 @@ use std::error::Error;
 use std::hash::{Hash, Hasher};
 use std::sync::Arc;
 use std::time::Duration;
+#[cfg(feature = "server")]
+use {
+	libp2p::{
+		mdns,
+		tcp,
+		// dns::tokio::Transport as DnsTransport
+	},
+	// libp2p::websocket,
+	libp2p_webrtc as webrtc,
+	tracing_subscriber::EnvFilter,
+};
 #[cfg(feature = "client")]
 use {
 	// libp2p::websocket_websys,
 	libp2p_webrtc_websys as webrtc_websys,
 };
-#[cfg(feature = "server")]
-use {
-	libp2p::{mdns, tcp},
-	// libp2p::websocket,
-	libp2p_webrtc as webrtc,
-	tracing_subscriber::EnvFilter,
-};
 
 pub type SubfieldSwarm = Swarm<SubfieldBehaviour>;
 pub type SubfieldSwarmEvent = SwarmEvent<SubfieldBehaviourEvent>;
-#[cfg(feature = "server")]
 pub type ThreadsafeSubfieldSwarm = Arc<Mutex<SubfieldSwarm>>;
-#[cfg(feature = "server")]
 pub type ThreadsafeSubfieldSwarmLock<'a> = MutexGuard<'a, SubfieldSwarm>;
 
 #[derive(Debug)]
@@ -48,23 +51,13 @@ pub enum SubfieldCreateSwarmError {
 	FailedToDialBootstrapAddrs,
 }
 
-#[derive(Clone)]
+#[derive(Debug, Clone)]
 pub enum SubfieldSwarmMode {
 	Client,
 	Server,
 }
 
-#[derive(Clone)]
-// #[wasm_bindgen]
-pub struct SubfieldSwarmConfig {
-	pub mode: SubfieldSwarmMode,
-	pub keypair: crypto::Keypair,
-	pub listen_addresses: Vec<String>,
-	pub bootstrap_multiaddrs: Vec<String>,
-}
-
-const IDLE_CONNECTION_TIMEOUT: u64 = u64::MAX;
-// const IDLE_CONNECTION_TIMEOUT: u64 = 600;
+const IDLE_CONNECTION_TIMEOUT: u64 = 60;
 
 /**
  * Create a Subfield Swarm
@@ -72,7 +65,7 @@ const IDLE_CONNECTION_TIMEOUT: u64 = u64::MAX;
 */
 // #[wasm_bindgen]
 pub async fn create_swarm(
-	swarm_config: SubfieldSwarmConfig,
+	swarm_config: SubfieldConfig,
 ) -> eyre::Result<SubfieldSwarm> {
 	#![allow(unused_assignments)]
 	let mut swarm: Result<Swarm<SubfieldBehaviour>, EReport> =
@@ -93,7 +86,7 @@ pub async fn create_swarm(
 */
 #[cfg(feature = "client")]
 async fn create_client(
-	swarm_config: SubfieldSwarmConfig,
+	swarm_config: SubfieldConfig,
 ) -> eyre::Result<SubfieldSwarm> {
 	use libp2p::core::upgrade;
 	use std::time::Duration;
@@ -106,22 +99,23 @@ async fn create_client(
 		let mut swarm = SwarmBuilder::with_existing_identity(keypair.clone())
 			.with_wasm_bindgen()
 			.with_other_transport(|key| {
-				
 				// webtransport
 				// let config = webtransport_websys::Config::new(&key);
 				// let transport = webtransport_websys::Transport::new(config).boxed();
 				// Ok(transport)
-				
+
 				// websocket
 				// let transport = websocket_websys::Transport::default()
 				// 	.upgrade(upgrade::Version::V1)
 				// 	.authenticate(noise::Config::new(&key)?)
 				// 	.multiplex(yamux::Config::default())
 				// 	.boxed();
-				
+
 				// webrtc
-				let transport = libp2p_webrtc_websys::Transport::new(libp2p_webrtc_websys::Config::new(&key));
-				
+				let transport = libp2p_webrtc_websys::Transport::new(
+					libp2p_webrtc_websys::Config::new(&key),
+				);
+
 				Ok(transport)
 			})?
 			.with_behaviour(|key| Ok(SubfieldBehaviour::new(key)))?
@@ -168,7 +162,7 @@ async fn create_client(
 */
 #[cfg(feature = "server")]
 async fn create_server(
-	swarm_config: SubfieldSwarmConfig,
+	swarm_config: SubfieldConfig,
 ) -> eyre::Result<SubfieldSwarm> {
 	let keypair = swarm_config.keypair.to_libp2p_keypair().unwrap();
 
@@ -188,13 +182,13 @@ async fn create_server(
 			// .await?
 			// webrtc
 			.with_other_transport(|id_keys| {
-				Ok(webrtc::tokio::Transport::new(
+				let transport = webrtc::tokio::Transport::new(
 					id_keys.clone(),
-					webrtc::tokio::Certificate::generate(
-						&mut rand::thread_rng(),
-					)?,
+					webrtc::tokio::Certificate::generate(&mut thread_rng())?,
 				)
-				.map(|(peer_id, conn), _| (peer_id, StreamMuxerBox::new(conn))))
+				.map(|(peer_id, conn), _| (peer_id, StreamMuxerBox::new(conn)));
+
+				Ok(transport)
 			})?
 			.with_behaviour(|key| Ok(SubfieldBehaviour::new(key)))
 			.map_err(|e| eyr!(e.to_string()))?

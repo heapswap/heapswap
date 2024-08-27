@@ -1,13 +1,13 @@
 // use super::*;
 use futures::channel::mpsc::{unbounded, UnboundedReceiver, UnboundedSender};
 
-pub type Transmitter<T> = UnboundedSender<T>;
+pub type Sender<T> = UnboundedSender<T>;
 pub type Receiver<R> = UnboundedReceiver<R>;
 
 /**
  * Unidirectional channel
 */
-pub fn portal<U>() -> (Transmitter<U>, Receiver<U>) {
+pub fn portal<U>() -> (Sender<U>, Receiver<U>) {
 	let (tx, rx) = unbounded::<U>();
 	(tx, rx)
 }
@@ -32,8 +32,8 @@ where
 	T: Clone,
 	R: Clone,
 {
-	tx: Transmitter<T>,
-	tx_self: Transmitter<R>,
+	tx: Sender<T>,
+	tx_self: Sender<R>,
 	rx: Receiver<R>,
 }
 
@@ -42,11 +42,11 @@ where
 	T: Clone,
 	R: Clone,
 {
-	pub fn tx(&self) -> Transmitter<T> {
+	pub fn tx(&self) -> Sender<T> {
 		self.tx.clone()
 	}
 
-	pub fn tx_self(&self) -> Transmitter<R> {
+	pub fn tx_self(&self) -> Sender<R> {
 		self.tx_self.clone()
 	}
 

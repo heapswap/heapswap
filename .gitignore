@@ -12,7 +12,7 @@ pkg
 wasm
 certs
 _datastore
-
+_subfield_store
 
 # Based on https://raw.githubusercontent.com/github/gitignore/main/Node.gitignore
 

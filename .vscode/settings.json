@@ -3,7 +3,7 @@
 		"Cargo.toml",
 		"crates/subfield/Cargo.toml",
 		"crates/heapswap/Cargo.toml",
-		"crates/subfield_proto/Cargo.toml",
+		"crates/subfield_proto/Cargo.toml"
 		// "crates/subfield_macro_proto_ext/Cargo.toml",
 		// "crates/subfield_macro_proto_ext_proc/Cargo.toml",
 		//"crates/browser/Cargo.toml",

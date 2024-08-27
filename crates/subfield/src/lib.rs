@@ -18,23 +18,25 @@ pub use eyre::{
 };
 pub use std::collections::{HashMap, HashSet};
 
+pub use lazy_static::lazy_static;
 /**
  * Reexports
 */
 // pub use futures::prelude::*;
 pub use std::fmt;
-pub use lazy_static::lazy_static;
 // pub use libp2p;
 pub use getset::{CopyGetters, Getters, MutGetters, Setters};
 pub use once_cell::sync::{Lazy, OnceCell};
 pub use reqwest;
 // pub use prost::Message;
+pub use async_trait::async_trait;
 pub use dashmap::{DashMap, DashSet};
 pub use futures::{AsyncReadExt, AsyncWriteExt, FutureExt, SinkExt, StreamExt};
 pub use itertools::Itertools;
 pub use js_sys::Uint8Array;
+pub use libp2p;
 pub use ordered_float::OrderedFloat;
-pub use rand::{thread_rng, Rng};
+pub use rand::{prelude::*, thread_rng, Rng};
 pub use serde::{
 	de::DeserializeOwned, Deserialize, Deserializer, Serialize, Serializer,
 };
@@ -57,11 +59,11 @@ pub use {
 	tokio::task::yield_now,
 };
 
-pub mod constants;
-pub mod crypto;
 /**
  * Prelude
 */
+pub mod constants;
+pub mod crypto;
 pub mod misc;
 pub mod protocol;
 pub mod store;

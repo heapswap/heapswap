@@ -31,13 +31,15 @@ use std::{io, time::Duration};
 #[derive(NetworkBehaviour)]
 pub struct SubfieldBehaviour {
 	// subfield
-	pub subfield:
-		Behaviour<protocol::SubfieldRequest, protocol::SubfieldResponse>,
-	
+	pub subfield: request_response::cbor::Behaviour<
+		protocol::SubfieldRequest,
+		protocol::SubfieldResponse,
+	>,
+
 	// utils
 	pub kad: kad::Behaviour<MemoryStore>,
 	// pub pubsub: gossipsub::Behaviour,
-		
+
 	// networking
 	pub ping: ping::Behaviour,
 	pub dcutr: dcutr::Behaviour,
@@ -51,7 +53,7 @@ pub struct SubfieldBehaviour {
 impl SubfieldBehaviour {
 	pub fn new(key: &Keypair) -> Self {
 		let local_peer_id = key.public().to_peer_id();
-		
+
 		/*
 		// To content-address message, we can take the hash of message and use it as an ID.
 		let _message_id_fn = |message: &gossipsub::Message| {
@@ -63,7 +65,7 @@ impl SubfieldBehaviour {
 		// Set a custom gossipsub configuration
 		let gossipsub_config = gossipsub::ConfigBuilder::default()
 			.heartbeat_interval(Duration::from_secs(10))
-			.validation_mode(gossipsub::ValidationMode::Strict) 
+			.validation_mode(gossipsub::ValidationMode::Strict)
 			//.message_id_fn(message_id_fn) // content-address messages. No two messages of the same content will be propagated.
 			.build()
 			.map_err(|msg| io::Error::new(io::ErrorKind::Other, msg))?; // Temporary hack because `build` does not return a proper `std::error::Error`.
@@ -74,7 +76,6 @@ impl SubfieldBehaviour {
 			gossipsub_config,
 		)?;
 		*/
-					
 
 		let mut behaviour = SubfieldBehaviour {
 			subfield: Behaviour::new(
@@ -107,17 +108,17 @@ impl SubfieldBehaviour {
 				relay::Config::default(),
 			),
 		};
-		
+
 		// set mode
 		#[cfg(feature = "client")]
 		{
-			behaviour.subfield.set_mode(Some(kad::Mode::Client));
+			behaviour.kad.set_mode(Some(kad::Mode::Client));
 		}
 		#[cfg(feature = "server")]
 		{
-			behaviour.subfield.set_mode(Some(kad::Mode::Server));
+			behaviour.kad.set_mode(Some(kad::Mode::Server));
 		}
-		
+
 		behaviour
 	}
 }

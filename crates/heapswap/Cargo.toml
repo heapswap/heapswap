@@ -5,18 +5,18 @@ authors = ["kahnpoint <96557890+kahnpoint@users.noreply.github.com>"]
 edition = "2021"
 
 [dependencies]
-# subfield = { path = "../subfield", features = ["libp2p-server"] }
+subfield = { path = "../subfield", features = ["server"] }
 #
 ## Networking
 ##
-# http.workspace = true
-# headers.workspace = true
-# axum.workspace = true
-# axum-extra.workspace = true
-# tower.workspace = true
-# tower-http.workspace = true
-# tokio.workspace = true
-# tokio-tungstenite.workspace = true
+http.workspace = true
+headers.workspace = true
+axum.workspace = true
+axum-extra.workspace = true
+tower.workspace = true
+tower-http.workspace = true
+tokio.workspace = true
+tokio-tungstenite.workspace = true
 #
 ## Logging
 ##

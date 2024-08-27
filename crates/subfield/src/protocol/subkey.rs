@@ -55,16 +55,13 @@ impl Subkey {
 		Self::hash_concat(&[&self.signer, &self.cosigner, &self.tangent])
 	}
 
-	
 	// get all the combinations of a subkey, for use when publishing to pubsub
 	pub fn hash_combinations(&self) -> Result<Vec<V256>, SubkeyError> {
-		
 		// // pubsub publishing requires a complete subkey
 		// if !self.is_complete() {
 		// 	return Err(SubkeyError::IncompleteSubkey);
 		// }
-		
-		
+
 		let mut res = HashSet::new();
 
 		for i in [&self.signer, &None] {
@@ -76,7 +73,7 @@ impl Subkey {
 				}
 			}
 		}
-		
+
 		Ok(res.into_iter().collect())
 	}
 
@@ -169,7 +166,8 @@ impl Protoable<proto::Subkey, SubkeyError> for Subkey {
 	}
 
 	fn to_proto_bytes(&self) -> Result<Bytes, SubkeyError> {
-		proto::serialize(&self.to_proto()?).map_err(|_| SubkeyError::EncodeError)
+		proto::serialize(&self.to_proto()?)
+			.map_err(|_| SubkeyError::EncodeError)
 	}
 
 	fn from_proto_bytes(bytes: Bytes) -> Result<Self, SubkeyError> {

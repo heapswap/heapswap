@@ -7,7 +7,7 @@ fn test_alias_proto() {
 	let mut versioned_bytes = subfield_proto::VersionedBytes {
 		version: 1,
 		data: bytes.clone(),
-	}; 
+	};
 
 	let public_key = subfield_proto::PublicKey {
 		version: 1,
@@ -73,26 +73,26 @@ fn test_proto_timestamp() {
 	assert_eq!(timestamp, timestamp_from_datetime);
 }
 
-
 #[test]
 fn test_proto_request_serialization() {
-	
 	let timestamp = protocol::now_timestamp_proto();
-	
-	let request = protocol::SubfieldRequest::new(protocol::SubfieldRequestType::Ping(
-		proto::PingRequest {
+
+	let request = protocol::SubfieldRequest::new(
+		protocol::SubfieldRequestType::Ping(proto::PingRequest {
 			timestamp: Some(timestamp.clone()),
-		}
-	));
-	
+		}),
+	);
+
 	let proto_serialized = proto::serialize(request.proto()).unwrap();
-	let proto_deserialized = proto::deserialize::<proto::SubfieldRequest>(proto_serialized).unwrap();
-	
+	let proto_deserialized =
+		proto::deserialize::<proto::SubfieldRequest>(proto_serialized).unwrap();
+
 	assert_eq!(request.proto(), &proto_deserialized);
-	
+
 	let bincode_serialized = bincode::serialize(&request).unwrap();
-	let bincode_deserialized = bincode::deserialize::<protocol::SubfieldRequest>(&bincode_serialized).unwrap();
-	
+	let bincode_deserialized =
+		bincode::deserialize::<protocol::SubfieldRequest>(&bincode_serialized)
+			.unwrap();
+
 	assert_eq!(request.proto(), bincode_deserialized.proto());
-	
 }
