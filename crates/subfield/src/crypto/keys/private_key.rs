@@ -47,7 +47,6 @@ impl std::fmt::Debug for PrivateKey {
 	}
 }
 
-
 impl PrivateKey {
 	/**
 	 * Constructors
@@ -165,10 +164,13 @@ impl Vecable<KeyError> for PrivateKey {
 */
 impl Protoable<subfield_proto::PrivateKey, KeyError> for PrivateKey {
 	fn from_proto(proto: subfield_proto::PrivateKey) -> Result<Self, KeyError> {
-		Ok(PrivateKey::new(V256::from_proto(subfield_proto::VersionedBytes {
-			version: proto.version,
-			data: proto.data.clone().into(),
-		}).map_err(|_| KeyError::InvalidPrivateKey)?))
+		Ok(PrivateKey::new(
+			V256::from_proto(subfield_proto::VersionedBytes {
+				version: proto.version,
+				data: proto.data.clone().into(),
+			})
+			.map_err(|_| KeyError::InvalidPrivateKey)?,
+		))
 	}
 
 	fn to_proto(&self) -> Result<subfield_proto::PrivateKey, KeyError> {
@@ -177,20 +179,25 @@ impl Protoable<subfield_proto::PrivateKey, KeyError> for PrivateKey {
 			data: self.v256.data().clone().into(),
 		})
 	}
-	
+
 	fn from_proto_bytes(bytes: Bytes) -> Result<Self, KeyError> {
-		Ok(Self::from_proto(proto::deserialize::<subfield_proto::PrivateKey>(bytes).unwrap()).map_err(|_| KeyError::InvalidPrivateKey)?)
+		Ok(Self::from_proto(
+			proto::deserialize::<subfield_proto::PrivateKey>(bytes).unwrap(),
+		)
+		.map_err(|_| KeyError::InvalidPrivateKey)?)
 	}
-	
+
 	fn to_proto_bytes(&self) -> Result<Bytes, KeyError> {
-		Ok(proto::serialize::<subfield_proto::PrivateKey>(self.to_proto().map_err(|_| KeyError::InvalidPrivateKey)?).map_err(|_| KeyError::InvalidPrivateKey)?)
+		Ok(proto::serialize::<subfield_proto::PrivateKey>(
+			&self.to_proto().map_err(|_| KeyError::InvalidPrivateKey)?,
+		)
+		.map_err(|_| KeyError::InvalidPrivateKey)?)
 	}
 }
 
 /**
  * Libp2pKeypairable
 */
-#[cfg(feature = "libp2p")]
 impl Libp2pKeypairable<KeyError> for PrivateKey {
 	fn to_libp2p_keypair(&self) -> Result<libp2p::identity::Keypair, KeyError> {
 		Ok(libp2p::identity::Keypair::ed25519_from_bytes(
@@ -212,7 +219,7 @@ impl Libp2pKeypairable<KeyError> for PrivateKey {
 			.to_bytes();
 		let private_key_bytes: [u8; SECRET_KEY_LENGTH] =
 			private_key_bytes[..SECRET_KEY_LENGTH].try_into().unwrap();
-		let private_key = PrivateKey::new(V256::new(0, private_key_bytes));
+		let private_key = PrivateKey::new(V256::new(0, &private_key_bytes));
 		let public_key = private_key.public_key();
 
 		Ok(private_key)

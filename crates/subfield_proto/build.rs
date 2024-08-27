@@ -32,19 +32,18 @@ fn main() -> io::Result<()> {
 
 	// let proto_strs: Vec<&str> = Vec::new();
 
-	
 	let mut config = Config::new();
 	config
 		.include_file("lib.rs")
 		.compile_well_known_types()
 		.compile_protos(&proto_strs, &["proto/"])?;
-	
+
 	println!("{:?}", proto_strs);
 	// compile_protos(&proto_strs, &["proto/"])?;
 	// compile_protos(&["helloworld.proto"], &["proto/"])?;
 
 	let out_dir =
-	 	env::var("OUT_DIR").expect("OUT_DIR environment variable not set");
+		env::var("OUT_DIR").expect("OUT_DIR environment variable not set");
 
 	let mut debug_file = File::create("./debug_info.txt")?;
 	writeln!(debug_file, "OUT_DIR: {}", out_dir)?;
@@ -53,4 +52,3 @@ fn main() -> io::Result<()> {
 
 	Ok(())
 }
-

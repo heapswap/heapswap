@@ -224,7 +224,6 @@ impl Noise {
 	}
 }
 
-
 #[wasm_bindgen]
 impl Noise {
 	/**

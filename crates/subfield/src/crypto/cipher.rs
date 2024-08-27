@@ -95,7 +95,6 @@ impl Cipher {
 	}
 }
 
-
 #[wasm_bindgen]
 impl Cipher {
 	/**

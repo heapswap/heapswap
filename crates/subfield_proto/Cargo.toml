@@ -13,7 +13,7 @@ bytes.workspace = true
 [dev-dependencies]
 rand.workspace = true
 poem.workspace = true
-tokio = {workspace = true, features = ["full"]}
+tokio = { workspace = true, features = ["full"] }
 
 [build-dependencies]
 #protobuf-codegen.workspace = true

@@ -5,7 +5,9 @@
 #![allow(unused_parens)]
 #![allow(unused_mut)]
 
-pub use bincode::{deserialize as bincode_deserialize, serialize as bincode_serialize};
+pub use bincode::{
+	deserialize as bincode_deserialize, serialize as bincode_serialize,
+};
 // pub use subfield_proto::*;
 pub use subfield_proto as proto;
 // pub use subfield_proto::{proto_serialize, proto_deserialize};
@@ -15,11 +17,12 @@ pub use eyre::{
 	Result as EResult,
 };
 pub use std::collections::{HashMap, HashSet};
- 
+
 /**
  * Reexports
 */
 // pub use futures::prelude::*;
+pub use std::fmt;
 pub use lazy_static::lazy_static;
 // pub use libp2p;
 pub use getset::{CopyGetters, Getters, MutGetters, Setters};
@@ -54,37 +57,29 @@ pub use {
 	tokio::task::yield_now,
 };
 
+pub mod constants;
+pub mod crypto;
 /**
  * Prelude
 */
 pub mod misc;
-pub mod constants;
-pub mod crypto;
-pub mod store;
 pub mod protocol;
-#[cfg(feature = "client")]
-pub mod client;
-#[cfg(feature = "server")]
-pub mod server;
-
+pub mod store;
+pub mod swarm;
 
 pub mod prelude {
-    pub use crate::misc::*;
-    pub use super::constants::*;
-    pub use super::crypto::*;
-    pub use super::store::*;
-    pub use super::protocol::*;
-    #[cfg(feature = "client")]
-    pub use super::client::*;
-    #[cfg(feature = "server")]
-    pub use super::server::*;
+	pub use super::constants::*;
+	pub use super::crypto::*;
+	pub use super::protocol::*;
+	pub use super::store::*;
+	pub use super::swarm::*;
+	pub use crate::misc::*;
 }
 pub use crate::prelude::*;
 
 // tests
 #[cfg(test)]
 pub mod tests;
-
 
 /**
  * WASM Setup

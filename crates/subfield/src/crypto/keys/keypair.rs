@@ -110,7 +110,6 @@ impl Stringable<KeyError> for Keypair {
 	}
 }
 
-#[cfg(feature = "libp2p")]
 impl Libp2pKeypairable<KeyError> for Keypair {
 	fn to_libp2p_keypair(&self) -> Result<libp2p::identity::Keypair, KeyError> {
 		self.private_key().to_libp2p_keypair()
@@ -136,14 +135,12 @@ impl PartialEq for Keypair {
 }
 impl Eq for Keypair {}
 
-
-
 /**
  * Protoable
 */
 impl Protoable<subfield_proto::Keypair, KeyError> for Keypair {
 	fn from_proto(proto: subfield_proto::Keypair) -> Result<Self, KeyError> {
-		Ok(Keypair{
+		Ok(Keypair {
 			private_key: PrivateKey::from_proto(proto.private_key.unwrap())?,
 			public_key: PublicKey::from_proto(proto.public_key.unwrap())?,
 		})
@@ -155,17 +152,21 @@ impl Protoable<subfield_proto::Keypair, KeyError> for Keypair {
 			public_key: Some(self.public_key.to_proto()?),
 		})
 	}
-	
+
 	fn from_proto_bytes(bytes: Bytes) -> Result<Self, KeyError> {
-		Ok(Self::from_proto(proto::deserialize::<subfield_proto::Keypair>(bytes).unwrap()).map_err(|_| KeyError::InvalidKeypair)?)
+		Ok(Self::from_proto(
+			proto::deserialize::<subfield_proto::Keypair>(bytes).unwrap(),
+		)
+		.map_err(|_| KeyError::InvalidKeypair)?)
 	}
-	
+
 	fn to_proto_bytes(&self) -> Result<Bytes, KeyError> {
-		Ok(proto::serialize::<subfield_proto::Keypair>(self.to_proto().map_err(|_| KeyError::InvalidKeypair)?).map_err(|_| KeyError::InvalidKeypair)?)
+		Ok(proto::serialize::<subfield_proto::Keypair>(
+			&self.to_proto().map_err(|_| KeyError::InvalidKeypair)?,
+		)
+		.map_err(|_| KeyError::InvalidKeypair)?)
 	}
 }
-
-
 
 #[wasm_bindgen]
 impl Keypair {

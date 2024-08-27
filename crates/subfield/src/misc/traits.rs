@@ -25,7 +25,6 @@ pub trait Vecable<E>: Sized {
 	fn from_arr(arr: &[u8]) -> Result<Self, E>;
 }
 
-
 // Able to be converted to and from a string
 pub trait Stringable<E>: Sized {
 	fn to_string(&self) -> String;
@@ -47,7 +46,6 @@ pub trait HasV256 {
 	fn v256(&self) -> &V256;
 }
 
-#[cfg(feature = "libp2p")]
 pub trait Libp2pKeypairable<E>: Sized {
 	fn to_libp2p_keypair(&self) -> Result<libp2p::identity::Keypair, E>;
 	fn from_libp2p_keypair(

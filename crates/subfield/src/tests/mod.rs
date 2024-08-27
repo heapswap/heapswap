@@ -1,3 +1,3 @@
 pub mod crypto;
-pub mod protos;
 pub mod protocol;
+pub mod protos;

@@ -71,10 +71,8 @@ impl PublicKey {
 		match self.ed().verify(
 			message,
 			&DalekSignature::from(
-				&<[_; SIGNATURE_LENGTH]>::try_from(
-					signature.data().as_slice(),
-				)
-				.map_err(|_| KeyError::InvalidSignature)?,
+				&<[_; SIGNATURE_LENGTH]>::try_from(signature.data().as_slice())
+					.map_err(|_| KeyError::InvalidSignature)?,
 			),
 		) {
 			Ok(_) => Ok(true),
@@ -155,10 +153,13 @@ impl Eq for PublicKey {}
 */
 impl Protoable<subfield_proto::PublicKey, KeyError> for PublicKey {
 	fn from_proto(proto: subfield_proto::PublicKey) -> Result<Self, KeyError> {
-		Ok(PublicKey::new(V256::from_proto(subfield_proto::VersionedBytes {
-			version: proto.version,
-			data: proto.data.clone().into(),
-		}).map_err(|_| KeyError::InvalidPublicKey)?))
+		Ok(PublicKey::new(
+			V256::from_proto(subfield_proto::VersionedBytes {
+				version: proto.version,
+				data: proto.data.clone().into(),
+			})
+			.map_err(|_| KeyError::InvalidPublicKey)?,
+		))
 	}
 
 	fn to_proto(&self) -> Result<subfield_proto::PublicKey, KeyError> {
@@ -167,17 +168,21 @@ impl Protoable<subfield_proto::PublicKey, KeyError> for PublicKey {
 			data: self.v256.data().clone().into(),
 		})
 	}
-	
+
 	fn from_proto_bytes(bytes: Bytes) -> Result<Self, KeyError> {
-		Ok(Self::from_proto(proto::deserialize::<subfield_proto::PublicKey>(bytes).unwrap()).map_err(|_| KeyError::InvalidPublicKey)?)
+		Ok(Self::from_proto(
+			proto::deserialize::<subfield_proto::PublicKey>(bytes).unwrap(),
+		)
+		.map_err(|_| KeyError::InvalidPublicKey)?)
 	}
-	
+
 	fn to_proto_bytes(&self) -> Result<Bytes, KeyError> {
-		Ok(proto::serialize::<subfield_proto::PublicKey>(self.to_proto().map_err(|_| KeyError::InvalidPublicKey)?).map_err(|_| KeyError::InvalidPublicKey)?)
+		Ok(proto::serialize::<subfield_proto::PublicKey>(
+			&self.to_proto().map_err(|_| KeyError::InvalidPublicKey)?,
+		)
+		.map_err(|_| KeyError::InvalidPublicKey)?)
 	}
 }
-
-
 
 #[wasm_bindgen]
 impl PublicKey {

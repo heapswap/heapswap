@@ -27,10 +27,9 @@ pub struct VersionedBytes {
 }
 
 impl VersionedBytes {
-	
 	/**
 	 * Constructors
-	*/
+		*/
 	pub fn new(version: VersionUsize, data: &[u8]) -> Self {
 		Self {
 			version,
@@ -42,14 +41,14 @@ impl VersionedBytes {
 	pub fn zero(version: VersionUsize, len: usize) -> Self {
 		Self::new(version, &vec![0; len])
 	}
-	
+
 	pub fn one(version: VersionUsize, len: usize) -> Self {
 		Self::new(version, &vec![1; len])
 	}
-	
+
 	/**
 	 * Operations
-	*/
+		*/
 	pub fn leading_zeros(&self) -> u32 {
 		let mut count = 0;
 		for i in 0..self.data.len() {
@@ -95,8 +94,6 @@ impl VersionedBytes {
 		let data: Vec<u8> = arr::random(64).try_into().unwrap();
 		VersionedBytes::new(0, data.as_slice())
 	}
-	
-	
 }
 
 /**
@@ -140,28 +137,40 @@ impl Vecable<VersionedBytesError> for VersionedBytes {
 /**
  * Protoable
 */
-impl Protoable<subfield_proto::VersionedBytes, VersionedBytesError> for VersionedBytes {
-	fn from_proto(proto: subfield_proto::VersionedBytes) -> Result<Self, VersionedBytesError> {
+impl Protoable<subfield_proto::VersionedBytes, VersionedBytesError>
+	for VersionedBytes
+{
+	fn from_proto(
+		proto: subfield_proto::VersionedBytes,
+	) -> Result<Self, VersionedBytesError> {
 		Ok(VersionedBytes::new(proto.version, proto.data.as_slice()))
 	}
 
-	fn to_proto(&self) -> Result<subfield_proto::VersionedBytes, VersionedBytesError> {
+	fn to_proto(
+		&self,
+	) -> Result<subfield_proto::VersionedBytes, VersionedBytesError> {
 		Ok(subfield_proto::VersionedBytes {
 			version: self.version,
 			data: self.data.clone().into(),
 		})
 	}
-	
+
 	fn from_proto_bytes(bytes: Bytes) -> Result<Self, VersionedBytesError> {
-		Ok(Self::from_proto(proto::deserialize::<subfield_proto::VersionedBytes>(bytes).unwrap())?)
+		Ok(Self::from_proto(
+			proto::deserialize::<subfield_proto::VersionedBytes>(bytes)
+				.unwrap(),
+		)?)
 	}
-	
+
 	fn to_proto_bytes(&self) -> Result<Bytes, VersionedBytesError> {
-		Ok(proto::serialize::<subfield_proto::VersionedBytes>(self.to_proto()?).unwrap())
+		Ok(
+			proto::serialize::<subfield_proto::VersionedBytes>(
+				&self.to_proto()?,
+			)
+			.unwrap(),
+		)
 	}
 }
-
-
 
 /**
  * Byteable

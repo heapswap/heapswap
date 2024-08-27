@@ -13,8 +13,6 @@ default = []
 ## Server
 ##
 server = [
-	"libp2p-server",
-	"libp2p-common",
 	# "axum",
 	# "axum-extra",
 	# "http",
@@ -26,12 +24,6 @@ server = [
 	# "poem",
 	# "poem-grpc",
 	# "poem-openapi"
-
-]
-
-libp2p-server = [
-	"libp2p-common",
-	"server",
 	"libp2p/mdns",
 	"libp2p/tokio",
 	# "libp2p/websocket",
@@ -44,59 +36,10 @@ libp2p-server = [
 #
 ## Browser
 ##
-client = ["browser"]
-browser = []
-# browser = ["libp2p-browser", "libp2p-common"]
-libp2p-browser = [
-	"libp2p-common",
-	"browser",
+client = [
 	"libp2p/wasm-bindgen",
 	# "libp2p/websocket-websys",
 	"libp2p-webrtc-websys",
-
-]
-#
-## Common
-##
-libp2p-common = [
-	# 	"async-std",
-	"libp2p",
-	"libp2p/autonat",
-	"libp2p/cbor",
-	"libp2p/dcutr",
-	# 	"dns",
-	# 	"ecdsa",
-	"libp2p/ed25519",
-	"libp2p/gossipsub",
-	"libp2p/identify",
-	# 	"json",
-	"libp2p/kad",
-	"libp2p/macros",
-	# 	"mdns",
-	# 	"memory-connection-limits",
-	# 	"metrics",
-	"libp2p/noise",
-	"libp2p/ping",
-	# 	"plaintext",
-	# 	"pnet",
-	# 	"quic",
-	#    "relay",
-	# 	"rendezvous",
-	"libp2p/request-response",
-	# 	"rsa",
-	# 	"secp256k1",
-	"libp2p/serde",
-	# 	"tcp",
-	# 	"tls",
-	# 	"tokio",
-	# 	"uds",
-	# 	"wasm-bindgen",
-	# 	"websocket-websys",
-	# 	"websocket",
-	# 	"webtransport-websys",
-	"libp2p/yamux",
-	# 	"upnp",
-
 ]
 
 # client = []
@@ -114,7 +57,45 @@ subfield_proto = { path = "../subfield_proto" }
 ## Networking
 ##
 # libp2p
-libp2p = { workspace = true, optional = true }
+libp2p = { workspace = true, features = [
+	# 	"async-std",
+	"autonat",
+	"cbor",
+	"dcutr",
+	# 	"dns",
+	# 	"ecdsa",
+	"ed25519",
+	"gossipsub",
+	"identify",
+	# 	"json",
+	"kad",
+	"macros",
+	# 	"mdns",
+	# 	"memory-connection-limits",
+	# 	"metrics",
+	"noise",
+	"ping",
+	# 	"plaintext",
+	# 	"pnet",
+	# 	"quic",
+	#    "relay",
+	# 	"rendezvous",
+	"request-response",
+	# 	"rsa",
+	# 	"secp256k1",
+	"serde",
+	# 	"tcp",
+	# 	"tls",
+	# 	"tokio",
+	# 	"uds",
+	# 	"wasm-bindgen",
+	# 	"websocket-websys",
+	# 	"websocket",
+	# 	"webtransport-websys",
+	"yamux",
+	# 	"upnp",
+
+] }
 libp2p-webrtc-websys = { workspace = true, optional = true }
 libp2p-websocket-websys = { workspace = true, optional = true }
 libp2p-webrtc = { workspace = true, optional = true }

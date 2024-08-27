@@ -67,7 +67,7 @@ fn test_vanity() {
 	assert!(keypair.public_key().to_string().starts_with(prefix));
 }
 
-#[cfg(feature = "libp2p")]
+
 #[test]
 fn test_libp2p_keypair() {
 	let keypair: Keypair = Keypair::random();

@@ -12,6 +12,7 @@ import "versioned_bytes.proto";
  */
 message GetRecordRequest {
   subkey.Subkey subkey = 1;
+  subkey.SubkeyField field = 2; // which field to route by
 }
 
 message GetRecordResponse {

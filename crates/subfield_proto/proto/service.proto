@@ -10,19 +10,78 @@ service SubfieldService {
   /**
    * System
    */
-  rpc Ping(message_system.PingRequest) returns (message_system.PingResponse) {}
+  rpc Ping(message_system.PingRequest) returns (message_system.PingResponse);
 
   /**
    * Records
    */
-  rpc GetRecord(message_record.GetRecordRequest) returns (stream message_record.GetRecordResponse) {}
-  rpc PutRecord(message_record.PutRecordRequest) returns (message_record.PutRecordResponse) {}
-  // rpc UpdateRecord(message_record.UpdateRecordRequest) returns (message_record.UpdateRecordResponse) {}
-  rpc DeleteRecord(message_record.DeleteRecordRequest) returns (message_record.DeleteRecordResponse) {}
+  rpc GetRecord(message_record.GetRecordRequest) returns (stream message_record.GetRecordResponse);
+  rpc PutRecord(message_record.PutRecordRequest) returns (message_record.PutRecordResponse);
+  // rpc UpdateRecord(message_record.UpdateRecordRequest) returns (message_record.UpdateRecordResponse);
+  rpc DeleteRecord(message_record.DeleteRecordRequest) returns (message_record.DeleteRecordResponse);
 
   /**
    * Pubsub
    */
-  rpc Subscribe(message_pubsub.SubscribeRequest) returns (stream message_pubsub.SubscribeResponse) {}
-  rpc Unsubscribe(message_pubsub.UnsubscribeRequest) returns (message_pubsub.UnsubscribeResponse) {}
+  rpc Subscribe(message_pubsub.SubscribeRequest) returns (stream message_pubsub.SubscribeResponse);
+  rpc Unsubscribe(message_pubsub.UnsubscribeRequest) returns (message_pubsub.UnsubscribeResponse);
 }
+
+message SubfieldRequest {
+  oneof request_type {
+    // system
+    message_system.PingRequest ping = 1;
+    // record
+    message_record.GetRecordRequest get_record = 20;
+    message_record.PutRecordRequest put_record = 21;
+    message_record.DeleteRecordRequest delete_record = 22;
+    // pubsub
+    message_pubsub.SubscribeRequest subscribe = 30;
+    message_pubsub.UnsubscribeRequest unsubscribe = 31;
+  }
+}
+
+message SubfieldResponse {
+  oneof response_type {
+    // system
+    message_system.PingResponse ping = 1;
+    // record
+    message_record.GetRecordResponse get_record = 20;
+    message_record.PutRecordResponse put_record = 21;
+    message_record.DeleteRecordResponse delete_record = 22;
+    // pubsub
+    message_pubsub.SubscribeResponse subscribe = 30;
+    message_pubsub.UnsubscribeResponse unsubscribe = 31;
+  }
+}
+
+
+/*
+enum SubfieldRequestType {
+  // system
+  PingRequest = 0;
+  
+  // records
+  GetRecordRequest = 10;
+  PutRecordRequest = 11;
+  DeleteRecordRequest = 12;
+  
+  // pubsub
+  SubscribeRequest = 20;
+  UnsubscribeRequest = 21;
+}
+
+enum SubfieldResponseType {
+  // system
+  PingResponse = 0;
+  
+  // records
+  GetRecordResponse = 10;
+  PutRecordResponse = 11;
+  DeleteRecordResponse = 12;
+  
+  // pubsub
+  SubscribeResponse = 20;
+  UnsubscribeResponse = 21;
+}
+*/

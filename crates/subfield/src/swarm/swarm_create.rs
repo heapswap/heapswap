@@ -5,7 +5,7 @@ use libp2p::kad;
 use libp2p::kad::store::MemoryStore;
 use libp2p::kad::Mode;
 
-use super::behaviour::*;
+use super::swarm_behaviour::*;
 use bytes::Bytes;
 
 use libp2p::{
@@ -22,7 +22,7 @@ use std::error::Error;
 use std::hash::{Hash, Hasher};
 use std::sync::Arc;
 use std::time::Duration;
-#[cfg(feature = "browser")]
+#[cfg(feature = "client")]
 use {
 	// libp2p::websocket_websys,
 	libp2p_webrtc_websys as webrtc_websys,
@@ -55,7 +55,7 @@ pub enum SubfieldSwarmMode {
 }
 
 #[derive(Clone)]
-#[wasm_bindgen]
+// #[wasm_bindgen]
 pub struct SubfieldSwarmConfig {
 	pub mode: SubfieldSwarmMode,
 	pub keypair: crypto::Keypair,
@@ -63,20 +63,21 @@ pub struct SubfieldSwarmConfig {
 	pub bootstrap_multiaddrs: Vec<String>,
 }
 
-const IDLE_CONNECTION_TIMEOUT: u64 = 600;
+const IDLE_CONNECTION_TIMEOUT: u64 = u64::MAX;
+// const IDLE_CONNECTION_TIMEOUT: u64 = 600;
 
 /**
  * Create a Subfield Swarm
  * Switches between client and server based on the feature flags
 */
-#[wasm_bindgen]
+// #[wasm_bindgen]
 pub async fn create_swarm(
 	swarm_config: SubfieldSwarmConfig,
 ) -> eyre::Result<SubfieldSwarm> {
 	#![allow(unused_assignments)]
 	let mut swarm: Result<Swarm<SubfieldBehaviour>, EReport> =
 		Err(eyr!("Failed to create swarm"));
-	#[cfg(feature = "browser")]
+	#[cfg(feature = "client")]
 	{
 		swarm = create_client(swarm_config).await;
 	}
@@ -90,7 +91,7 @@ pub async fn create_swarm(
 /**
  * Client - Wasm
 */
-#[cfg(feature = "browser")]
+#[cfg(feature = "client")]
 async fn create_client(
 	swarm_config: SubfieldSwarmConfig,
 ) -> eyre::Result<SubfieldSwarm> {

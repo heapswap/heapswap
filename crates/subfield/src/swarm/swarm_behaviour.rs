@@ -32,11 +32,11 @@ use std::{io, time::Duration};
 pub struct SubfieldBehaviour {
 	// subfield
 	pub subfield:
-		Behaviour<subfield::SubfieldRequest, subfield::SubfieldResponse>,
+		Behaviour<protocol::SubfieldRequest, protocol::SubfieldResponse>,
 	
 	// utils
-	kad: kad::Behaviour<MemoryStore>,
-	gossipsub: gossipsub::Behaviour,
+	pub kad: kad::Behaviour<MemoryStore>,
+	// pub pubsub: gossipsub::Behaviour,
 		
 	// networking
 	pub ping: ping::Behaviour,
@@ -51,6 +51,30 @@ pub struct SubfieldBehaviour {
 impl SubfieldBehaviour {
 	pub fn new(key: &Keypair) -> Self {
 		let local_peer_id = key.public().to_peer_id();
+		
+		/*
+		// To content-address message, we can take the hash of message and use it as an ID.
+		let _message_id_fn = |message: &gossipsub::Message| {
+			let mut s = DefaultHasher::new();
+			message.data.hash(&mut s);
+			gossipsub::MessageId::from(s.finish().to_string())
+		};
+
+		// Set a custom gossipsub configuration
+		let gossipsub_config = gossipsub::ConfigBuilder::default()
+			.heartbeat_interval(Duration::from_secs(10))
+			.validation_mode(gossipsub::ValidationMode::Strict) 
+			//.message_id_fn(message_id_fn) // content-address messages. No two messages of the same content will be propagated.
+			.build()
+			.map_err(|msg| io::Error::new(io::ErrorKind::Other, msg))?; // Temporary hack because `build` does not return a proper `std::error::Error`.
+
+		// build a gossipsub network behaviour
+		let gossipsub = gossipsub::Behaviour::new(
+			gossipsub::MessageAuthenticity::Signed(key.clone()),
+			gossipsub_config,
+		)?;
+		*/
+					
 
 		let mut behaviour = SubfieldBehaviour {
 			subfield: Behaviour::new(
@@ -59,6 +83,11 @@ impl SubfieldBehaviour {
 					request_response::ProtocolSupport::Full,
 				)],
 				request_response::Config::default(),
+			),
+			// pubsub: gossipsub,
+			kad: kad::Behaviour::new(
+				key.public().to_peer_id(),
+				MemoryStore::new(key.public().to_peer_id()),
 			),
 			ping: ping::Behaviour::new(ping::Config::new()),
 			dcutr: dcutr::Behaviour::new(local_peer_id.clone()),
@@ -78,9 +107,9 @@ impl SubfieldBehaviour {
 				relay::Config::default(),
 			),
 		};
-
-		// Set the Kademlia mode
-		#[cfg(feature = "browser")]
+		
+		// set mode
+		#[cfg(feature = "client")]
 		{
 			behaviour.subfield.set_mode(Some(kad::Mode::Client));
 		}
@@ -88,7 +117,7 @@ impl SubfieldBehaviour {
 		{
 			behaviour.subfield.set_mode(Some(kad::Mode::Server));
 		}
-
+		
 		behaviour
 	}
 }
