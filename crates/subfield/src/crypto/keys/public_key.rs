@@ -184,6 +184,36 @@ impl Protoable<subfield_proto::PublicKey, KeyError> for PublicKey {
 	}
 }
 
+type Libp2pPublicKey = libp2p::identity::PublicKey;
+type Libp2pEdPublicKey = libp2p::identity::ed25519::PublicKey;
+
+impl Libp2pPublicKeyable<KeyError> for PublicKey {
+	fn to_libp2p_public_key(&self) -> Result<Libp2pEdPublicKey, KeyError> {
+		let bytes: [u8; PUBLIC_KEY_LENGTH] =
+			self.v256().data().as_slice().try_into().unwrap();
+		Ok(Libp2pEdPublicKey::try_from_bytes(&bytes).unwrap())
+	}
+
+	fn from_libp2p_public_key(
+		public_key: Libp2pEdPublicKey,
+	) -> Result<Self, KeyError> {
+		let bytes: [u8; PUBLIC_KEY_LENGTH] = public_key.to_bytes();
+		Ok(PublicKey::new(
+			V256::from_arr(&bytes).map_err(|_| KeyError::InvalidPublicKey)?,
+		))
+	}
+}
+
+impl Libp2pPeerIdable<KeyError> for PublicKey {
+	fn to_libp2p_peer_id(&self) -> Result<libp2p::PeerId, KeyError> {
+		let libp2p_key = self
+			.to_libp2p_public_key()
+			.map_err(|_| KeyError::InvalidPublicKey)?;
+		let libp2p_public_key = Libp2pPublicKey::from(libp2p_key);
+		Ok(libp2p::PeerId::from_public_key(&libp2p_public_key))
+	}
+}
+
 #[wasm_bindgen]
 impl PublicKey {
 	/**

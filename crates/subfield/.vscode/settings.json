@@ -12,7 +12,7 @@
 		//"RUSTC_WRAPPER":"sccache",
 		//"RUSTFLAGS": "-Clinker=clang -Clink-arg=-fuse-ld=mold"
 	},
-	"rust-analyzer.cargo.features": ["client", "server"],
+	"rust-analyzer.cargo.features": ["client"],
 	"rust-analyzer.diagnostics.disabled": [
 		"existing-disabled-diagnostic",
 		"unlinked-file"

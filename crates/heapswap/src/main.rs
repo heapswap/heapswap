@@ -7,6 +7,7 @@
 use subfield::libp2p::futures::FutureExt;
 use subfield::libp2p::multiaddr::{Multiaddr, Protocol};
 // use subfield::store::SubfieldStoreConfig;
+use std::borrow::Cow;
 use subfield::*;
 
 use std::borrow::BorrowMut;
@@ -72,6 +73,14 @@ async fn main() -> EResult<()> {
 	let local_ipv4 = IpAddr::from(Ipv4Addr::UNSPECIFIED);
 	let local_ipv6 = IpAddr::from(Ipv6Addr::UNSPECIFIED);
 
+	let websocket_ipv4_address = Multiaddr::from(local_ipv4)
+		.with(Protocol::Tcp(0))
+		.with(Protocol::Ws(Cow::Borrowed("/")));
+
+	let websocket_ipv6_address = Multiaddr::from(local_ipv6)
+		.with(Protocol::Tcp(0))
+		.with(Protocol::Ws(Cow::Borrowed("/")));
+
 	let webrtc_ipv4_address = Multiaddr::from(local_ipv4)
 		.with(Protocol::Udp(0))
 		.with(Protocol::WebRTCDirect);
@@ -93,7 +102,12 @@ async fn main() -> EResult<()> {
 	let keypair = crypto::Keypair::random();
 
 	let config = subfield::swarm::SubfieldConfig {
-		listen_addresses: vec![webrtc_ipv4_address.to_string(), webrtc_ipv6_address.to_string()],
+		listen_addresses: vec![
+			websocket_ipv4_address.to_string(),
+			websocket_ipv6_address.to_string(),
+			// webrtc_ipv4_address.to_string(),
+			// webrtc_ipv6_address.to_string(),
+		],
 		..Default::default()
 	};
 
@@ -157,7 +171,49 @@ async fn main() -> EResult<()> {
 
 	let subfield_client_clone = subfield_client.clone();
 	tokio::task::spawn(async move {
+		if port != 3000 {
+			subfield_client_clone.bootstrap().await.unwrap();
+		}
 		subfield_client_clone.event_loop().await;
+	});
+
+	let subfield_client_clone2 = subfield_client.clone();
+	tokio::task::spawn(async move {
+		// let _ = tokio::time::sleep(tokio::time::Duration::from_secs(1)).await;
+		// let message = V256::random256().to_string();
+		// let res = subfield_client_clone2
+		// 	.echo(proto::EchoRequest { message: message.clone() })
+		// 	.await;
+		// match res {
+		// 	Ok(response) => {
+		// 		if response.message != message {
+		// 			tracing::error!("ECHO FAILED: {} != {}", message, response.message);
+		// 		} else {
+		// 			tracing::info!("ECHO SUCCESS: {} == {}", message, response.message);
+		// 		}
+		// 	}
+		// 	Err(e) => {
+		// 		tracing::error!("ECHO ERROR: {:?}", e);
+		// 	}
+		// }
+		loop {
+			let _ =
+				tokio::time::sleep(tokio::time::Duration::from_secs(5)).await;
+			// print connected peers
+			let swarm_lock = subfield_client_clone2.swarm().await;
+			let peers = swarm_lock
+				.connected_peers()
+				.map(|peer| peer.to_string())
+				.collect::<Vec<String>>();
+			tracing::info!("Connected peers: {:?}", peers);
+
+			// if peers.len() > 0 {
+			// 	let _ = subfield_client_clone2.echo(proto::EchoRequest { message: "hello".to_string() }).await;
+			// 	// tracing::info!("Echo response: {:?}", res);
+			// }
+
+			drop(swarm_lock);
+		}
 	});
 
 	// App Router

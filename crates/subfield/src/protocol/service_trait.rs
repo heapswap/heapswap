@@ -3,6 +3,7 @@ use crate::*;
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum SubfieldServiceError {
 	NoConnectedPeers,
+	NoLocalPeer,
 	UnexpectedResponseType,
 }
 
@@ -23,7 +24,7 @@ pub trait SubfieldService {
 	*/
 
 	async fn echo(
-		self,
+		&self,
 		request: proto::EchoRequest,
 	) -> SubfieldServiceResult<proto::EchoResponse>;
 

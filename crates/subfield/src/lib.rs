@@ -40,6 +40,7 @@ pub use rand::{prelude::*, thread_rng, Rng};
 pub use serde::{
 	de::DeserializeOwned, Deserialize, Deserializer, Serialize, Serializer,
 };
+pub use std::pin::Pin;
 pub use std::sync::Arc;
 pub use strum;
 pub use tracing;
@@ -49,13 +50,13 @@ pub use wasm_bindgen::prelude::*;
 #[cfg(not(feature = "server"))]
 pub use {
 	// std::sync::{Mutex, MutexGuard},
-	futures::lock::{Mutex, MutexGuard},
+	futures::lock::{MappedMutexGuard, Mutex, MutexGuard},
 	std::sync::RwLock, // std::thread::yield_now,
 };
 #[cfg(feature = "server")]
 pub use {
 	tokio,
-	tokio::sync::{Mutex, MutexGuard, RwLock},
+	tokio::sync::{MappedMutexGuard, Mutex, MutexGuard, RwLock},
 	tokio::task::yield_now,
 };
 

@@ -1,12 +1,7 @@
 cargo watch \
     -i "target/*" \
     -i "dist/*" \
-    -i "data/*" \
-    -i "src/data/*" \
-    # -i "src/schemas/*" \
-    # -i "crates/browser" \
-    # -i "crates/core" \
-    # -i "crates/protos" \
     -i "crates/subfield" \
+    -i "crates/heapswap/_subfield_store" \
     -c \
-    -x "run --bin heapswap"
+    -x "run --bin heapswap -- --nocapture"

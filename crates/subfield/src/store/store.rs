@@ -7,6 +7,7 @@ use gluesql::{
 	prelude::*,
 };
 use std::sync::Arc;
+use thiserror::Error;
 
 pub trait FullStore:
 	Store
@@ -35,44 +36,65 @@ impl<
 {
 }
 
-// pub type ThreadsafeSubfieldStore = Arc<Mutex<SubfieldStore>>;
+#[derive(Error, Debug)]
+pub enum SubfieldStoreError {
+	#[error("Failed to create SledStorage: {0}")]
+	SledStorageError(String),
+	#[error("Failed to create IdbStorage: {0}")]
+	IdbStorageError(String),
+}
+
+type ThreadSafeFullStore = Arc<Mutex<Pin<Box<dyn FullStore + Send + 'static>>>>;
+// type ThreadSafeFullStoreGuard = MutexGuard<Pin<Box<dyn FullStore + Send>>>;
 
 #[derive(Clone)]
 pub struct SubfieldStore {
-	cache: Arc<Mutex<dyn FullStore>>,
-	perma: Arc<Mutex<dyn FullStore>>,
+	cache: ThreadSafeFullStore,
+	perma: ThreadSafeFullStore,
 }
 
 impl SubfieldStore {
-	pub async fn new(config: swarm::SubfieldConfig) -> Result<Self, Error> {
-		let cache: Arc<Mutex<dyn FullStore>> =
-			Arc::new(Mutex::new(SharedMemoryStorage::new()));
+	pub async fn new(
+		config: swarm::SubfieldConfig,
+	) -> Result<Self, SubfieldStoreError> {
+		let cache: ThreadSafeFullStore =
+			Arc::new(Mutex::new(Box::pin(SharedMemoryStorage::new())));
 
 		let store_path = config.store_path.clone();
-		
-		
+
 		#[cfg(not(target_arch = "wasm32"))]
-		let perma: Arc<Mutex<dyn FullStore>> = match SledStorage::new(store_path.as_str()) {
-			Ok(store) => Arc::new(Mutex::new(store)),
+		let perma: ThreadSafeFullStore = match SledStorage::new(store_path.as_str()) {
+			Ok(store) => Arc::new(Mutex::new(Box::pin(store))),
 			Err(e) => {
-				println!("Failed to create SledStorage: {}", e);
-				Arc::new(Mutex::new(SharedMemoryStorage::new()))
+				return Err(SubfieldStoreError::SledStorageError(
+					e.to_string(),
+				));
 			}
 		};
 
 		#[cfg(target_arch = "wasm32")]
-		let perma: Arc<Mutex<dyn FullStore>> = Arc::new(Mutex::new(
-			IdbStorage::new(Some(store_path.to_string())).await?,
-		));
+		let perma: ThreadSafeFullStore =
+			match IdbStorage::new(Some(store_path.to_string())).await {
+				Ok(store) => Arc::new(Mutex::new(Box::pin(store))),
+				Err(e) => {
+					return Err(SubfieldStoreError::IdbStorageError(
+						e.to_string(),
+					));
+				}
+			};
 
 		Ok(SubfieldStore { cache, perma })
 	}
 
-	pub async fn cache(&self) -> MutexGuard<dyn FullStore> {
+	pub async fn cache<'a>(
+		&'a self,
+	) -> MutexGuard<'a, Pin<Box<dyn FullStore + Send>>> {
 		self.cache.lock().await
 	}
 
-	pub async fn perma(&self) -> MutexGuard<dyn FullStore> {
+	pub async fn perma<'a>(
+		&'a self,
+	) -> MutexGuard<'a, Pin<Box<dyn FullStore + Send>>> {
 		self.perma.lock().await
 	}
 }

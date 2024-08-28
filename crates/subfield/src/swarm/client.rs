@@ -24,8 +24,8 @@ impl Default for SubfieldConfig {
 			keypair: crypto::Keypair::random(),
 			mode: SubfieldSwarmMode::Client,
 			bootstrap_urls: vec![
-				"localhost:3000/bootstrap".to_string(),
-				"heapswap.com/bootstrap".to_string(),
+				"http://localhost:3000/bootstrap".to_string(),
+				"https://heapswap.com/bootstrap".to_string(),
 			],
 			#[cfg(feature = "server")]
 			listen_addresses: vec![
@@ -41,11 +41,11 @@ trait SizedMessage: proto::Message + Sized {}
 
 #[derive(Clone)]
 pub struct SubfieldClient {
+	peer_id: libp2p::PeerId,
 	config: SubfieldConfig,
 
 	swarm: swarm::ThreadsafeSubfieldSwarm,
-	store: store::SubfieldStore,
-
+	// store: store::SubfieldStore,
 	request_handles: Arc<SubfieldRequestHandles>,
 }
 
@@ -134,13 +134,15 @@ impl SubfieldClient {
 			Arc::new(Mutex::new(swarm::create_swarm(config.clone()).await?));
 		let request_handles: Arc<SubfieldRequestHandles> =
 			Arc::new(SubfieldRequestHandles::new());
-		let store = store::SubfieldStore::new(config.clone()).await?;
-
+		// let store = store::SubfieldStore::new(config.clone()).await?;
+		// let peer_id = libp2p::PeerId::from_public_key(libp2p::identity::PublicKey::config.keypair.public_key());
+		let peer_id = config.keypair.public_key().to_libp2p_peer_id().unwrap();
 		Ok(Self {
+			peer_id,
 			config,
 			swarm,
 			request_handles,
-			store,
+			// store,
 		})
 	}
 
@@ -151,25 +153,72 @@ impl SubfieldClient {
 		self.swarm.lock().await
 	}
 
-	pub async fn cache(&self) -> MutexGuard<dyn store::FullStore> {
-		self.store.cache().await
-	}
+	// pub async fn cache(
+	// 	&self,
+	// ) -> MutexGuard<Pin<Box<dyn store::FullStore + Send>>> {
+	// 	self.store.cache().await
+	// }
 
-	pub async fn perma(&self) -> MutexGuard<dyn store::FullStore> {
-		self.store.perma().await
+	// pub async fn perma(
+	// 	&self,
+	// ) -> MutexGuard<Pin<Box<dyn store::FullStore + Send>>> {
+	// 	self.store.perma().await
+	// }
+
+	pub async fn bootstrap(&self) -> eyre::Result<()> {
+		let mut success = false;
+
+		let mut swarm_lock = self.swarm.lock().await;
+		let bootstrap_urls = self.config.bootstrap_urls.clone();
+
+		for url in bootstrap_urls {
+			tracing::info!("Dialing bootstrap URL: {:?}", url);
+
+			// get the json multiaddr list from the url
+			let multiaddr_list =
+				reqwest::get(url).await?.json::<Vec<String>>().await?;
+
+			tracing::info!("Multiaddr list: {:?}", multiaddr_list);
+
+			for addr in multiaddr_list {
+				tracing::info!("Dialing bootstrap Multiaddr: {:?}", addr);
+				match swarm_lock.dial(
+					addr.parse::<libp2p::Multiaddr>().map_err(|_| {
+						eyr!("Failed to parse bootstrap multiaddr")
+					})?,
+				) {
+					Ok(_) => {
+						tracing::info!(
+							"Successfully dialed bootstrap URL: {:?}",
+							addr
+						);
+						success = true;
+						break;
+					}
+					Err(_) => {}
+				}
+			}
+			if success {
+				return Ok(());
+			} else {
+				return Err(eyr!("No bootstrap nodes dialed"));
+			}
+		}
+
+		Err(eyr!("Failed to connect to any bootstrap nodes"))
 	}
 
 	pub async fn event_loop(&self) {
-		loop{
-		let mut swarm_lock = self.swarm.lock().await;
-		let swarm = &mut *swarm_lock;
+		loop {
+			let mut swarm_lock = self.swarm.lock().await;
+			let swarm = &mut *swarm_lock;
 
-		while let Some(Some(event)) = swarm_lock.next().now_or_never() {
-			match event {
-				swarm::SubfieldSwarmEvent::Behaviour(event) => {
-					match event {
-						swarm::SubfieldBehaviourEvent::Subfield(event) => {
-							match event {
+			while let Some(Some(event)) = swarm_lock.next().now_or_never() {
+				match event {
+					swarm::SubfieldSwarmEvent::Behaviour(event) => {
+						match event {
+							swarm::SubfieldBehaviourEvent::Subfield(event) => {
+								match event {
 								// an incoming response
 								libp2p::request_response::Event::Message {
 									peer,
@@ -187,56 +236,80 @@ impl SubfieldClient {
 												},
 												_ => {}					
 											 }
-										},	
+										},
 										_ => {}
 									}
 								}
 								_ => {}
 							}
-						}
-						/*
-						swarm::SubfieldBehaviourEvent::Kad(event) => match event
-						{
-							libp2p::kad::Event::OutboundQueryProgressed {
-								id,
-								result,
-								step,
-								stats,
-							} => {
-								if step.last {
-									match result {
-										libp2p::kad::QueryResult::GetClosestPeers(result) => {
-											let mut sender = self.request_handles.kad.get_mut(&id).unwrap();
-											for peer in result.unwrap().peers {
-												let _ =sender.send(peer);
-											}
-										},
-										_ => {}
+							}
+							/*
+							swarm::SubfieldBehaviourEvent::Kad(event) => match event
+							{
+								libp2p::kad::Event::OutboundQueryProgressed {
+									id,
+									result,
+									step,
+									stats,
+								} => {
+									if step.last {
+										match result {
+											libp2p::kad::QueryResult::GetClosestPeers(result) => {
+												let mut sender = self.request_handles.kad.get_mut(&id).unwrap();
+												for peer in result.unwrap().peers {
+													let _ =sender.send(peer);
+												}
+											},
+											_ => {}
+										}
 									}
 								}
-							}
+								_ => {}
+							},
+							*/
+							// #[cfg(feature = "server")]
+							// SubfieldBehaviourEvent::Mdns(event) => {
+							// 	match event {
+							// 		libp2p::mdns::Event::Discovered(peer_id) => {
+							// 			// tracing::info!("Discovered peer: {:?}", peer_id);
+							// 			for (peer_id, multiaddr) in peer_id {
+							// 				// match swarm_lock.dial(peer_id) {
+							// 				// 	Ok(_) => {
+							// 				// 		// tracing::info!("Successfully dialed peer: {:?}", peer_id);
+							// 				// 	}
+							// 				// 	Err(e) => {
+							// 				// 		// tracing::error!("Failed to dial peer: {:?}, error: {:?}", peer_id, e);
+							// 				// 	}
+							// 				// }
+							// 			}
+							// 		},
+							// 		libp2p::mdns::Event::Expired(peer_id) => {
+							// 			// tracing::info!("Expired peer: {:?}", peer_id);
+							// 		},
+							// 	}
+							// }
 							_ => {}
-						},
-						*/
-						_ => {}
+						}
 					}
+					_ => {}
 				}
-				_ => {}
+			}
+			// tracing::info!("event loop yielded");
+			drop(swarm_lock);
+
+			#[cfg(feature = "client")]
+			{
+				let _ = gloo::timers::future::sleep(
+					std::time::Duration::from_secs(0),
+				)
+				.await;
+			}
+
+			#[cfg(feature = "server")]
+			{
+				let _ = tokio::task::yield_now().await;
 			}
 		}
-		// tracing::info!("event loop yielded");
-		drop(swarm_lock);
-
-		#[cfg(feature = "client")]
-		{
-			let _ = gloo::time::sleep(std::time::Duration::from_secs(0)).await;
-		}
-
-		#[cfg(feature = "server")]
-		{
-			let _ = tokio::task::yield_now().await;
-		}
-	}
 	}
 
 	async fn send_request(
@@ -292,19 +365,21 @@ impl SubfieldClient {
 		}
 	*/
 
-	pub async fn closest_local_peer(&self, target: V256) -> libp2p::PeerId {
+	pub async fn closest_local_peer(
+		&self,
+		target: V256,
+	) -> Result<Option<libp2p::PeerId>, SubfieldServiceError> {
 		let mut swarm_lock = self.swarm.lock().await;
 		let kad = &mut swarm_lock.behaviour_mut().kad;
+
+		// let local_dist = self.peer_id.distance(&target);
 
 		// kad.get_closest_local_peers(target.data().to_vec())
 		let key = target.to_key();
 		let peers = kad.get_closest_local_peers(&key);
-		let peer_id = peers
-			.into_iter()
-			.map(|key| key.preimage().clone())
-			.next()
-			.unwrap();
-		peer_id
+		let peer_id =
+			peers.into_iter().map(|key| key.preimage().clone()).next();
+		Ok(peer_id)
 	}
 
 	/*
@@ -351,12 +426,16 @@ impl protocol::SubfieldService for SubfieldClient {
 	*/
 
 	async fn echo(
-		self,
+		&self,
 		request: proto::EchoRequest,
 	) -> protocol::SubfieldServiceResult<proto::EchoResponse> {
-		let peer_id = self
+		let Some(peer_id) = self
 			.closest_local_peer(self.config.keypair.public_key().v256().clone())
-			.await;
+			.await
+			.map_err(|_| SubfieldServiceError::NoLocalPeer)?
+		else {
+			return Err(SubfieldServiceError::NoLocalPeer);
+		};
 
 		let request: SubfieldRequest = SubfieldRequest::new(
 			proto::subfield_request::RequestType::Echo(request),

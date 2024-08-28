@@ -28,7 +28,7 @@ server = [
 	"libp2p/dns",
 	"libp2p/mdns",
 	"libp2p/tokio",
-	# "libp2p/websocket",
+	"libp2p/websocket",
 	"libp2p/tcp",
 	"libp2p/tls",
 	"libp2p/dns",
@@ -41,7 +41,7 @@ server = [
 ##
 client = [
 	"libp2p/wasm-bindgen",
-	# "libp2p/websocket-websys",
+	"libp2p/websocket-websys",
 	"libp2p-webrtc-websys",
 ]
 
@@ -102,6 +102,7 @@ libp2p = { workspace = true, features = [
 libp2p-webrtc-websys = { workspace = true, optional = true }
 libp2p-websocket-websys = { workspace = true, optional = true }
 libp2p-webrtc = { workspace = true, optional = true }
+libp2p-core = { workspace = true }
 # reqwest
 reqwest = { workspace = true }
 reqwest-websocket = { workspace = true }
@@ -130,7 +131,7 @@ bincode.workspace = true
 bytes.workspace = true
 dashmap.workspace = true
 # Storage
-gluesql.workspace = true
+# gluesql.workspace = true
 # Concurrency
 async-stream.workspace = true
 futures.workspace = true
@@ -142,7 +143,7 @@ tracing.workspace = true
 tracing-subscriber = { workspace = true }
 eyre.workspace = true
 # WASM
-gloo = { workspace = true }
+gloo = { workspace = true, features = ["futures"] }
 wasm-bindgen = { workspace = true }
 wasm-bindgen-futures = { workspace = true }
 web-sys = { workspace = true }
@@ -175,12 +176,12 @@ tokio = { workspace = true, features = ["full"] }
 # rustflags = ["-Z", "threads=8"]
 [target.'cfg(target_arch = "wasm32")'.dependencies]
 gluesql = { workspace = true, features = [
-	"idb-storage",
-	"shared-memory-storage"
+	"gluesql-idb-storage",
+	"gluesql-shared-memory-storage"
 ] }
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 gluesql = { workspace = true, features = [
-	"sled-storage",
-	"shared-memory-storage"
+	"gluesql_sled_storage",
+	"gluesql-shared-memory-storage"
 ] }

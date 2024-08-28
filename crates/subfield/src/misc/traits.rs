@@ -52,3 +52,14 @@ pub trait Libp2pKeypairable<E>: Sized {
 		keypair: libp2p::identity::Keypair,
 	) -> Result<Self, E>;
 }
+
+type Libp2pPublicKey = libp2p::identity::ed25519::PublicKey;
+pub trait Libp2pPublicKeyable<E>: Sized {
+	fn to_libp2p_public_key(&self) -> Result<Libp2pPublicKey, E>;
+	fn from_libp2p_public_key(public_key: Libp2pPublicKey) -> Result<Self, E>;
+}
+
+pub trait Libp2pPeerIdable<E>: Sized {
+	fn to_libp2p_peer_id(&self) -> Result<libp2p::PeerId, E>;
+	// fn from_libp2p_peer_id(peer_id: libp2p::PeerId) -> Result<Self, E>;
+}

@@ -130,7 +130,7 @@ yamux = { version = "0.13.3" } # Multiplexing
 #
 ## Libp2p
 ##
-libp2p = { version = "0.53.2" }
+libp2p = { path = "../rust-libp2p/libp2p" }
 #
 ## Concurrency
 ##
@@ -175,7 +175,7 @@ tracing-subscriber = { version = "0.3.18", features = [
 #
 ## Storage
 ##
-gluesql = { version = "0.15.0", default-features = false }
+gluesql = { version = "0.16.2", default-features = false }
 # gluesql-idb-storage = "0.15.0"
 # sea-orm = { version = "0.12.15" } # ORM
 #redb = { version = "2.1.0" } # KV-store
@@ -214,8 +214,11 @@ wasm-bindgen-test = { version = "0.3" }
 rayon = { version = "1.10.0" }
 #libp2p-webrtc-websys = {version = "0.3.0-alpha.1"}
 libp2p-websocket-websys = { version = "0.4" }
-libp2p-webrtc = { version = "0.7.1-alpha" } # WebRTC
-libp2p-webrtc-websys = { version = "0.4.0-alpha" } # WebRTC (browser)
+# libp2p-webrtc = { version = "0.7.1-alpha" } # WebRTC
+libp2p-webrtc = { path = "../rust-libp2p/transports/webrtc" } # WebRTC (browser)
+# libp2p-webrtc-websys = { version = "0.4.0-alpha" } # WebRTC (browser)
+libp2p-webrtc-websys = { path = "../rust-libp2p/transports/webrtc-websys" } # WebRTC (browser)
+libp2p-core = { path = "../rust-libp2p/core" }
 ### Web
 web-sys = { version = "0.3.69" } # Bindings for all Web APIs
 gloo = { version = "0.11.0" } # Convenience crate for common `web_sys` features
