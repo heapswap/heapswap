@@ -5,9 +5,9 @@
 #![allow(unused_parens)]
 #![allow(unused_mut)]
 
-pub use bincode::{
-	deserialize as bincode_deserialize, serialize as bincode_serialize,
-};
+// pub use bincode::{
+// 	deserialize, serialize,
+// };
 // pub use subfield_proto::*;
 // pub use subfield_proto as proto;
 // pub use subfield_proto::{proto_serialize, proto_deserialize};
@@ -16,6 +16,18 @@ pub use eyre::{
 	eyre as eyr, Ok as EOk, OptionExt as _, Report as EReport,
 	Result as EResult,
 };
+
+pub fn cbor_serialize<T: Serialize>(value: &T) -> EResult<Vec<u8>> {
+	EOk(cbor4ii::serde::to_vec(Vec::new(), value)?)
+}
+
+pub fn cbor_deserialize<'a, T: Deserialize<'a>>(bytes: &'a [u8]) -> EResult<T> {
+	EOk(cbor4ii::serde::from_slice(bytes)?)
+}
+
+pub use chrono::{DateTime, Utc};
+pub type DateTimeUtc = DateTime<Utc>;
+
 pub use std::collections::{HashMap, HashSet};
 
 pub use lazy_static::lazy_static;
@@ -46,7 +58,36 @@ pub use strum;
 pub use tracing;
 pub use wasm_bindgen::prelude::*;
 
-// Mutex reexport
+/**
+ * Channel Reexports
+*/
+
+#[cfg(not(any(feature = "server", test)))]
+pub use futures::channel::{
+	mpsc::{unbounded, UnboundedReceiver, UnboundedSender},
+	oneshot::{self, Receiver as OneshotReceiver, Sender as OneshotSender},
+};
+
+#[cfg(any(feature = "server", test))]
+pub use {
+	// tokio_stream::StreamExt as _,
+	tokio::sync::{
+		mpsc::UnboundedSender,
+		oneshot::{self, Receiver as OneshotReceiver, Sender as OneshotSender},
+	},
+	tokio_stream::wrappers::UnboundedReceiverStream as UnboundedReceiver,
+};
+
+#[cfg(any(feature = "server", test))]
+pub fn unbounded<T>() -> (UnboundedSender<T>, UnboundedReceiver<T>) {
+	let (tx, rx) = tokio::sync::mpsc::unbounded_channel::<T>();
+	let rx = UnboundedReceiver::new(rx);
+	(tx, rx)
+}
+
+/**
+ * Mutex Reexports
+*/
 #[cfg(not(feature = "server"))]
 pub use {
 	// std::sync::{Mutex, MutexGuard},
@@ -66,16 +107,16 @@ pub use {
 pub mod constants;
 pub mod crypto;
 pub mod misc;
-pub mod protocol;
+pub mod proto;
 pub mod store;
-pub mod swarm;
+// pub mod swarm;
 
 pub mod prelude {
 	pub use super::constants::*;
 	pub use super::crypto::*;
-	pub use super::protocol::*;
+	pub use super::proto::*;
 	pub use super::store::*;
-	pub use super::swarm::*;
+	// pub use super::swarm::*;
 	pub use crate::misc::*;
 }
 pub use crate::prelude::*;

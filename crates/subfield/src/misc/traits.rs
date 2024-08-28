@@ -31,6 +31,7 @@ pub trait Stringable<E>: Sized {
 	fn from_string(string: &str) -> Result<Self, E>;
 }
 
+/*
 // Able to be converted to and from a proto
 pub trait Protoable<T, E>: Sized {
 	fn to_proto(&self) -> Result<T, E>;
@@ -38,6 +39,7 @@ pub trait Protoable<T, E>: Sized {
 	fn to_proto_bytes(&self) -> Result<Bytes, E>;
 	fn from_proto_bytes(bytes: Bytes) -> Result<Self, E>;
 }
+*/
 
 /**
  * Has data of 32 bytes

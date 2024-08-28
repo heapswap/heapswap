@@ -1,10 +1,4 @@
 use crate::*;
-use dashmap::DashMap;
-use futures::channel::mpsc::{unbounded, UnboundedReceiver, UnboundedSender};
-use futures::channel::oneshot::{
-	self, Receiver as OneshotReceiver, Sender as OneshotSender,
-};
-// use generational_arena::Arena;
 use std::any::Any;
 use std::sync::atomic::{AtomicU64, Ordering};
 
@@ -27,27 +21,6 @@ pub struct PortalManager<M> {
 	stream_tx: DashMap<PortalHandle, UnboundedSender<M>>,
 	stream_rx: DashMap<PortalHandle, UnboundedReceiver<M>>,
 }
-
-/*
-pub trait PortalManagerTrait<M> {
-
-	fn new() -> Self;
-	fn handle(&self) -> PortalHandle;
-
-	// oneshot
-	fn create_oneshot(&self) -> PortalHandle;
-	fn create_oneshot_with_handle(&self, handle: PortalHandle) -> ();
-	fn send_oneshot(&self, handle: PortalHandle, val: M) -> Result<(), PortalError>;
-	async fn recv_oneshot(&self, handle: PortalHandle) -> Result<M, PortalError>;
-
-	// stream
-	fn create_stream(&self) -> PortalHandle;
-	fn create_stream_with_handle(&self, handle: PortalHandle) -> ();
-	fn delete_stream(&self, handle: PortalHandle) -> ();
-	fn send_stream(&self, handle: PortalHandle, val: M) -> Result<(), PortalError>;
-	async fn recv_stream(&self, handle: PortalHandle) -> Result<M, PortalError>;
-}
-*/
 
 // impl<M> PortalManagerTrait<M> for PortalManager<M> {
 impl<M> PortalManager<M> {
@@ -143,4 +116,12 @@ impl<M> PortalManager<M> {
 			Err(PortalError::HandleNotFound)
 		}
 	}
+
+	// pub async fn recv_stream(
+	// 	&self,
+	// 	handle: PortalHandle,
+	// ) -> Result<UnboundedReceiver<M>, PortalError> {
+	// 	let (_handle, rx) = self.stream_rx.remove(&handle).unwrap();
+	// 	Ok(rx)
+	// }
 }

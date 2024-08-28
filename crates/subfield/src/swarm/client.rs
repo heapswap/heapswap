@@ -625,7 +625,7 @@ impl protocol::SubfieldService for SubfieldClient {
 					Err(SubfieldServiceError::UnexpectedResponseType)
 				}
 			}
-		}
+		
 	}
 	
 	

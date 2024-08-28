@@ -1,4 +1,4 @@
-use subfield_proto::signed_record;
+// use subfield_proto::signed_record;
 
 use crate::*;
 use std::collections::HashSet;
@@ -14,55 +14,63 @@ pub enum SubkeyError {
 	RequiresEitherSignerOrCosigner,
 }
 
-pub type Keyfield = Option<V256>;
+pub type Subkeyfield = Option<V256>;
 
-#[derive(Debug, Clone, PartialEq, Eq, Getters)]
+#[derive(Debug, Clone, PartialEq, Eq, Getters, Serialize, Deserialize)]
 pub struct Subkey {
-	#[get = "pub"]
-	signer: Keyfield,
-	#[get = "pub"]
-	cosigner: Keyfield,
-	#[get = "pub"]
-	tangent: Keyfield,
+	pub signer: Subkeyfield,
+	pub cosigner: Subkeyfield,
+	pub tangent: Subkeyfield,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub enum RoutingSubkey {
+	Signer(Subkey),
+	Cosigner(Subkey),
+	Tangent(Subkey),
+}
+
+pub fn flatten_routing_subkey(routing_subkey: RoutingSubkey) -> Subkey {
+	match routing_subkey {
+		RoutingSubkey::Signer(subkey) => subkey,
+		RoutingSubkey::Cosigner(subkey) => subkey,
+		RoutingSubkey::Tangent(subkey) => subkey,
+	}
 }
 
 lazy_static! {
 	static ref ZERO: V256 = V256::zero(0, 256);
 }
 
-const SUBKEY_FIELDS: [i32; 3] = [
-	proto::SubkeyField::Signer as i32,
-	proto::SubkeyField::Cosigner as i32,
-	proto::SubkeyField::Tangent as i32,
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub enum SubkeyField {
+	Signer = 0,
+	Cosigner = 1,
+	Tangent = 2,
+}
+
+const SUBKEY_FIELDS: [SubkeyField; 3] = [
+	SubkeyField::Signer,
+	SubkeyField::Cosigner,
+	SubkeyField::Tangent,
 ];
 
 impl Subkey {
-	pub fn new(
-		signer: Keyfield,
-		cosigner: Keyfield,
-		tangent: Keyfield,
-	) -> Self {
-		Self {
-			signer,
-			cosigner,
-			tangent,
-		}
-	}
-
 	/**
 	 * Hash - for use in system
 		*/
 
+	pub fn hash(&self) -> V256 {
+		Self::hash_concat(&[&self.signer, &self.cosigner, &self.tangent])
+	}
+
+	// hash multiple subkeys put together
 	fn hash_concat(hashes: &[&Option<V256>]) -> V256 {
 		let concatenated: Vec<u8> = hashes
 			.iter()
 			.flat_map(|v| v.as_ref().unwrap_or(&ZERO).to_vec())
 			.collect();
 		crypto::hash(&concatenated)
-	}
-
-	pub fn hash(&self) -> V256 {
-		Self::hash_concat(&[&self.signer, &self.cosigner, &self.tangent])
 	}
 
 	// get all the combinations of a subkey, for use when publishing to pubsub
@@ -93,6 +101,7 @@ impl Subkey {
 			&& self.tangent.is_some()
 	}
 
+	/*
 	// build the 3 get record requests to get a subkey
 	pub fn to_get_record_requests(
 		&self,
@@ -101,7 +110,7 @@ impl Subkey {
 		if !self.is_complete() {
 			return Err(SubkeyError::IncompleteSubkey);
 		}
-		
+
 		let requests = SUBKEY_FIELDS.map(|field| {
 			proto::GetRecordRequest {
 				subkey: Some(self.to_proto().unwrap()),
@@ -111,7 +120,7 @@ impl Subkey {
 
 		Ok(requests)
 	}
-	
+
 	pub fn signer_is_signer(&self, signer: crypto::Keypair) -> Result<bool, SubkeyError> {
 		if signer.public_key().v256() == self.signer.clone().unwrap().v256() {
 			Ok(true)
@@ -119,9 +128,9 @@ impl Subkey {
 			Ok(false)
 		} else {
 			Err(SubkeyError::RequiresEitherSignerOrCosigner)
-		} 
+		}
 	}
-	
+
 	pub fn to_put_record_requests(
 		&self,
 		signer: &crypto::Keypair,
@@ -131,9 +140,9 @@ impl Subkey {
 		if !self.is_complete() {
 			return Err(SubkeyError::IncompleteSubkey);
 		}
-		
+
 		let record_bytes = proto::serialize(&record).map_err(|_| SubkeyError::EncodeError)?.to_vec();
-		
+
 		let mut signature: Option<signed_record::Signature>;
 		if self.signer_is_signer(signer)? {
 			let sig = signer.sign(&record_bytes).to_proto().map_err(|_| SubkeyError::SignatureError)?;
@@ -142,14 +151,14 @@ impl Subkey {
 			let sig = signer.sign(&record_bytes).to_proto().map_err(|_| SubkeyError::SignatureError)?;
 			signature = Some(signed_record::Signature::CosignerSignature(sig));
 		}
-		
+
 		let signed_record = Some(proto::SignedRecord {
 			signature,
 			record_bytes,
 		});
-		
+
 		let subkey = Some(self.to_proto().map_err(|e| SubkeyError::InvalidProto)?);
-		
+
 		let requests = SUBKEY_FIELDS.map(|field| {
 			proto::PutRecordRequest {
 				subkey,
@@ -160,10 +169,8 @@ impl Subkey {
 
 		Ok(requests)
 	}
+	*/
 }
-
-
-
 
 /**
  * Randomable
@@ -187,11 +194,8 @@ impl Hash for Subkey {
 	}
 }
 
-
-/**
- * Protoable
-*/
-
+/*
+Protable
 fn option_to_proto<T: Protoable<P, E>, P, E>(
 	opt: Option<T>,
 ) -> Result<Option<P>, SubkeyError> {
@@ -258,3 +262,4 @@ impl Protoable<proto::Subkey, SubkeyError> for Subkey {
 		)
 	}
 }
+*/

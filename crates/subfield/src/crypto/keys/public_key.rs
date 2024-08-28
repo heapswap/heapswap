@@ -151,6 +151,7 @@ impl Eq for PublicKey {}
 /**
  * Protoable
 */
+/*
 impl Protoable<subfield_proto::PublicKey, KeyError> for PublicKey {
 	fn from_proto(proto: subfield_proto::PublicKey) -> Result<Self, KeyError> {
 		Ok(PublicKey::new(
@@ -183,6 +184,7 @@ impl Protoable<subfield_proto::PublicKey, KeyError> for PublicKey {
 		.map_err(|_| KeyError::InvalidPublicKey)?)
 	}
 }
+*/
 
 type Libp2pPublicKey = libp2p::identity::PublicKey;
 type Libp2pEdPublicKey = libp2p::identity::ed25519::PublicKey;

@@ -18,6 +18,7 @@ server = [
 	# "http",
 	# "headers",
 	"tokio/full",
+	"tokio-stream",
 	# "tokio-tungstenite",
 	# "tower",
 	# "tower-http",
@@ -126,7 +127,8 @@ snow.workspace = true
 base32.workspace = true
 serde.workspace = true
 serde_bytes.workspace = true
-bincode.workspace = true
+# bincode.workspace = true
+cbor4ii.workspace = true
 # Datastructures
 bytes.workspace = true
 dashmap.workspace = true
@@ -137,6 +139,7 @@ async-stream.workspace = true
 futures.workspace = true
 futures-channel.workspace = true
 tokio = { workspace = true, optional = true }
+tokio-stream = { workspace = true, optional = true }
 # Logging
 tracing.workspace = true
 # tracing-subscriber = { workspace = true, optional = true }
@@ -170,6 +173,7 @@ async-trait.workspace = true
 timeit.workspace = true
 wasm-bindgen-test = { workspace = true }
 tokio = { workspace = true, features = ["full"] }
+tokio-stream = { workspace = true }
 
 [build]
 

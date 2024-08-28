@@ -25,27 +25,19 @@ pub trait SubfieldService {
 	) -> SubfieldServiceResult<proto::PingResponse>;
 	*/
 
-	async fn echo(
-		&self,
-		message: &str,
-	) -> SubfieldServiceResult<proto::EchoResponse>;
+	async fn echo(&self, message: &str) -> EchoResponse;
 
 	/*
 	Records
 	   */
 
-	async fn get_record(
-		&self,
-		subkey: protocol::Subkey,
-	) -> SubfieldServiceResult<proto::GetRecordResponse>;
-	
+	async fn get_record(&self, subkey: Subkey) -> GetRecordResponse;
 
-	
 	async fn put_record(
 		&self,
-		subkey: protocol::Subkey,
-		record: proto::Record,
-	) -> SubfieldServiceResult<proto::PutRecordResponse>;
+		subkey: Subkey,
+		record: Record,
+	) -> PutRecordResponse;
 
 	/*
 	fn delete_record(

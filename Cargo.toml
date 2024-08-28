@@ -89,7 +89,7 @@ base32 = { version = "0.5.0" } # Base32
 prost = { version = "0.13.1" } # Tokio/bytes protobufs
 prost-types = { version = "0.13.1" } # Well-known protobuf types
 prost-build = { version = "0.13.1" }
-# cbor4ii = {version = "0.3.2"} # Concise Binary Object Representation
+cbor4ii = { version = "0.3.3" } # Concise Binary Object Representation
 #
 ## Networking
 ##
@@ -138,6 +138,7 @@ libp2p = { path = "../rust-libp2p/libp2p" }
 tokio = { version = "1.37.0" }
 tokio-util = { version = "0.7.11", features = ["compat"] }
 tokio_with_wasm = { version = "0.6.1" }
+tokio-stream = { version = "0.1.15" }
 ### Async
 async-std = { version = "1.12.0" }
 async-stream = { version = "0.3.5" }

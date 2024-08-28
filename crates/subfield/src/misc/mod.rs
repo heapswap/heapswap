@@ -1,6 +1,3 @@
-mod versioned_bytes;
-pub use versioned_bytes::*;
-
 pub mod traits;
 pub use traits::*;
 

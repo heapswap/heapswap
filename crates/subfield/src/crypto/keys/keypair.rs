@@ -138,6 +138,7 @@ impl Eq for Keypair {}
 /**
  * Protoable
 */
+/*
 impl Protoable<subfield_proto::Keypair, KeyError> for Keypair {
 	fn from_proto(proto: subfield_proto::Keypair) -> Result<Self, KeyError> {
 		Ok(Keypair {
@@ -167,6 +168,7 @@ impl Protoable<subfield_proto::Keypair, KeyError> for Keypair {
 		.map_err(|_| KeyError::InvalidKeypair)?)
 	}
 }
+*/
 
 #[wasm_bindgen]
 impl Keypair {
@@ -236,10 +238,10 @@ impl Keypair {
 		*/
 	#[wasm_bindgen(js_name = "toBytes")]
 	pub fn _js_to_bytes(&self) -> Uint8Array {
-		bincode_serialize(self).unwrap().as_slice().into()
+		cbor_serialize(self).unwrap().as_slice().into()
 	}
 	#[wasm_bindgen(js_name = "fromBytes")]
 	pub fn _js_from_bytes(bytes: Uint8Array) -> Keypair {
-		bincode_deserialize(&bytes.to_vec()).unwrap()
+		cbor_deserialize(&bytes.to_vec()).unwrap()
 	}
 }

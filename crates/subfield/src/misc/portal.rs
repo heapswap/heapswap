@@ -1,5 +1,4 @@
-// use super::*;
-use futures::channel::mpsc::{unbounded, UnboundedReceiver, UnboundedSender};
+use crate::*;
 
 pub type Sender<T> = UnboundedSender<T>;
 pub type Receiver<R> = UnboundedReceiver<R>;
@@ -11,13 +10,6 @@ pub fn portal<U>() -> (Sender<U>, Receiver<U>) {
 	let (tx, rx) = unbounded::<U>();
 	(tx, rx)
 }
-
-// pub fn portals<T>() -> (Portal<T,T>, Portal<T,T>)
-// where
-// 	T: Clone,
-// {
-// 	Portals::new().split()
-// }
 
 pub fn portals<L, R>() -> (Portal<R, L>, Portal<L, R>)
 where

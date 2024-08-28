@@ -14,15 +14,15 @@ pub enum VersionedBytesError {
 type VersionUsize = u32;
 const VERSION_BYTES: usize = 4;
 
-#[derive(Debug, Serialize, Deserialize, Getters)]
+#[derive(Debug, Getters)]
 #[wasm_bindgen]
 pub struct VersionedBytes {
 	#[getset(get = "pub")]
 	version: VersionUsize,
 	#[getset(get = "pub")]
-	#[serde(with = "serde_bytes")]
+	// #[serde(with = "serde_bytes")]
 	data: Vec<u8>,
-	#[serde(skip)]
+	// #[serde(skip)]
 	string: OnceCell<String>,
 }
 
@@ -149,55 +149,30 @@ impl Vecable<VersionedBytesError> for VersionedBytes {
 }
 
 /**
- * Protoable
+ * Serde
 */
-impl Protoable<subfield_proto::VersionedBytes, VersionedBytesError>
-	for VersionedBytes
-{
-	fn from_proto(
-		proto: subfield_proto::VersionedBytes,
-	) -> Result<Self, VersionedBytesError> {
-		Ok(VersionedBytes::new(proto.version, proto.data.as_slice()))
-	}
+use serde::{Serialize, Serializer};
 
-	fn to_proto(
+impl Serialize for VersionedBytes {
+	fn serialize<S: Serializer>(
 		&self,
-	) -> Result<subfield_proto::VersionedBytes, VersionedBytesError> {
-		Ok(subfield_proto::VersionedBytes {
-			version: self.version,
-			data: self.data.clone().into(),
-		})
-	}
-
-	fn from_proto_bytes(bytes: Bytes) -> Result<Self, VersionedBytesError> {
-		Ok(Self::from_proto(
-			proto::deserialize::<subfield_proto::VersionedBytes>(bytes)
-				.unwrap(),
-		)?)
-	}
-
-	fn to_proto_bytes(&self) -> Result<Bytes, VersionedBytesError> {
-		Ok(proto::serialize::<subfield_proto::VersionedBytes>(
-			&self.to_proto()?,
-		)
-		.unwrap())
+		serializer: S,
+	) -> Result<S::Ok, S::Error> {
+		serializer.serialize_bytes(&self.to_vec())
 	}
 }
 
-/**
- * Byteable
-*/
-/*
-impl Byteable<VersionedBytesError> for VersionedBytes {
-	fn to_bytes(&self) -> Bytes {
-		Bytes::from(self.to_vec())
-	}
+use serde::de::{self, Deserialize, Deserializer};
 
-	fn from_bytes(bytes: Bytes) -> Result<Self, VersionedBytesError> {
-		Self::from_arr(&bytes.as_ref())
+impl<'de> Deserialize<'de> for VersionedBytes {
+	fn deserialize<D: Deserializer<'de>>(
+		deserializer: D,
+	) -> Result<Self, D::Error> {
+		let data = Vec::<u8>::deserialize(deserializer)?;
+		VersionedBytes::from_arr(&data)
+			.map_err(|_| de::Error::invalid_length(data.len(), &"valid bytes"))
 	}
 }
-*/
 
 /**
  * Equality

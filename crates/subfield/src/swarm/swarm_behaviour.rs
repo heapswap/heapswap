@@ -32,8 +32,8 @@ use std::{io, time::Duration};
 pub struct SubfieldBehaviour {
 	// subfield
 	pub subfield: request_response::cbor::Behaviour<
-		protocol::SubfieldRequest,
-		protocol::SubfieldResponse,
+		proto::SubfieldRequest,
+		proto::SubfieldResponse,
 	>,
 
 	// utils

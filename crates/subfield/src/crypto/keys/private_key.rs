@@ -162,6 +162,7 @@ impl Vecable<KeyError> for PrivateKey {
 /**
  * Protoable
 */
+/*
 impl Protoable<subfield_proto::PrivateKey, KeyError> for PrivateKey {
 	fn from_proto(proto: subfield_proto::PrivateKey) -> Result<Self, KeyError> {
 		Ok(PrivateKey::new(
@@ -194,6 +195,7 @@ impl Protoable<subfield_proto::PrivateKey, KeyError> for PrivateKey {
 		.map_err(|_| KeyError::InvalidPrivateKey)?)
 	}
 }
+*/
 
 /**
  * Libp2pKeypairable
