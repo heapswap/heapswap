@@ -5,12 +5,12 @@ use crate::*;
 */
 #[derive(Serialize, Deserialize, Clone)]
 pub struct PingRequest {
-	timestamp: DateTimeUtc,
+	pub timestamp: DateTimeUtc,
 }
 
 #[derive(Serialize, Deserialize, Clone)]
 pub struct PingSuccess {
-	timestamp: DateTimeUtc,
+	pub timestamp: DateTimeUtc,
 }
 
 pub enum PingFailure {
@@ -25,12 +25,12 @@ pub type PingResponse = Result<PingSuccess, PingFailure>;
 */
 #[derive(Serialize, Deserialize, Clone)]
 pub struct EchoRequest {
-	message: String,
+	pub message: String,
 }
 
 #[derive(Serialize, Deserialize, Clone)]
 pub struct EchoSuccess {
-	message: String,
+	pub message: String,
 }
 
 pub enum EchoFailure {

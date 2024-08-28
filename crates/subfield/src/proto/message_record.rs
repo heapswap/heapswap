@@ -5,7 +5,7 @@ use crate::*;
  */
 #[derive(Serialize, Deserialize, Clone)]
 pub struct GetRecordRequest {
-	routing_subkey: RoutingSubkey,
+	pub routing_subkey: RoutingSubkey,
 }
 
 #[derive(Serialize, Deserialize, Clone)]
@@ -43,3 +43,28 @@ pub enum PutRecordFailure {
 }
 
 pub type PutRecordResponse = Result<PutRecordSuccess, PutRecordFailure>;
+
+/**
+ * DeleteRecord
+*/
+#[derive(Serialize, Deserialize, Clone)]
+pub struct DeleteRecordRequest {
+	pub routing_subkey: RoutingSubkey,
+	pub signature: DeleteRecordSignature,
+}
+
+pub enum DeleteRecordSignature {
+	Signer(Signature),
+	Cosigner(Signature),
+}
+
+#[derive(Serialize, Deserialize, Clone)]
+pub struct DeleteRecordSuccess {}
+
+#[derive(Debug)]
+pub enum DeleteRecordFailure {
+	Unknown = 0,
+	Invalid = 1,
+}
+
+pub type DeleteRecordResponse = Result<DeleteRecordSuccess, DeleteRecordFailure>;

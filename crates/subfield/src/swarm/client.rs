@@ -75,7 +75,7 @@ impl SubfieldConfig {
 	}
 }
 
-trait SizedMessage: proto::Message + Sized {}
+trait SizedMessage: Message + Sized {}
 
 #[derive(Clone)]
 pub struct SubfieldClient {
@@ -92,23 +92,23 @@ pub struct SubfieldClient {
 type HandleMap<T> = DashMap<OutboundRequestId, Sender<T>>;
 
 enum SubfieldRequestRPC {
-	Ping(proto::PingRequest),
-	Echo(proto::EchoRequest),
-	GetRecord(proto::GetRecordRequest),
-	DeleteRecord(proto::DeleteRecordRequest),
-	PutRecord(proto::PutRecordRequest),
-	Subscribe(proto::SubscribeRequest),
-	Unsubscribe(proto::UnsubscribeRequest),
+	Ping(PingRequest),
+	Echo(EchoRequest),
+	GetRecord(GetRecordRequest),
+	DeleteRecord(DeleteRecordRequest),
+	PutRecord(PutRecordRequest),
+	Subscribe(SubscribeRequest),
+	Unsubscribe(UnsubscribeRequest),
 }
 
 enum SubfieldResponseRPC {
-	Ping(proto::PingResponse),
-	Echo(proto::EchoResponse),
-	GetRecord(proto::GetRecordResponse),
-	DeleteRecord(proto::DeleteRecordResponse),
-	PutRecord(proto::PutRecordResponse),
-	Subscribe(Receiver<proto::SubscribeResponse>),
-	Unsubscribe(proto::UnsubscribeResponse),
+	Ping(PingResponse),
+	Echo(EchoResponse),
+	GetRecord(GetRecordResponse),
+	DeleteRecord(DeleteRecordResponse),
+	PutRecord(PutRecordResponse),
+	Subscribe(Receiver<SubscribeResponse>),
+	Unsubscribe(UnsubscribeResponse),
 }
 
 /*
@@ -116,15 +116,15 @@ struct SubfieldRequestHandles {
 	// kad
 	kad: DashMap<libp2p::kad::QueryId, Sender<libp2p::PeerId>>,
 	// system
-	ping: HandleMap<proto::PingResponse>,
-	echo: HandleMap<proto::EchoResponse>,
+	ping: HandleMap<PingResponse>,
+	echo: HandleMap<EchoResponse>,
 	// records
-	get_record: HandleMap<proto::GetRecordResponse>,
-	delete_record: HandleMap<proto::DeleteRecordResponse>,
-	put_record: HandleMap<proto::PutRecordResponse>,
+	get_record: HandleMap<GetRecordResponse>,
+	delete_record: HandleMap<DeleteRecordResponse>,
+	put_record: HandleMap<PutRecordResponse>,
 	// pubsub
-	subscribe: HandleMap<proto::SubscribeResponse>,
-	unsubscribe: HandleMap<proto::UnsubscribeResponse>,
+	subscribe: HandleMap<SubscribeResponse>,
+	unsubscribe: HandleMap<UnsubscribeResponse>,
 }
 
 impl SubfieldRequestHandles {
@@ -294,20 +294,14 @@ impl SubfieldClient {
 											request,
 											channel,
 										} => {
-											match request.proto_type() {
-												RequestType::Echo(request) => {
-													let response = proto_wrap_response(
-														proto::echo_response::Success {
-															message: request.message.clone(),
-														},
-													)
-													.unwrap();
-
-													// send the response
-													let _ = behaviour
-														.subfield
-														.send_response(channel, response);
+											match request {
+												SubfieldRequest::Echo(request) => {
+													let response = SubfieldResponse::Echo(Ok(EchoSuccess {
+														message: request.message,
+													}));
+													behaviour.subfield.send_response(channel, response);
 												}
+												
 												_ => {}
 											}
 										}
@@ -317,21 +311,8 @@ impl SubfieldClient {
 											response,
 										} => {
 											let handle = get_outbound_request_id(request_id);
-											match response.proto_type() {
-												ResponseType::Echo(_) => {
-													let _ = self
-														.request_handles
-														.subfield
-														.send_oneshot(handle, response);
-												}
-												ResponseType::GetRecord(_) => {
-													let _ = self
-														.request_handles
-														.subfield
-														.send_oneshot(handle, response);
-												}
-												_ => {}
-											}
+											
+											self.request_handles.subfield.send_stream(handle, response);
 										}
 										// _ => {}
 									}
@@ -407,9 +388,8 @@ impl SubfieldClient {
 	async fn send_request(
 		&self,
 		peer_id: libp2p::PeerId,
-		request: RequestType,
+		request: SubfieldRequest,
 	) -> Result<u64, SubfieldServiceError> {
-		let request = proto_wrap_request(request);
 
 		let mut swarm_lock = self.swarm.lock().await;
 
@@ -429,7 +409,7 @@ impl SubfieldClient {
 
 	async fn send_request_to_closest_local_peer(
 		&self,
-		request: RequestType,
+		request: SubfieldRequest,
 	) -> Result<u64, SubfieldServiceError> {
 		let peer_id = match self
 			.closest_local_peer(self.config.keypair.public_key().v256().clone())
@@ -519,15 +499,15 @@ impl SubfieldClient {
 }
 
 #[async_trait]
-impl protocol::SubfieldService for SubfieldClient {
+impl SubfieldService for SubfieldClient {
 	/*
 	async fn ping(
 		&self,
-		request: proto::PingRequest,
-	) -> protocol::SubfieldServiceResult<proto::PingResponse> {
-		self.send_request(proto::SubfieldRequest {
+		request: PingRequest,
+	) -> SubfieldServiceResult<PingResponse> {
+		self.send_request(SubfieldRequest {
 			request_type: Some(
-				proto::subfield_request::RequestType::PingRequest(request),
+				subfield_request::SubfieldRequest::PingRequest(request),
 			),
 		})
 	}
@@ -536,127 +516,140 @@ impl protocol::SubfieldService for SubfieldClient {
 	async fn echo(
 		&self,
 		message: &str,
-	) -> protocol::SubfieldServiceResult<proto::EchoResponse> {
+	) -> SubfieldServiceResult<EchoResponse> {
 		
-		let request = proto::EchoRequest {
-			message: message.to_string(),
-		};	
+		// let request = EchoRequest {
+		// 	message: message.to_string(),
+		// };	
 		
-		let handle = self
-			.send_request_to_closest_local_peer(RequestType::Echo(request))
-			.await?;
+		// let handle = self
+		// 	.send_request_to_closest_local_peer(SubfieldRequest::Echo(request))
+		// 	.await?;
 
-		// await the response
-		match self.request_handles.subfield.recv_oneshot(handle).await {
-			Ok(res) => {
-				tracing::info!("Received echo response: {:?}", res);
+		// // await the response
+		// match self.request_handles.subfield.recv_oneshot(handle).await {
+		// 	Ok(res) => {
+		// 		tracing::info!("Received echo response: {:?}", res);
 
-				let ResponseType::Echo(res) = res.proto_type() else {
-					return Err(SubfieldServiceError::UnexpectedResponseType);
-				};
+		// 		let SubfieldResponse::Echo(res) = res.proto_type() else {
+		// 			return Err(SubfieldServiceError::UnexpectedSubfieldResponse);
+		// 		};
 
-				Ok(res.clone())
-			}
-			Err(e) => {
-				tracing::error!("Failed to receive echo response: {:?}", e);
-				Err(SubfieldServiceError::UnexpectedResponseType)
-			}
-		}
+		// 		Ok(res.clone())
+		// 	}
+		// 	Err(e) => {
+		// 		tracing::error!("Failed to receive echo response: {:?}", e);
+		// 		Err(SubfieldServiceError::UnexpectedSubfieldResponse)
+		// 	}
+		// }
+		
+		todo!()
 	}
 
 	async fn get_record(
 		&self,
-		subkey: protocol::Subkey,
-	) -> Result<proto::GetRecordResponse, SubfieldServiceError> {
+		subkey: Subkey,
+	) -> Result<GetRecordResponse, SubfieldServiceError> {
 		
-		let requests = subkey.to_get_record_requests().map_err(|_| SubfieldServiceError::IncompleteSubkey)?;
+		// let requests = subkey.to_get_record_requests().map_err(|_| SubfieldServiceError::IncompleteSubkey)?;
 		
-		// send each of the requests to their closest local peers
-		// each handle returns a oneshot channel (impl Future)
-		let channels = requests.map(|request| {
-			let future = async move {
-				let handle = self.send_request_to_closest_local_peer(RequestType::GetRecord(request)).await?;
-				let channel = self.request_handles.subfield.recv_oneshot(handle);
-				channel.await.map_err(|_| SubfieldServiceError::UnexpectedResponseType)
-			};
-			Box::pin(future)
-		});
+		// // send each of the requests to their closest local peers
+		// // each handle returns a oneshot channel (impl Future)
+		// let channels = requests.map(|request| {
+		// 	let future = async move {
+		// 		let handle = self.send_request_to_closest_local_peer(SubfieldRequest::GetRecord(request)).await?;
+		// 		let channel = self.request_handles.subfield.recv_oneshot(handle);
+		// 		channel.await.map_err(|_| SubfieldServiceError::UnexpectedSubfieldResponse)
+		// 	};
+		// 	Box::pin(future)
+		// });
 		
-		// wait for any of the channels to return a response
-		let responses = futures::future::select_ok(channels).await?;
+		// // wait for any of the channels to return a response
+		// let responses = futures::future::select_ok(channels).await?;
 		
-		match responses.0.proto_type() {
-			ResponseType::GetRecord(res) => {
-				Ok(res.clone())
-			}
-			_ => {
-				Err(SubfieldServiceError::UnexpectedResponseType)
-			}
-		}
+		// match responses.0.proto_type() {
+		// 	SubfieldResponse::GetRecord(res) => {
+		// 		Ok(res.clone())
+		// 	}
+		// 	_ => {
+		// 		Err(SubfieldServiceError::UnexpectedSubfieldResponse)
+		// 	}
+		// }
+		
+		todo!()
 	}
 	
 	async fn put_record(
 		&self,
-		subkey: protocol::Subkey,
-		record: proto::Record,
-	) -> Result<proto::PutRecordResponse, SubfieldServiceError> {
+		subkey: Subkey,
+		record: Record,
+	) -> Result<PutRecordResponse, SubfieldServiceError> {
 			
-			let requests = subkey.to_put_record_requests(&self.config.keypair, record).map_err(|_| SubfieldServiceError::IncompleteSubkey)?;
+			// let requests = subkey.to_put_record_requests(&self.config.keypair, record).map_err(|_| SubfieldServiceError::IncompleteSubkey)?;
 			
-			// send each of the requests to their closest local peers
-			// each handle returns a oneshot channel (impl Future)
-			let channels = requests.map(|request| {
-				let future = async move {
-					let handle = self.send_request_to_closest_local_peer(RequestType::GetRecord(request)).await?;
-					let channel = self.request_handles.subfield.recv_oneshot(handle);
-					channel.await.map_err(|_| SubfieldServiceError::UnexpectedResponseType)
-				};
-				Box::pin(future)
-			});
+			// // send each of the requests to their closest local peers
+			// // each handle returns a oneshot channel (impl Future)
+			// let channels = requests.map(|request| {
+			// 	let future = async move {
+			// 		let handle = self.send_request_to_closest_local_peer(SubfieldRequest::GetRecord(request)).await?;
+			// 		let channel = self.request_handles.subfield.recv_oneshot(handle);
+			// 		channel.await.map_err(|_| SubfieldServiceError::UnexpectedSubfieldResponse)
+			// 	};
+			// 	Box::pin(future)
+			// });
 			
-			// wait for any of the channels to return a response
-			let responses = futures::future::select_ok(channels).await?;
+			// // wait for any of the channels to return a response
+			// let responses = futures::future::select_ok(channels).await?;
 			
-			match responses.0.proto_type() {
-				ResponseType::GetRecord(res) => {
-					Ok(res.clone())
-				}
-				_ => {
-					Err(SubfieldServiceError::UnexpectedResponseType)
-				}
-			}
+			// match responses.0.proto_type() {
+			// 	SubfieldResponse::GetRecord(res) => {
+			// 		Ok(res.clone())
+			// 	}
+			// 	_ => {
+			// 		Err(SubfieldServiceError::UnexpectedSubfieldResponse)
+			// 	}
+			// }
 		
+		todo!()
 	}
 	
+	async fn put_record_with_keypair(
+		&self,
+		keypair: Keypair,
+		subkey: Subkey,
+		record: Record,
+	) -> Result<PutRecordResponse, SubfieldServiceError> {
+		todo!()
+	}
 	
 	
 	
 	/*
 		fn delete_record(
 				&self,
-				request: proto::DeleteRecordRequest,
-			) -> Result<proto::DeleteRecordResponse, SubfieldServiceError> {
+				request: DeleteRecordRequest,
+			) -> Result<DeleteRecordResponse, SubfieldServiceError> {
 			todo!()
 		}
 
 		fn put_record(
 				&self,
-				request: proto::PutRecordRequest,
-			) -> Result<proto::PutRecordResponse, SubfieldServiceError> {
+				request: PutRecordRequest,
+			) -> Result<PutRecordResponse, SubfieldServiceError> {
 			todo!()
 		}
 
 		fn subscribe(
 				&self,
-				request: proto::SubscribeRequest,
-			) -> Result<proto::SubscribeResponse, SubfieldServiceError> {
+				request: SubscribeRequest,
+			) -> Result<SubscribeResponse, SubfieldServiceError> {
 			todo!()
 		}
 
 	t	fn unsubscribe(
 				&self,
-				request: proto::UnsubscribeRequest,
-			) -> Result<proto::UnsubscribeResponse, SubfieldServiceError> {
+				request: UnsubscribeRequest,
+			) -> Result<UnsubscribeResponse, SubfieldServiceError> {
 			todo!()
 		}
 		*/

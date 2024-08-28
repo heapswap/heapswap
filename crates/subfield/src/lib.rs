@@ -109,14 +109,14 @@ pub mod crypto;
 pub mod misc;
 pub mod proto;
 pub mod store;
-// pub mod swarm;
+pub mod swarm;
 
 pub mod prelude {
 	pub use super::constants::*;
 	pub use super::crypto::*;
 	pub use super::proto::*;
 	pub use super::store::*;
-	// pub use super::swarm::*;
+	pub use super::swarm::*;
 	pub use crate::misc::*;
 }
 pub use crate::prelude::*;

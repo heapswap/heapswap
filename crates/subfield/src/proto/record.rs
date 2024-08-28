@@ -8,6 +8,7 @@ pub enum RecordType {
 #[derive(Serialize, Deserialize, Clone)]
 pub struct Record {
 	pub record_type: RecordType,
+	pub subkey: Subkey,
 
 	pub is_encrypted: bool,
 	hash_seed: VersionedBytes,

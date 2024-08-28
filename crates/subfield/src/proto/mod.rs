@@ -1,12 +1,11 @@
+mod message;
+pub use message::*;
 mod message_pubsub;
 pub use message_pubsub::*;
 mod message_record;
 pub use message_record::*;
 mod message_system;
 pub use message_system::*;
-
-mod traits;
-pub use traits::*;
 
 mod record;
 pub use record::*;

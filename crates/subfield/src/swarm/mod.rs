@@ -1,7 +1,10 @@
+mod config;
+pub use config::*;
+
 // #[cfg(feature = "client")]
-// mod client;
+mod client;
 // #[cfg(feature = "client")]
-// pub use client::*;
+pub use client::*;
 // #[cfg(feature = "server")]
 // mod server;
 // #[cfg(feature = "server")]

@@ -31,10 +31,7 @@ use std::{io, time::Duration};
 #[derive(NetworkBehaviour)]
 pub struct SubfieldBehaviour {
 	// subfield
-	pub subfield: request_response::cbor::Behaviour<
-		proto::SubfieldRequest,
-		proto::SubfieldResponse,
-	>,
+	pub subfield: request_response::cbor::Behaviour<SubfieldRequest,SubfieldResponse>,
 
 	// utils
 	pub kad: kad::Behaviour<MemoryStore>,

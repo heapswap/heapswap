@@ -1,5 +1,6 @@
 use crate::*;
 
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum SubfieldRequest {
 	// System
 	Ping(PingRequest),
@@ -16,6 +17,7 @@ pub enum SubfieldRequest {
 }
 
 
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum SubfieldResponse  {
 	// System
 	Ping(PingResponse),

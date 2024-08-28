@@ -5,7 +5,7 @@ use crate::*;
 */
 #[derive(Serialize, Deserialize, Clone)]
 pub struct SubscribeRequest {
-	subkey: Subkey,
+	pub subkey: Subkey,
 }
 
 #[derive(Serialize, Deserialize, Clone)]
@@ -24,7 +24,7 @@ pub type SubscribeResponse = Result<SubscribeSuccess, SubscribeFailure>;
 */
 #[derive(Serialize, Deserialize, Clone)]
 pub struct UnsubscribeRequest {
-	subkey: Subkey,
+	pub subkey: Subkey,
 }
 
 #[derive(Serialize, Deserialize, Clone)]

@@ -31,6 +31,7 @@ pub trait SubfieldService {
 	Records
 	   */
 
+	   /*
 	async fn get_record(&self, subkey: Subkey) -> GetRecordResponse;
 
 	async fn put_record(
@@ -39,6 +40,14 @@ pub trait SubfieldService {
 		record: Record,
 	) -> PutRecordResponse;
 
+	async fn put_record_with_keypair(
+		&self,
+		keypair: Keypair,
+		subkey: Subkey,
+		record: Record,
+	) -> PutRecordResponse;
+	 */
+	
 	/*
 	fn delete_record(
 		&self,
