@@ -2,8 +2,10 @@ use crate::*;
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum SubfieldServiceError {
+	IncompleteSubkey,
 	NoConnectedPeers,
 	NoLocalPeer,
+	SelfIsClosest,
 	UnexpectedResponseType,
 }
 
@@ -25,23 +27,27 @@ pub trait SubfieldService {
 
 	async fn echo(
 		&self,
-		request: proto::EchoRequest,
+		message: &str,
 	) -> SubfieldServiceResult<proto::EchoResponse>;
 
 	/*
 	Records
 	   */
-	/*
-	fn get_record(
-		&self,
-		request: proto::GetRecordRequest,
-	) -> SubfieldServiceResult<proto::GetRecordResponse>;
 
-	fn put_record(
+	async fn get_record(
 		&self,
-		request: proto::PutRecordRequest,
+		subkey: protocol::Subkey,
+	) -> SubfieldServiceResult<proto::GetRecordResponse>;
+	
+
+	
+	async fn put_record(
+		&self,
+		subkey: protocol::Subkey,
+		record: proto::Record,
 	) -> SubfieldServiceResult<proto::PutRecordResponse>;
 
+	/*
 	fn delete_record(
 		&self,
 		request: proto::DeleteRecordRequest,

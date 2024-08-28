@@ -12,7 +12,19 @@ message PingRequest {
 }
 
 message PingResponse {
-  google.protobuf.Timestamp timestamp = 1;
+  oneof response {
+    Success success = 1;
+    Failure failure = 2;
+  }
+
+  message Success {
+    google.protobuf.Timestamp timestamp = 1;
+  }
+
+  enum Failure {
+    Unknown = 0;
+    Invalid = 1;
+  }
 }
 
 /**
@@ -23,5 +35,17 @@ message EchoRequest {
 }
 
 message EchoResponse {
-  string message = 1;
+  oneof response {
+    Success success = 1;
+    Failure failure = 2;
+  }
+
+  message Success {
+    string message = 1;
+  }
+
+  enum Failure {
+    Unknown = 0;
+    Invalid = 1;
+  }
 }

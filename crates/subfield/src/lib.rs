@@ -9,7 +9,7 @@ pub use bincode::{
 	deserialize as bincode_deserialize, serialize as bincode_serialize,
 };
 // pub use subfield_proto::*;
-pub use subfield_proto as proto;
+// pub use subfield_proto as proto;
 // pub use subfield_proto::{proto_serialize, proto_deserialize};
 pub use bytes::{Buf, BufMut, Bytes, BytesMut};
 pub use eyre::{

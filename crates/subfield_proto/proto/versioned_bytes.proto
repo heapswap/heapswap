@@ -16,30 +16,30 @@ message EncryptedVersionedBytes {
 /*
  * The following messages are aliases for the VersionedBytes message.
  */
-message PublicKey {
-  uint32 version = 1;
-  bytes data = 2;
-}
+// message PublicKey {
+//   uint32 version = 1;
+//   bytes data = 2;
+// }
 
-message PrivateKey {
-  uint32 version = 1;
-  bytes data = 2;
-}
+// message PrivateKey {
+//   uint32 version = 1;
+//   bytes data = 2;
+// }
 
-message Hash {
-  uint32 version = 1;
-  bytes data = 2;
-}
+// message Hash {
+//   uint32 version = 1;
+//   bytes data = 2;
+// }
 
-message Signature {
-  uint32 version = 1;
-  bytes data = 2;
-}
+// message Signature {
+//   uint32 version = 1;
+//   bytes data = 2;
+// }
 
 /**
  * Crypto
  */
 message Keypair {
-  PublicKey public_key = 1;
-  PrivateKey private_key = 2;
+  VersionedBytes public_key = 1;
+  VersionedBytes private_key = 2;
 }

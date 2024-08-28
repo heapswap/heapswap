@@ -16,7 +16,19 @@ message SubscribeRequest {
   subkey.Subkey subkey = 1;
 }
 
-message SubscribeResponse {}
+message SubscribeResponse {
+  oneof response {
+    Success success = 1;
+    Failure failure = 2;
+  }
+
+  message Success {}
+
+  enum Failure {
+    Unknown = 0;
+    Invalid = 1;
+  }
+}
 
 /**
  * Unsubscribe
@@ -25,4 +37,16 @@ message UnsubscribeRequest {
   subkey.Subkey subkey = 1;
 }
 
-message UnsubscribeResponse {}
+message UnsubscribeResponse {
+  oneof response {
+    Success success = 1;
+    Failure failure = 2;
+  }
+
+  message Success {}
+
+  enum Failure {
+    Unknown = 0;
+    Invalid = 1;
+  }
+}

@@ -1,3 +1,5 @@
+use subfield_proto::signed_record;
+
 use crate::*;
 use std::collections::HashSet;
 use std::hash::Hash;
@@ -8,6 +10,8 @@ pub enum SubkeyError {
 	EncodeError,
 	DecodeError,
 	IncompleteSubkey,
+	SignatureError,
+	RequiresEitherSignerOrCosigner,
 }
 
 pub type Keyfield = Option<V256>;
@@ -25,6 +29,12 @@ pub struct Subkey {
 lazy_static! {
 	static ref ZERO: V256 = V256::zero(0, 256);
 }
+
+const SUBKEY_FIELDS: [i32; 3] = [
+	proto::SubkeyField::Signer as i32,
+	proto::SubkeyField::Cosigner as i32,
+	proto::SubkeyField::Tangent as i32,
+];
 
 impl Subkey {
 	pub fn new(
@@ -82,7 +92,78 @@ impl Subkey {
 			&& self.cosigner.is_some()
 			&& self.tangent.is_some()
 	}
+
+	// build the 3 get record requests to get a subkey
+	pub fn to_get_record_requests(
+		&self,
+	) -> Result<[proto::GetRecordRequest; 3], SubkeyError> {
+		// must be complete
+		if !self.is_complete() {
+			return Err(SubkeyError::IncompleteSubkey);
+		}
+		
+		let requests = SUBKEY_FIELDS.map(|field| {
+			proto::GetRecordRequest {
+				subkey: Some(self.to_proto().unwrap()),
+				field: field.into(),
+			}
+		});
+
+		Ok(requests)
+	}
+	
+	pub fn signer_is_signer(&self, signer: crypto::Keypair) -> Result<bool, SubkeyError> {
+		if signer.public_key().v256() == self.signer.clone().unwrap().v256() {
+			Ok(true)
+		} else if signer.public_key().v256() == self.cosigner.clone().unwrap().v256() {
+			Ok(false)
+		} else {
+			Err(SubkeyError::RequiresEitherSignerOrCosigner)
+		} 
+	}
+	
+	pub fn to_put_record_requests(
+		&self,
+		signer: &crypto::Keypair,
+		record: proto::Record,
+	) -> Result<[proto::PutRecordRequest; 3], SubkeyError> {
+		// must be complete
+		if !self.is_complete() {
+			return Err(SubkeyError::IncompleteSubkey);
+		}
+		
+		let record_bytes = proto::serialize(&record).map_err(|_| SubkeyError::EncodeError)?.to_vec();
+		
+		let mut signature: Option<signed_record::Signature>;
+		if self.signer_is_signer(signer)? {
+			let sig = signer.sign(&record_bytes).to_proto().map_err(|_| SubkeyError::SignatureError)?;
+			signature = Some(signed_record::Signature::SignerSignature(sig));
+		} else {
+			let sig = signer.sign(&record_bytes).to_proto().map_err(|_| SubkeyError::SignatureError)?;
+			signature = Some(signed_record::Signature::CosignerSignature(sig));
+		}
+		
+		let signed_record = Some(proto::SignedRecord {
+			signature,
+			record_bytes,
+		});
+		
+		let subkey = Some(self.to_proto().map_err(|e| SubkeyError::InvalidProto)?);
+		
+		let requests = SUBKEY_FIELDS.map(|field| {
+			proto::PutRecordRequest {
+				subkey,
+				signed_record,
+				field: field.into(),
+			}
+		});
+
+		Ok(requests)
+	}
 }
+
+
+
 
 /**
  * Randomable
@@ -105,6 +186,7 @@ impl Hash for Subkey {
 		self.hash().hash(state)
 	}
 }
+
 
 /**
  * Protoable

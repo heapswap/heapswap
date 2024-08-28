@@ -44,17 +44,21 @@ pub struct AppState {
 
 #[tokio::main]
 async fn main() -> EResult<()> {
+	main_inner(|_| async move { Ok(()) }).await
+}
+
+async fn main_inner<F, Fut>(test_func: F) -> EResult<()>
+where
+	F: FnOnce(Arc<subfield::swarm::SubfieldClient>) -> Fut + Send + 'static,
+	Fut: std::future::Future<Output = EResult<()>> + Send,
+{
 	// use tracing subscriber
-	tracing::subscriber::set_global_default(
+	let _ = tracing::subscriber::set_global_default(
 		tracing_subscriber::FmtSubscriber::new(),
-	)?;
+	);
 
 	tracing::info!("DEV_MODE: {}", DEV_MODE);
 
-	// #[cfg(feature = "server")]
-	// let _ = tokio::runtime::Runtime::new()
-	// 	.unwrap()
-	// 	.block_on(async move {
 	// try to open port - if unsuccessful, add 1 and retry
 	let mut port: u16 = SERVER_PORT;
 	let mut try_listener;
@@ -114,88 +118,24 @@ async fn main() -> EResult<()> {
 	let subfield_client =
 		Arc::new(subfield::swarm::SubfieldClient::new(config).await?);
 
-	// let swarm_instance: swarm::SubfieldSwarm =
-	// // Arc::new(Mutex::new(
-	// swarm::create(swarm_config)
-	// .await
-	// .map_err(|e| eyr!(e.to_string()))?;
-	// // ));
-
-	/*
-	let threadsafe_swarm: swarm::ThreadsafeSubfieldSwarm =
-		Arc::new(Mutex::new(swarm_instance));
-
-	// let (outgoing_swarm_tx, outgoing_swarm_rx) = swarm::new_subfield_message_channel();
-	// let (incoming_swarm_tx, incoming_swarm_rx) = swarm::new_subfield_message_channel();
-
-	// Handle swarm events
-	// let swarm_instance_cloned = swarm_instance.clone();
-	// let mp_swarm = Arc::new(Mutex::new(swarm::MultiplexedSwarm::new(swarm_instance)));
-	// let mp_swarm_cloned = mp_swarm.clone();
-
-	let (mut tx, mut rx) = portal::<SubfieldRequest>();
-	let swarm_tx = tx.clone();
-
-	let threadsafe_swarm_cloned = threadsafe_swarm.clone();
-
-	let store_threadsafe = Arc::new(Mutex::new(
-		store::SubfieldStore::new(SubfieldStoreConfig{
-			location: "".to_string(),
-		}).await.unwrap(),
-	));
-
-	tokio::task::spawn_local(async move {
-		loop {
-			let mut swarm_lock = threadsafe_swarm_cloned.lock().await;
-
-			// swarm::handle_events(&mut *swarm_lock, &mut incoming_swarm_tx.clone(), &mut outgoing_swarm_rx).await;
-
-			let mut store_lock = store_threadsafe.lock().await;
-
-			let _ = events::handle_events(
-				&mut *store_lock,
-				&mut *swarm_lock,
-				&mut rx,
-				&mut tx,
-			)
-			.now_or_never();
-
-			drop(swarm_lock);
-			drop(store_lock);
-
-			tokio::task::yield_now().await;
-		}
-	});
-
-	*/
-
+	// swarm event loop
 	let subfield_client_clone = subfield_client.clone();
 	tokio::task::spawn(async move {
-		if port != 3000 {
-			subfield_client_clone.bootstrap().await.unwrap();
-		}
+		// if port != 3000 {
+		// 	subfield_client_clone.bootstrap().await.unwrap();
+		// }
 		subfield_client_clone.event_loop().await;
 	});
 
+	// test func
 	let subfield_client_clone2 = subfield_client.clone();
 	tokio::task::spawn(async move {
-		// let _ = tokio::time::sleep(tokio::time::Duration::from_secs(1)).await;
-		// let message = V256::random256().to_string();
-		// let res = subfield_client_clone2
-		// 	.echo(proto::EchoRequest { message: message.clone() })
-		// 	.await;
-		// match res {
-		// 	Ok(response) => {
-		// 		if response.message != message {
-		// 			tracing::error!("ECHO FAILED: {} != {}", message, response.message);
-		// 		} else {
-		// 			tracing::info!("ECHO SUCCESS: {} == {}", message, response.message);
-		// 		}
-		// 	}
-		// 	Err(e) => {
-		// 		tracing::error!("ECHO ERROR: {:?}", e);
-		// 	}
-		// }
+		test_func(subfield_client_clone2).await.unwrap();
+	});
+
+	/*
+	let subfield_client_clone2 = subfield_client.clone();
+	tokio::task::spawn(async move {
 		loop {
 			let _ =
 				tokio::time::sleep(tokio::time::Duration::from_secs(5)).await;
@@ -205,21 +145,39 @@ async fn main() -> EResult<()> {
 				.connected_peers()
 				.map(|peer| peer.to_string())
 				.collect::<Vec<String>>();
+			drop(swarm_lock);
 			tracing::info!("Connected peers: {:?}", peers);
 
-			// if peers.len() > 0 {
-			// 	let _ = subfield_client_clone2.echo(proto::EchoRequest { message: "hello".to_string() }).await;
-			// 	// tracing::info!("Echo response: {:?}", res);
-			// }
+			if peers.len() > 0 {
+				 let res = subfield_client_clone2.echo(proto::EchoRequest { message: "hello".to_string() }).await;
+				 tracing::info!("Successfully recieved Echo response: {:?}", res);
+			 }
 
-			drop(swarm_lock);
 		}
 	});
+
+
+	let subfield_client_clone3 = subfield_client.clone();
+	let monitor_lock = false;
+	if monitor_lock {
+		tokio::task::spawn(async move {
+			loop {
+				// print whether the swarm is locked
+				let swarm_lock = subfield_client_clone3.swarm().now_or_never();
+				tracing::info!("Swarm locked: {:?}", swarm_lock.is_none());
+				drop(swarm_lock);
+				tokio::time::sleep(tokio::time::Duration::from_secs(1)).await;
+			}
+
+		});
+	}
+	*/
 
 	// App Router
 
 	let state = AppState { subfield_client };
 
+	#[allow(unused_mut)]
 	let mut app = Router::new()
 		.route("/", get(homepage))
 		.route("/bootstrap", get(get_bootstrap))
@@ -298,4 +256,46 @@ async fn get_peers(State(state): State<AppState>) -> Json<Vec<String>> {
 		.collect::<Vec<_>>();
 
 	Json(peers)
+}
+
+#[tokio::test]
+async fn test_main() -> EResult<()> {
+	let mut handles = vec![];
+	for i in 0..3 {
+		let handle = tokio::spawn(async move {
+			main_inner(|swarm_client| async move {
+				loop {
+					let _ =
+						tokio::time::sleep(tokio::time::Duration::from_secs(5))
+							.await;
+					// print connected peers
+					let swarm_lock = swarm_client.swarm().await;
+					let peers = swarm_lock
+						.connected_peers()
+						.map(|peer| peer.to_string())
+						.collect::<Vec<String>>();
+					drop(swarm_lock);
+					tracing::info!("Connected peers: {:?}", peers);
+
+					if !peers.is_empty() {
+						let res = swarm_client
+							.echo(proto::EchoRequest {
+								message: "hello".to_string(),
+							})
+							.await;
+						tracing::info!(
+							"Successfully received Echo response: {:?}",
+							res
+						);
+					}
+				}
+			})
+			.await
+		});
+		handles.push(handle);
+	}
+	for handle in handles {
+		handle.await??;
+	}
+	Ok(())
 }

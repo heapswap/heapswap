@@ -104,6 +104,12 @@ impl VersionedBytes {
 	}
 }
 
+impl HasV256 for VersionedBytes {
+	fn v256(&self) -> &V256 {
+		self
+	}
+}
+
 /**
  * Stringable
 */

@@ -11,7 +11,7 @@ enum RecordType {
 }
 
 message Record {
-  subkey.Subkey subkey = 1;
+  // subkey.Subkey subkey = 1;
   RecordType record_type = 2;
   bool is_encrypted = 3;
 
@@ -32,7 +32,7 @@ message Record {
 message SignedRecord {
   bytes record_bytes = 1;
   oneof signature {
-    versioned_bytes.Signature signer_signature = 2;
-    versioned_bytes.Signature cosigner_signature = 3;
+    versioned_bytes.VersionedBytes signer_signature = 2;
+    versioned_bytes.VersionedBytes cosigner_signature = 3;
   }
 }

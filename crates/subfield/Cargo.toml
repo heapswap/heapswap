@@ -54,7 +54,7 @@ client = [
 # path = "src/main.rs"
 # required-features = ["server"]
 [dependencies]
-subfield_proto = { path = "../subfield_proto" }
+# subfield_proto = { path = "../subfield_proto" }
 # prost = { workspace = true }
 #
 ## Networking

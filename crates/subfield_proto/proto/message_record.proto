@@ -11,22 +11,49 @@ import "versioned_bytes.proto";
  * GetRecord
  */
 message GetRecordRequest {
-  subkey.Subkey subkey = 1;
+  subkey.Subkey subkey = 1; // full address to find
   subkey.SubkeyField field = 2; // which field to route by
 }
 
 message GetRecordResponse {
-  record.SignedRecord signed_record = 1;
+  oneof response {
+    Success success = 1;
+    Failure failure = 2;
+  }
+
+  message Success {
+    record.SignedRecord signed_record = 1;
+  }
+
+  enum Failure {
+    Unknown = 0;
+    Invalid = 1;
+  }
 }
 
 /**
  * PutRecord
  */
 message PutRecordRequest {
-  record.SignedRecord signed_record = 1;
+  subkey.Subkey subkey = 1;
+  subkey.SubkeyField field = 2;
+  record.SignedRecord signed_record = 3;
 }
 
-message PutRecordResponse {}
+message PutRecordResponse {
+  oneof response {
+    Success success = 1;
+    Failure failure = 2;
+  }
+
+  message Success {}
+
+  enum Failure {
+    Unknown = 0;
+    Invalid = 1;
+    InvalidSignature = 2;
+  }
+}
 
 /**
  * DeleteRecord
@@ -34,9 +61,21 @@ message PutRecordResponse {}
 message DeleteRecordRequest {
   subkey.Subkey subkey = 1;
   oneof signature {
-    versioned_bytes.Signature signer_signature = 2;
-    versioned_bytes.Signature cosigner_signature = 3;
+    versioned_bytes.VersionedBytes signer_signature = 2;
+    versioned_bytes.VersionedBytes cosigner_signature = 3;
   }
 }
 
-message DeleteRecordResponse {}
+message DeleteRecordResponse {
+  oneof response {
+    Success success = 1;
+    Failure failure = 2;
+  }
+
+  message Success {}
+
+  enum Failure {
+    Unknown = 0;
+    Invalid = 1;
+  }
+}

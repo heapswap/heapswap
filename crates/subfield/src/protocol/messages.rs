@@ -27,6 +27,10 @@ impl SubfieldRequest {
 	pub fn proto(&self) -> &proto::SubfieldRequest {
 		&self.proto
 	}
+
+	pub fn proto_type(&self) -> &proto::subfield_request::RequestType {
+		&self.proto.request_type.as_ref().unwrap()
+	}
 }
 
 impl Serialize for SubfieldRequest {

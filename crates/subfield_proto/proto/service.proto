@@ -28,29 +28,6 @@ service SubfieldService {
   rpc Unsubscribe(message_pubsub.UnsubscribeRequest) returns (message_pubsub.UnsubscribeResponse);
 }
 
-enum SubfieldMessageDiscriminant {
-  // system
-  Ping = 0;
-  Echo = 1;
-  // records
-  GetRecord = 20;
-  PutRecord = 21;
-  DeleteRecord = 22;
-  // pubsub
-  Subscribe = 30;
-  Unsubscribe = 31;
-}
-
-/*
-   enum SubfieldMessage {
-     SubfieldRpcMessageType type = 1;
-     oneof message {
-       SubfieldRequest request = 2;
-       SubfieldResponse response = 3;
-     }
-   }
-*/
-
 message SubfieldRequest {
   oneof request_type {
     // system
@@ -80,33 +57,3 @@ message SubfieldResponse {
     message_pubsub.UnsubscribeResponse unsubscribe = 31;
   }
 }
-
-/*
-   enum SubfieldRequestType {
-     // system
-     PingRequest = 0;
-
-     // records
-     GetRecordRequest = 10;
-     PutRecordRequest = 11;
-     DeleteRecordRequest = 12;
-
-     // pubsub
-     SubscribeRequest = 20;
-     UnsubscribeRequest = 21;
-   }
-
-   enum SubfieldResponseType {
-     // system
-     PingResponse = 0;
-
-     // records
-     GetRecordResponse = 10;
-     PutRecordResponse = 11;
-     DeleteRecordResponse = 12;
-
-     // pubsub
-     SubscribeResponse = 20;
-     UnsubscribeResponse = 21;
-   }
-*/

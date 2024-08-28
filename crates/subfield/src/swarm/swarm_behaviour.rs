@@ -77,6 +77,9 @@ impl SubfieldBehaviour {
 		)?;
 		*/
 
+		let kad_config =
+			kad::Config::new(StreamProtocol::new("/subfield/kad/1.0.0"));
+
 		let mut behaviour = SubfieldBehaviour {
 			subfield: Behaviour::new(
 				[(
@@ -85,10 +88,11 @@ impl SubfieldBehaviour {
 				)],
 				request_response::Config::default(),
 			),
-			// pubsub: gossipsub,
-			kad: kad::Behaviour::new(
-				key.public().to_peer_id(),
-				MemoryStore::new(key.public().to_peer_id()),
+			//pubsub: gossipsub,
+			kad: kad::Behaviour::with_config(
+				local_peer_id.clone(),
+				MemoryStore::new(local_peer_id.clone()),
+				kad_config,
 			),
 			ping: ping::Behaviour::new(ping::Config::new()),
 			dcutr: dcutr::Behaviour::new(local_peer_id.clone()),
