@@ -1,7 +1,14 @@
 use crate::*;
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
-pub enum SubfieldRequest {
+pub struct SubfieldRequest {
+	pub subkey: RoutingSubkey,
+	pub body: SubfieldRequestBody,
+}
+
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub enum SubfieldRequestBody {
 	// System
 	Ping(PingRequest), // oneshot
 	Echo(EchoRequest), // oneshot
@@ -18,16 +25,15 @@ pub enum SubfieldRequest {
 
 impl SubfieldRequest {
 	pub fn is_streaming(&self) -> bool {
-		matches!(self, 
-			SubfieldRequest::Subscribe(_) | SubfieldRequest::Unsubscribe(_)
+		matches!(self.body, 
+			SubfieldRequestBody::Subscribe(_) | SubfieldRequestBody::Unsubscribe(_)
 		)
 	}
 	
 	pub fn is_oneshot(&self) -> bool {
 		!self.is_streaming()
 	}
-	
-	
+
 }
 
 

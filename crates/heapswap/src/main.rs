@@ -224,7 +224,7 @@ async fn homepage() -> Html<&'static str> {
 async fn get_bootstrap(State(state): State<AppState>) -> Json<Vec<String>> {
 	let filter_private = !DEV_MODE;
 
-	let swarm_lock = state.subfield_client.swarm().await;
+	let swarm_lock = state.subfield_client.swarm_lock().await;
 	let addresses = swarm_lock
 		.listeners()
 		.into_iter()
@@ -247,7 +247,7 @@ async fn get_bootstrap(State(state): State<AppState>) -> Json<Vec<String>> {
 }
 
 async fn get_peers(State(state): State<AppState>) -> Json<Vec<String>> {
-	let swarm_lock = state.subfield_client.swarm().await;
+	let swarm_lock = state.subfield_client.swarm_lock().await;
 
 	let peers = swarm_lock
 		.connected_peers()
@@ -269,7 +269,7 @@ async fn test_main() -> EResult<()> {
 						tokio::time::sleep(tokio::time::Duration::from_secs(5))
 							.await;
 					// print connected peers
-					let swarm_lock = swarm_client.swarm().await;
+					let swarm_lock = swarm_client.swarm_lock().await;
 					let peers = swarm_lock
 						.connected_peers()
 						.map(|peer| peer.to_string())
@@ -279,7 +279,7 @@ async fn test_main() -> EResult<()> {
 
 					if !peers.is_empty() {
 						let res = swarm_client
-							.echo(V256::random256(), "hello")
+							.echo(RoutingSubkey::random(), "hello")
 							.await;
 						tracing::info!(
 							"Successfully received Echo response: {:?}",

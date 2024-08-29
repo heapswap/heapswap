@@ -39,6 +39,14 @@ impl PartialSubkey {
 			tangent: self.tangent.clone().unwrap(),
 		})
 	}
+	
+	pub fn from_complete(complete: CompleteSubkey) -> PartialSubkey {
+		PartialSubkey {
+			signer: Some(complete.signer),
+			cosigner: Some(complete.cosigner),
+			tangent: Some(complete.tangent),
+		}
+	}
 
 	/**
 	 * Hashing

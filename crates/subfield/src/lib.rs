@@ -31,6 +31,8 @@ pub type DateTimeUtc = DateTime<Utc>;
 pub use std::collections::{HashMap, HashSet};
 
 pub use lazy_static::lazy_static;
+pub use libp2p::request_response::ResponseChannel;
+
 /**
  * Reexports
 */

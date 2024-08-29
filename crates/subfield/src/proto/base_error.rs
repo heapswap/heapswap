@@ -2,7 +2,12 @@ use crate::*;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum SubfieldError {
+	BootstrapFailedNoMultiaddrs,
+	BootstrapFailedNoUrls,
+	BootstrapFailedDial,
 	IncompleteSubkey,
+	CompleteSubkeyMissingField,
+	RoutingSubkeyMissingField,
 	NoConnectedPeers,
 	NoLocalPeer,
 	SelfIsClosest,
@@ -10,5 +15,6 @@ pub enum SubfieldError {
 	RequestFailed,
 	UnexpectedResponseType,
 	PortalError(PortalError),
-	ChannelClosed
+	ChannelClosed,
+	SwarmError,
 }

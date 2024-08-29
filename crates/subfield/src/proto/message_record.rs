@@ -29,15 +29,14 @@ pub type GetRecordResponse = Result<GetRecordSuccess, GetRecordFailure>;
 */
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct PutRecordRequest {
-	pub routing_subkey: RoutingSubkey,
 	pub record_bytes: Vec<u8>,
 	pub signature: crypto::Signature,
 }
 
 impl PutRecordRequest {
-	pub fn verify(&self) -> Result<(CompleteSubkey, Record), RecordError> {
-		
-		let subkey = self.routing_subkey.to_complete_subkey();
+		pub fn verify(&self, routing_subkey: RoutingSubkey) -> Result<(CompleteSubkey, Record), RecordError> {
+			
+		let subkey = routing_subkey.to_complete_subkey().map_err(|e| RecordError::SubfieldError(e))?;
 		let record: Record = cbor_deserialize(&self.record_bytes).map_err(|e| RecordError::DeserializationError)?;
 		
 		// routing subkey must be the same as the internal subkey
@@ -54,7 +53,6 @@ impl PutRecordRequest {
 		}
 	}
 }
-
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct PutRecordSuccess {}
@@ -75,7 +73,6 @@ pub type PutRecordResponse = Result<PutRecordSuccess, PutRecordFailure>;
 */
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct DeleteRecordRequest {
-	pub routing_subkey: RoutingSubkey,
 	pub signature: DeleteRecordSignature,
 }
 

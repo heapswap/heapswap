@@ -11,9 +11,11 @@ impl SubfieldServiceTrait for SubfieldClient {
 		message: &str,
 	) -> EchoResponse {
 		
-		let request = EchoRequest {
+		let request = SubfieldRequest {
 			subkey: subkey.clone(),
-			message: message.to_string(),
+			body: SubfieldRequestBody::Echo(EchoRequest {
+				message: message.to_string(),
+			}),
 		};	
 		
 		let handle = self
@@ -46,7 +48,7 @@ impl SubfieldServiceTrait for SubfieldClient {
 		subkey: CompleteSubkey,
 		record: Record,
 	) -> PutRecordResponse {
-		self.put_record_with_keypair(subkey, record, self.config.keypair.clone()).await
+		self.put_record_with_keypair(subkey, record, self.config().keypair.clone()).await
 	}
 	
 	async fn put_record_with_keypair(
@@ -66,27 +68,29 @@ impl SubfieldServiceTrait for SubfieldClient {
 					request.routing_subkey.clone(),
 					SubfieldRequest::PutRecord(request)
 				).await?;
-				let res = self.request_handles.subfield.recv_stream(handle).await.map_err(|_| SubfieldError::UnexpectedResponseType);
-				self.request_handles.subfield.delete_stream(handle);
-				res
+
+				let res = self.recv_next_response_from_portal(handle).await?;
+				Ok(res)
 			};
 			Box::pin(future)
 		});
 			
 		// wait for all of the channels to return a response
-		let responses = futures::future::join_all(channels).await;
+		let responses: Vec<Result<SubfieldResponse, SubfieldError>> = futures::future::join_all(channels).await;
 			
+		// if at least one of the responses is ok, return the first one
 		for response in responses.clone() {
-			if response.is_err() {
-				return Err(PutRecordFailure::ServiceError(SubfieldError::RequestFailed));
+			if response.is_ok() {
+				match response.unwrap() {
+					SubfieldResponse::PutRecord(res) => {
+						return res.clone();
+					}
+					_ => {
+					}
+				}
 			}
 		}
-
-		let SubfieldResponse::PutRecord(res) = responses[0].as_ref().map_err(|_| PutRecordFailure::ServiceError(SubfieldError::UnexpectedResponseType))? else {
-			return Err(PutRecordFailure::ServiceError(SubfieldError::UnexpectedResponseType));
-		};
-
-		res.clone()
+		return Err(PutRecordFailure::ServiceError(SubfieldError::RequestFailed));
 	}
 	
 

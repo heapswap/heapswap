@@ -26,6 +26,14 @@ impl CompleteSubkey {
 		}
 	}
 	
+	pub fn from_partial(partial: PartialSubkey) -> Result<CompleteSubkey, SubfieldError> {
+		Ok(CompleteSubkey {
+			signer: partial.signer.ok_or(SubfieldError::CompleteSubkeyMissingField)?,
+			cosigner: partial.cosigner.ok_or(SubfieldError::CompleteSubkeyMissingField)?,
+			tangent: partial.tangent.ok_or(SubfieldError::CompleteSubkeyMissingField)?,
+		})
+	}
+	
 	/**
 	 * Hashing
 	*/

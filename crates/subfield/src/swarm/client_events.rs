@@ -4,24 +4,26 @@ use crate::*;
 #[async_trait]
 impl SubfieldEventsTrait for SubfieldClient { 
 	
-	pub async fn bootstrap(&self) -> eyre::Result<()> {
+	async fn bootstrap(&self) -> Result<(), SubfieldError> {
 		
-		let mut config = self.config.clone();		
+		
+		
+		let mut config = self.config().clone();		
 		
 		// if the list of multiaddrs is empty, try to get it from the urls
 		if config.bootstrap_multiaddrs.is_empty() {
 			// if the list of urls is empty, return an error
 			if config.bootstrap_urls.is_empty() {
-				return Err(eyr!("No bootstrap URLs provided"));
+				return Err(SubfieldError::BootstrapFailedNoUrls);
 			} else {
-				config = config.get_bootstrap_multiaddrs_from_urls().await?;
+				config = config.get_bootstrap_multiaddrs_from_urls().await.map_err(|e| SubfieldError::BootstrapFailedNoMultiaddrs)?;
 			}
 		}
 		
 		// we only need to try to connect to one, so break after the first success
 		let mut success = false;
 
-		let mut swarm_lock = self.swarm.lock().await;
+		let mut swarm_lock = self.swarm_lock().await;
 
 		for multiaddr in config.bootstrap_multiaddrs.clone() {
 			tracing::info!("Dialing bootstrap Multiaddr: {:?}", multiaddr);
@@ -47,13 +49,13 @@ impl SubfieldEventsTrait for SubfieldClient {
 		if success {
 			return Ok(());
 		} else {
-			Err(eyr!("Failed to connect to any bootstrap nodes"))
+			Err(SubfieldError::BootstrapFailedDial)
 		}
 	}
 
-	pub async fn event_loop(&self) {
+	async fn event_loop(&self) {
 		loop {
-			let mut swarm_lock = self.swarm.lock().await;
+			let mut swarm_lock = self.swarm_lock().await;
 
 			let Some(Some(event)) = swarm_lock.next().now_or_never() else {
 				continue;
@@ -80,13 +82,18 @@ impl SubfieldEventsTrait for SubfieldClient {
 											request,
 											channel,
 										} => {
-											match request {
-												SubfieldRequest::Echo(request) => {
-													let response = SubfieldResponse::Echo(Ok(EchoSuccess {
-														message: request.message,
-													}));
-													let _ = behaviour.subfield.send_response(channel, response);
+											
+											let handle = Self::strip_inbound_request_id(request_id);
+											
+											// let closer_peer = self.closest_local_peer(request.routing_subkey.clone()).await;											
+											
+											let closer_peer: Option<libp2p::PeerId> = None;
+											
+											match (request.body, closer_peer) {
+												(SubfieldRequestBody::Echo(request), None) => {
+													let _ = self.handle_self_is_closest(handle, request, channel, &mut swarm_lock).await;
 												}
+												/*
 												SubfieldRequest::PutRecord(request) => {
 													// check if self is the closest peer
 													let closest_peer = self.closest_local_peer(request.routing_subkey.clone()).await;
@@ -100,7 +107,7 @@ impl SubfieldEventsTrait for SubfieldClient {
 															match request.verify() {
 																Ok((subkey, record)) => {
 																	// put the record locally
-																	self.store.insert(subkey, record);
+																	self.store().insert(subkey, record);
 																	
 																	// send a success response
 																	let _ = behaviour.subfield.send_response(channel, SubfieldResponse::PutRecord(Ok(PutRecordSuccess {})));
@@ -123,6 +130,7 @@ impl SubfieldEventsTrait for SubfieldClient {
 													
 													
 												}
+												*/
 												_ => {}
 											}
 										}
@@ -131,9 +139,8 @@ impl SubfieldEventsTrait for SubfieldClient {
 											request_id,
 											response,
 										} => {
-											let mut oneshot = false;
 											
-											let handle = get_outbound_request_id(request_id);
+											let handle = Self::strip_outbound_request_id(request_id);
 											
 											let _ = self.send_response_to_portal(handle, response);
 										}
@@ -208,27 +215,27 @@ impl SubfieldEventsTrait for SubfieldClient {
 		}
 	}
 
-	pub async fn send_request(
+	async fn send_request(
 		&self,
 		peer_id: libp2p::PeerId,
 		request: SubfieldRequest,
 	) -> Result<u64, SubfieldError> {
 
-		let mut swarm_lock = self.swarm.lock().await;
+		let mut swarm_lock = self.swarm_lock().await;
 
 		let behaviour = &mut *swarm_lock.behaviour_mut();
 
 		let request_id =
 			behaviour.subfield.send_request(&peer_id, request.clone());
 
-		let handle = get_outbound_request_id(request_id);
+		let handle = Self::strip_outbound_request_id(request_id);
 		
 		self.create_portal(handle, &request)?;
 
 		Ok(handle)
 	}
 
-	pub async fn send_request_to_closest_local_peer(
+	async fn send_request_to_closest_local_peer(
 		&self,
 		subkey: RoutingSubkey,
 		request: SubfieldRequest,
@@ -256,8 +263,8 @@ impl SubfieldEventsTrait for SubfieldClient {
 
 		
 	// will only be used for testing
-	pub async fn random_local_peer(&self) -> Option<libp2p::PeerId> {
-		let swarm_lock = self.swarm.lock().await;
+	async fn random_local_peer(&self) -> Option<libp2p::PeerId> {
+		let swarm_lock = self.swarm_lock().await;
 		let swarm = &*swarm_lock;
 		let peers: Vec<_> = swarm.connected_peers().collect();
 		peers
@@ -267,25 +274,25 @@ impl SubfieldEventsTrait for SubfieldClient {
 	}
 
 	// most common case: closest local peer
-	pub async fn closest_local_peer(
+	async fn closest_local_peer(
 		&self,
 		subkey: RoutingSubkey,
-	) -> LocalClosestKeyResult {
-		let target = subkey.get_only_routing_field();
-		let mut swarm_lock = self.swarm.lock().await;
+	) -> Result<Option<libp2p::PeerId>, SubfieldError> {
+		let routing_field = subkey.get_routing_field().map_err(|e| LocalClosestKeyResult::Err(e))?; 
+		let mut swarm_lock = self.swarm_lock().await;
 		let kad = &mut swarm_lock.behaviour_mut().kad;
-		let target_key = target.to_key();
+		let routing_field_key = routing_field.to_key();
 
 		// get closest key
-		let closest_key = kad.get_closest_local_peers(&target_key).next();
+		let closest_key = kad.get_closest_local_peers(&routing_field_key).next();
 		if closest_key.is_none() {
 			return LocalClosestKeyResult::SelfIsClosest;
 		}
 		let closest_key = closest_key.unwrap();
 		let closest_peer_id = closest_key.preimage();
 
-		let local_dist = target_key.distance(&self.local_peer_key);
-		let closest_dist = target_key.distance(&closest_key);
+		let local_dist = routing_field_key.distance(self.local_peer_key());
+		let closest_dist = routing_field_key.distance(&closest_key);
 
 
 		// server needs to check if it is the closest peer
@@ -300,7 +307,7 @@ impl SubfieldEventsTrait for SubfieldClient {
 	}
 
 	/*
-	pub async fn closest_global_peer(
+	async fn closest_global_peer(
 		&self,
 		target: libp2p::kad::RecordKey,
 	) -> Option<libp2p::PeerId> {

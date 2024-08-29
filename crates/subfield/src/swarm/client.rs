@@ -59,27 +59,15 @@ impl SubfieldRequestHandles {
 	}
 }
 
-fn get_outbound_request_id(request_id: OutboundRequestId) -> u64 {
-	unsafe { std::mem::transmute::<OutboundRequestId, u64>(request_id) }
-}
 
-fn get_inbound_request_id(request_id: InboundRequestId) -> u64 {
-	unsafe { std::mem::transmute::<InboundRequestId, u64>(request_id) }
-}
-
-pub enum LocalClosestKeyResult {
-	Ok(libp2p::PeerId),
-	// NoPeersConnected,
-	SelfIsClosest,
-}
 
 impl SubfieldClient {
 	/**
 	 * Constructor
 		*/
-	pub async fn new(config: SubfieldConfig) -> EResult<Self> {
+	pub async fn new(config: SubfieldConfig) -> Result<Self, SubfieldError> {
 		let swarm: ThreadsafeSubfieldSwarm =
-			Arc::new(Mutex::new(swarm::create_swarm(config.clone()).await?));
+			Arc::new(Mutex::new(swarm::create_swarm(config.clone()).await.map_err(|e| SubfieldError::SwarmError)?));
 		let request_handles: Arc<SubfieldRequestHandles> =
 			Arc::new(SubfieldRequestHandles::new());
 		// let store = store::SubfieldStore::new(config.clone()).await?;
@@ -100,7 +88,7 @@ impl SubfieldClient {
 	/**
 	 * Getters
 		*/
-	pub async fn swarm(&self) -> MutexGuard<swarm::SubfieldSwarm> {
+	pub async fn swarm_lock(&self) -> MutexGuard<swarm::SubfieldSwarm> {
 		self.swarm.lock().await
 	}
 
@@ -117,6 +105,18 @@ impl SubfieldClient {
 	// }
 	
 	/**
+	 * Utils
+	*/
+	pub fn strip_outbound_request_id(request_id: OutboundRequestId) -> u64 {
+		unsafe { std::mem::transmute::<OutboundRequestId, u64>(request_id) }
+	}
+	
+	pub fn strip_inbound_request_id(request_id: InboundRequestId) -> u64 {
+		unsafe { std::mem::transmute::<InboundRequestId, u64>(request_id) }
+	}
+	
+	
+	/**
 	 * Bootstrap
 	*/
 
@@ -125,7 +125,7 @@ impl SubfieldClient {
 	 * Channel Creation
 	*/
 	
-	fn create_portal(&self, handle: u64, request: &SubfieldRequest) -> Result<(), SubfieldError> {
+	pub fn create_portal(&self, handle: u64, request: &SubfieldRequest) -> Result<(), SubfieldError> {
 		if request.is_oneshot() {
 			let _ = self
 			.request_handles

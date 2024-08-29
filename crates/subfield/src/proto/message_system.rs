@@ -5,7 +5,6 @@ use crate::*;
 */
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct PingRequest {
-	pub subkey: RoutingSubkey,
 	pub timestamp: DateTimeUtc,
 }
 
@@ -28,7 +27,6 @@ pub type PingResponse = Result<PingSuccess, PingFailure>;
 */
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct EchoRequest {
-	pub subkey: RoutingSubkey,
 	pub message: String,
 }
 

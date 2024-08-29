@@ -28,6 +28,7 @@ pub enum RecordError {
 	InvalidSignature,
 	GetRecordFailure(GetRecordFailure),
 	KeyError(KeyError),
+	SubfieldError(SubfieldError),
 }
 
 impl Record {
@@ -35,7 +36,7 @@ impl Record {
 		&self,
 		subkey: &CompleteSubkey,
 		keypair: &Keypair,
-	) -> Result<[PutRecordRequest; 3], RecordError> {
+	) -> Result<[SubfieldRequest; 3], RecordError> {
 		
 		// The keypair's public key must be equal to the subkey's signer
 		if *keypair.public_key().v256() != subkey.clone().signer {
@@ -45,23 +46,31 @@ impl Record {
 		let record_bytes = cbor_serialize(self).unwrap();
 
 		let signature = keypair.sign(&record_bytes);
+		
+		let partial_subkey = PartialSubkey::from_complete(subkey.clone());
 
 		let put_record_requests = [
-			PutRecordRequest {
-				routing_subkey: RoutingSubkey::Signer(subkey.clone()),
-				record_bytes: record_bytes.clone(),
-				signature: signature.clone(),
+			SubfieldRequest {
+				subkey: RoutingSubkey::Signer(partial_subkey.clone()),
+				body: SubfieldRequestBody::PutRecord(PutRecordRequest {
+					record_bytes: record_bytes.clone(),
+					signature: signature.clone(),
+				}),
 			},
-			PutRecordRequest {
-				routing_subkey: RoutingSubkey::Cosigner(subkey.clone()),
-				record_bytes: record_bytes.clone(),
-				signature: signature.clone(),
+			SubfieldRequest {
+				subkey: RoutingSubkey::Cosigner(partial_subkey.clone()),
+				body: SubfieldRequestBody::PutRecord(PutRecordRequest {
+					record_bytes: record_bytes.clone(),
+					signature: signature.clone(),
+				}),
 			},
-			PutRecordRequest {
-				routing_subkey: RoutingSubkey::Tangent(subkey.clone()),
-				record_bytes: record_bytes.clone(),
-				signature: signature.clone(),
-			},
+			SubfieldRequest {
+				subkey: RoutingSubkey::Tangent(partial_subkey.clone()),
+				body: SubfieldRequestBody::PutRecord(PutRecordRequest {
+					record_bytes: record_bytes.clone(),
+					signature: signature.clone(),
+				}),
+			},			
 		];
 
 		Ok(put_record_requests)
@@ -73,7 +82,7 @@ impl Record {
 		let success = get_record_response
 			.map_err(|failure| RecordError::GetRecordFailure(failure))?;
 
-		let subkey = success.routing_subkey.to_complete_subkey();
+		let subkey = success.routing_subkey.to_complete_subkey().map_err(|e| RecordError::SubfieldError(e))?;
 
 		// verify signature
 		let public_key = PublicKey::new(subkey.signer);
