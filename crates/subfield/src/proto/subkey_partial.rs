@@ -4,71 +4,55 @@ use crate::*;
 use std::collections::HashSet;
 use std::hash::Hash;
 
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub enum SubkeyError {
-	InvalidProto,
-	EncodeError,
-	DecodeError,
-	IncompleteSubkey,
-	SignatureError,
-	RequiresEitherSignerOrCosigner,
-}
 
-pub type Subkeyfield = Option<V256>;
 
+pub type PartialSubkeyField = Option<CompleteSubkeyField>;
+
+// this is the base subkey type
+// all fields are optional, but at least one is expected to be set
 #[derive(Debug, Clone, PartialEq, Eq, Getters, Serialize, Deserialize)]
-pub struct Subkey {
-	pub signer: Subkeyfield,
-	pub cosigner: Subkeyfield,
-	pub tangent: Subkeyfield,
+pub struct PartialSubkey {
+	pub signer: PartialSubkeyField,
+	pub cosigner: PartialSubkeyField,
+	pub tangent: PartialSubkeyField,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub enum RoutingSubkey {
-	Signer(Subkey),
-	Cosigner(Subkey),
-	Tangent(Subkey),
-}
-
-pub fn flatten_routing_subkey(routing_subkey: RoutingSubkey) -> Subkey {
-	match routing_subkey {
-		RoutingSubkey::Signer(subkey) => subkey,
-		RoutingSubkey::Cosigner(subkey) => subkey,
-		RoutingSubkey::Tangent(subkey) => subkey,
-	}
-}
-
-lazy_static! {
-	static ref ZERO: V256 = V256::zero(0, 256);
-}
-
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-pub enum SubkeyField {
-	Signer = 0,
-	Cosigner = 1,
-	Tangent = 2,
-}
-
-const SUBKEY_FIELDS: [SubkeyField; 3] = [
-	SubkeyField::Signer,
-	SubkeyField::Cosigner,
-	SubkeyField::Tangent,
-];
-
-impl Subkey {
+impl PartialSubkey {
+	
 	/**
-	 * Hash - for use in system
-		*/
+	 * Conversions
+	*/
+	
+	pub fn is_complete(&self) -> bool {
+		self.signer.is_some()
+			&& self.cosigner.is_some()
+			&& self.tangent.is_some()
+	}
+	
+	pub fn to_complete(&self) -> Result<CompleteSubkey, SubkeyError> {
+		if !self.is_complete() {
+			return Err(SubkeyError::IncompleteSubkey);
+		}
+		Ok(CompleteSubkey {
+			signer: self.signer.clone().unwrap(),
+			cosigner: self.cosigner.clone().unwrap(),
+			tangent: self.tangent.clone().unwrap(),
+		})
+	}
+
+	/**
+	 * Hashing
+	*/
 
 	pub fn hash(&self) -> V256 {
 		Self::hash_concat(&[&self.signer, &self.cosigner, &self.tangent])
 	}
 
 	// hash multiple subkeys put together
-	fn hash_concat(hashes: &[&Option<V256>]) -> V256 {
+	pub fn hash_concat(hashes: &[&Option<V256>]) -> V256 {
 		let concatenated: Vec<u8> = hashes
 			.iter()
-			.flat_map(|v| v.as_ref().unwrap_or(&ZERO).to_vec())
+			.flat_map(|v| v.as_ref().unwrap_or(&ZERO_V256).to_vec())
 			.collect();
 		crypto::hash(&concatenated)
 	}
@@ -95,11 +79,6 @@ impl Subkey {
 		Ok(res.into_iter().collect())
 	}
 
-	pub fn is_complete(&self) -> bool {
-		self.signer.is_some()
-			&& self.cosigner.is_some()
-			&& self.tangent.is_some()
-	}
 
 	/*
 	// build the 3 get record requests to get a subkey
@@ -175,7 +154,7 @@ impl Subkey {
 /**
  * Randomable
 */
-impl Randomable for Subkey {
+impl Randomable for PartialSubkey {
 	fn random() -> Self {
 		Self {
 			signer: Some(V256::random256()),
@@ -188,78 +167,8 @@ impl Randomable for Subkey {
 /**
  * Hash (for use in maps)
 */
-impl Hash for Subkey {
+impl Hash for PartialSubkey {
 	fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
 		self.hash().hash(state)
 	}
 }
-
-/*
-Protable
-fn option_to_proto<T: Protoable<P, E>, P, E>(
-	opt: Option<T>,
-) -> Result<Option<P>, SubkeyError> {
-	match opt {
-		Some(t) => {
-			Ok(Some(t.to_proto().map_err(|_| SubkeyError::InvalidProto)?))
-		}
-		None => Ok(None),
-	}
-}
-
-fn key_to_proto(
-	vb: &Option<V256>,
-) -> Result<Option<proto::VersionedBytes>, SubkeyError> {
-	option_to_proto::<V256, proto::VersionedBytes, VersionedBytesError>(
-		vb.clone(),
-	)
-}
-
-fn proto_to_option<T: Protoable<P, E>, P, E>(
-	vb: Option<P>,
-) -> Result<Option<T>, SubkeyError> {
-	match vb {
-		Some(p) => Ok(Some(
-			T::from_proto(p).map_err(|_| SubkeyError::InvalidProto)?,
-		)),
-		None => Ok(None),
-	}
-}
-
-fn proto_to_key(
-	vb: &Option<proto::VersionedBytes>,
-) -> Result<Option<V256>, SubkeyError> {
-	proto_to_option::<V256, proto::VersionedBytes, VersionedBytesError>(
-		vb.clone(),
-	)
-}
-
-impl Protoable<proto::Subkey, SubkeyError> for Subkey {
-	fn to_proto(&self) -> Result<proto::Subkey, SubkeyError> {
-		Ok(proto::Subkey {
-			signer: key_to_proto(&self.signer)?,
-			cosigner: key_to_proto(&self.cosigner)?,
-			tangent: key_to_proto(&self.tangent)?,
-		})
-	}
-
-	fn from_proto(proto: proto::Subkey) -> Result<Self, SubkeyError> {
-		Ok(Self {
-			signer: proto_to_key(&proto.signer)?,
-			cosigner: proto_to_key(&proto.cosigner)?,
-			tangent: proto_to_key(&proto.tangent)?,
-		})
-	}
-
-	fn to_proto_bytes(&self) -> Result<Bytes, SubkeyError> {
-		proto::serialize(&self.to_proto()?)
-			.map_err(|_| SubkeyError::EncodeError)
-	}
-
-	fn from_proto_bytes(bytes: Bytes) -> Result<Self, SubkeyError> {
-		Self::from_proto(
-			proto::deserialize(bytes).map_err(|_| SubkeyError::DecodeError)?,
-		)
-	}
-}
-*/

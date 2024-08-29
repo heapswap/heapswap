@@ -3,7 +3,7 @@ use crate::*;
 #[test]
 fn test_subkey_hash_combinations() {
 	// all combinations 2^3 - 1 = 7
-	let subkey = Subkey {
+	let subkey = PartialSubkey {
 		signer: Some(V256::random256()),
 		cosigner: Some(V256::random256()),
 		tangent: Some(V256::random256()),
@@ -12,16 +12,16 @@ fn test_subkey_hash_combinations() {
 	assert_eq!(hashes.len(), 7);
 
 	// all combinations 2^2 - 1 = 3
-	let subkey = Subkey {
+	let subkey = PartialSubkey {
 		signer: Some(V256::random256()),
 		cosigner: Some(V256::random256()),
-		tangent: None,
+		tangent: None
 	};
 	let hashes = subkey.hash_combinations().unwrap();
 	assert_eq!(hashes.len(), 3);
 
 	// all combinations 2^1 - 1 = 1
-	let subkey = Subkey {
+	let subkey = PartialSubkey {
 		signer: Some(V256::random256()),
 		cosigner: None,
 		tangent: None,

@@ -279,9 +279,7 @@ async fn test_main() -> EResult<()> {
 
 					if !peers.is_empty() {
 						let res = swarm_client
-							.echo(proto::EchoRequest {
-								message: "hello".to_string(),
-							})
+							.echo(V256::random256(), "hello")
 							.await;
 						tracing::info!(
 							"Successfully received Echo response: {:?}",

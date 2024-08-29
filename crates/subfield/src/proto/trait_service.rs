@@ -1,31 +1,17 @@
 use crate::*;
 
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
-pub enum SubfieldServiceError {
-	IncompleteSubkey,
-	NoConnectedPeers,
-	NoLocalPeer,
-	SelfIsClosest,
-	UnexpectedResponseType,
-}
 
-pub type SubfieldServiceResult<T> = Result<T, SubfieldServiceError>;
-pub type SubfieldServiceStreamingResult<T> =
-	Result<Receiver<T>, SubfieldServiceError>;
+	
 
+// the service trait is the user-facing trait for interacting with the protocol
+	
 #[async_trait]
-pub trait SubfieldService {
+pub trait SubfieldServiceTrait {
 	/**
 	 * System
 		*/
-	/*
-	async fn ping(
-		&self,
-		request: proto::PingRequest,
-	) -> SubfieldServiceResult<proto::PingResponse>;
-	*/
 
-	async fn echo(&self, message: &str) -> EchoResponse;
+	async fn echo(&self, subkey: RoutingSubkey, message: &str) -> EchoResponse;
 
 	/*
 	Records
@@ -33,20 +19,20 @@ pub trait SubfieldService {
 
 	   /*
 	async fn get_record(&self, subkey: Subkey) -> GetRecordResponse;
-
+		*/
 	async fn put_record(
 		&self,
-		subkey: Subkey,
+		subkey: CompleteSubkey,
 		record: Record,
 	) -> PutRecordResponse;
 
 	async fn put_record_with_keypair(
 		&self,
-		keypair: Keypair,
-		subkey: Subkey,
+		subkey: CompleteSubkey,
 		record: Record,
+		keypair: Keypair,
 	) -> PutRecordResponse;
-	 */
+	 
 	
 	/*
 	fn delete_record(

@@ -3,19 +3,22 @@ use crate::*;
 /**
  * Ping
 */
-#[derive(Serialize, Deserialize, Clone)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct PingRequest {
+	pub subkey: RoutingSubkey,
 	pub timestamp: DateTimeUtc,
 }
 
-#[derive(Serialize, Deserialize, Clone)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct PingSuccess {
 	pub timestamp: DateTimeUtc,
 }
 
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub enum PingFailure {
-	Unknown = 0,
-	Invalid = 1,
+	Unknown,
+	Invalid,
+	ServiceError(SubfieldError)
 }
 
 pub type PingResponse = Result<PingSuccess, PingFailure>;
@@ -23,19 +26,22 @@ pub type PingResponse = Result<PingSuccess, PingFailure>;
 /**
  * Echo
 */
-#[derive(Serialize, Deserialize, Clone)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct EchoRequest {
+	pub subkey: RoutingSubkey,
 	pub message: String,
 }
 
-#[derive(Serialize, Deserialize, Clone)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct EchoSuccess {
 	pub message: String,
 }
 
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub enum EchoFailure {
-	Unknown = 0,
-	Invalid = 1,
+	Unknown,
+	Invalid,
+	ServiceError(SubfieldError)
 }
 
 pub type EchoResponse = Result<EchoSuccess, EchoFailure>;

@@ -3,22 +3,23 @@ use crate::*;
 /**
  * GetRecord
  */
-#[derive(Serialize, Deserialize, Clone)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct GetRecordRequest {
 	pub routing_subkey: RoutingSubkey,
 }
 
-#[derive(Serialize, Deserialize, Clone)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct GetRecordSuccess {
 	pub routing_subkey: RoutingSubkey,
 	pub record_bytes: Vec<u8>,
 	pub signature: crypto::Signature,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub enum GetRecordFailure {
-	Unknown = 0,
-	Invalid = 1,
+	Unknown,
+	Invalid,
+	ServiceError(SubfieldError)
 }
 
 pub type GetRecordResponse = Result<GetRecordSuccess, GetRecordFailure>;
@@ -26,20 +27,45 @@ pub type GetRecordResponse = Result<GetRecordSuccess, GetRecordFailure>;
 /**
  * PutRecord
 */
-#[derive(Serialize, Deserialize, Clone)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct PutRecordRequest {
 	pub routing_subkey: RoutingSubkey,
 	pub record_bytes: Vec<u8>,
 	pub signature: crypto::Signature,
 }
 
-#[derive(Serialize, Deserialize, Clone)]
+impl PutRecordRequest {
+	pub fn verify(&self) -> Result<(CompleteSubkey, Record), RecordError> {
+		
+		let subkey = self.routing_subkey.to_complete_subkey();
+		let record: Record = cbor_deserialize(&self.record_bytes).map_err(|e| RecordError::DeserializationError)?;
+		
+		// routing subkey must be the same as the internal subkey
+		if subkey != record.subkey {
+			return Err(RecordError::SubkeyMismatch);
+		}
+		
+		// verify the signature
+		let public_key = crypto::PublicKey::new(subkey.signer.clone());
+		match public_key.verify(&self.record_bytes, &self.signature) {
+			Ok(true) => Ok((subkey, record)),
+			Ok(false) => Err(RecordError::InvalidSignature),
+			Err(e) => Err(RecordError::KeyError(e)),
+		}
+	}
+}
+
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct PutRecordSuccess {}
 
-#[derive(Debug)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub enum PutRecordFailure {
-	Unknown = 0,
-	Invalid = 1,
+	Unknown,
+	Invalid,
+	NoPeersConnected,
+	ServiceError(SubfieldError), 
+	RecordError(RecordError),
 }
 
 pub type PutRecordResponse = Result<PutRecordSuccess, PutRecordFailure>;
@@ -47,24 +73,26 @@ pub type PutRecordResponse = Result<PutRecordSuccess, PutRecordFailure>;
 /**
  * DeleteRecord
 */
-#[derive(Serialize, Deserialize, Clone)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct DeleteRecordRequest {
 	pub routing_subkey: RoutingSubkey,
 	pub signature: DeleteRecordSignature,
 }
 
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub enum DeleteRecordSignature {
 	Signer(Signature),
 	Cosigner(Signature),
 }
 
-#[derive(Serialize, Deserialize, Clone)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct DeleteRecordSuccess {}
 
-#[derive(Debug)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub enum DeleteRecordFailure {
-	Unknown = 0,
-	Invalid = 1,
+	Unknown,
+	Invalid,
+	ServiceError(SubfieldError)
 }
 
 pub type DeleteRecordResponse = Result<DeleteRecordSuccess, DeleteRecordFailure>;

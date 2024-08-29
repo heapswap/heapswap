@@ -1,19 +1,17 @@
 mod config;
 pub use config::*;
 
-// #[cfg(feature = "client")]
 mod client;
-// #[cfg(feature = "client")]
 pub use client::*;
-// #[cfg(feature = "server")]
-// mod server;
-// #[cfg(feature = "server")]
-// pub use server::*;
+mod client_service;
+pub use client_service::*;
+mod client_events;
+pub use client_events::*;
+mod client_handler;
+pub use client_handler::*;
 
 mod swarm_behaviour;
 pub use swarm_behaviour::*;
 mod swarm_create;
 pub use swarm_create::*;
 
-// mod behaviour;
-// pub use behaviour::*;

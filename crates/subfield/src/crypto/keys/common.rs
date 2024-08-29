@@ -46,7 +46,7 @@ pub type Signature = V512;
 /**
  * Errors
 */
-#[derive(Debug, strum::Display)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub enum KeyError {
 	EncodingError,
 	InvalidYCoordinate,

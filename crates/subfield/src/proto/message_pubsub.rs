@@ -3,18 +3,19 @@ use crate::*;
 /**
  * Subscribe
 */
-#[derive(Serialize, Deserialize, Clone)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct SubscribeRequest {
-	pub subkey: Subkey,
+	pub subkey: PartialSubkey,
 }
 
-#[derive(Serialize, Deserialize, Clone)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct SubscribeSuccess {}
 
-#[derive(Debug)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub enum SubscribeFailure {
-	Unknown = 0,
-	Invalid = 1,
+	Unknown,
+	Invalid,
+	ServiceError(SubfieldError)
 }
 
 pub type SubscribeResponse = Result<SubscribeSuccess, SubscribeFailure>;
@@ -22,18 +23,19 @@ pub type SubscribeResponse = Result<SubscribeSuccess, SubscribeFailure>;
 /**
  * Unsubscribe
 */
-#[derive(Serialize, Deserialize, Clone)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct UnsubscribeRequest {
-	pub subkey: Subkey,
+	pub subkey: PartialSubkey,
 }
 
-#[derive(Serialize, Deserialize, Clone)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct UnsubscribeSuccess {}
 
-#[derive(Debug)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub enum UnsubscribeFailure {
-	Unknown = 0,
-	Invalid = 1,
+	Unknown,
+	Invalid,
+	ServiceError(SubfieldError)
 }
 
 pub type UnsubscribeResponse = Result<UnsubscribeSuccess, UnsubscribeFailure>;

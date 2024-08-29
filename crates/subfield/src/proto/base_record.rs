@@ -1,14 +1,14 @@
 use crate::*;
 
-#[derive(Serialize, Deserialize, Clone)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub enum RecordType {
 	Simple = 0,
 }
 
-#[derive(Serialize, Deserialize, Clone)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Record {
 	pub record_type: RecordType,
-	pub subkey: Subkey,
+	pub subkey: CompleteSubkey,
 
 	pub is_encrypted: bool,
 	hash_seed: VersionedBytes,
@@ -18,26 +18,27 @@ pub struct Record {
 	pub updated_at: DateTimeUtc,
 }
 
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub enum RecordError {
+	SerializationError,
+	DeserializationError,
 	SubkeyIncomplete,
+	SubkeyMismatch,
 	KeypairNotSigner,
 	InvalidSignature,
 	GetRecordFailure(GetRecordFailure),
+	KeyError(KeyError),
 }
 
 impl Record {
 	pub fn to_put_record_requests(
 		&self,
-		subkey: Subkey,
+		subkey: &CompleteSubkey,
 		keypair: &Keypair,
 	) -> Result<[PutRecordRequest; 3], RecordError> {
-		// Subkey must be complete
-		if !subkey.is_complete() {
-			return Err(RecordError::SubkeyIncomplete);
-		}
-
+		
 		// The keypair's public key must be equal to the subkey's signer
-		if *keypair.public_key().v256() != subkey.clone().signer.unwrap() {
+		if *keypair.public_key().v256() != subkey.clone().signer {
 			return Err(RecordError::KeypairNotSigner);
 		}
 
@@ -72,15 +73,10 @@ impl Record {
 		let success = get_record_response
 			.map_err(|failure| RecordError::GetRecordFailure(failure))?;
 
-		let subkey = flatten_routing_subkey(success.routing_subkey);
-
-		// make sure the subkey is complete
-		if !subkey.is_complete() {
-			return Err(RecordError::SubkeyIncomplete);
-		}
+		let subkey = success.routing_subkey.to_complete_subkey();
 
 		// verify signature
-		let public_key = PublicKey::new(subkey.signer.unwrap());
+		let public_key = PublicKey::new(subkey.signer);
 		match public_key.verify(&success.record_bytes, &success.signature) {
 			Ok(is_valid) => {
 				if !is_valid {
