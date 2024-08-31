@@ -47,7 +47,7 @@ pub type Signature = V512;
  * Errors
 */
 #[derive(Debug, Serialize, Deserialize, Clone)]
-pub enum KeyError {
+pub enum CryptoKeyError {
 	EncodingError,
 	InvalidYCoordinate,
 	InvalidSignature,

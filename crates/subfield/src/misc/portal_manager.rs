@@ -9,6 +9,7 @@ pub enum PortalError {
 	SendError(String),
 	RecvError(String),
 	HandleNotFound,
+	HandleIsOneshotNotFound,
 	PortalClosed,
 }
 
@@ -41,21 +42,23 @@ impl<M> PortalManager<M> {
 	pub fn handle(&self) -> PortalHandle {
 		self.current_handle.fetch_add(1, Ordering::SeqCst)
 	}
-	
-	pub fn handle_is_oneshot(&self, handle: &PortalHandle) -> bool {
+
+	pub fn handle_is_oneshot(
+		&self,
+		handle: &PortalHandle,
+	) -> Result<bool, PortalError> {
 		match self.handle_is_oneshot_tracker.get(handle) {
-			Some(res) => res.clone(),
-			None => false,
+			Some(res) => Ok(res.clone()),
+			None => Err(PortalError::HandleIsOneshotNotFound),
 		}
 	}
 
-	/**
-	 * Oneshot
+	/*
+	 Oneshot
 	*/
 	pub fn create_oneshot(&self) -> PortalHandle {
 		let handle = self.handle();
 		self.create_oneshot_with_handle(&handle);
-		self.handle_is_oneshot_tracker.insert(handle, true);
 		handle
 	}
 
@@ -63,6 +66,7 @@ impl<M> PortalManager<M> {
 		let (tx, rx) = oneshot::channel();
 		self.oneshot_tx.insert(*handle, tx);
 		self.oneshot_rx.insert(*handle, rx);
+		self.handle_is_oneshot_tracker.insert(*handle, true);
 	}
 
 	pub fn send_oneshot(
@@ -70,14 +74,19 @@ impl<M> PortalManager<M> {
 		handle: &PortalHandle,
 		val: M,
 	) -> Result<(), PortalError> {
-		let (_handle, mut tx) = self.oneshot_tx.remove(&handle).unwrap();
+		let (_handle, tx) = self
+			.oneshot_tx
+			.remove(&handle)
+			.ok_or(PortalError::HandleNotFound)?;
 
-		let _ = tx.send(val);
+		tx.send(val).map_err(|_| {
+			PortalError::SendError("Failed to send oneshot message".into())
+		})?;
 
 		Ok(())
 	}
 
-	pub async fn recv_oneshot(
+	pub async fn recv_next_oneshot(
 		&self,
 		handle: &PortalHandle,
 	) -> Result<M, PortalError> {
@@ -87,14 +96,12 @@ impl<M> PortalManager<M> {
 		Ok(val)
 	}
 
-	
-	/**
-	 * Stream
+	/*
+	 Stream
 	*/
 	pub fn create_stream(&self) -> PortalHandle {
 		let handle = self.handle();
 		self.create_stream_with_handle(&handle);
-		self.handle_is_oneshot_tracker.insert(handle, false);
 		handle
 	}
 
@@ -102,6 +109,7 @@ impl<M> PortalManager<M> {
 		let (tx, rx) = portal::<M>();
 		self.stream_tx.insert(*handle, tx);
 		self.stream_rx.insert(*handle, rx);
+		self.handle_is_oneshot_tracker.insert(*handle, false);
 	}
 
 	pub fn delete_stream(&self, handle: &PortalHandle) -> () {
@@ -123,7 +131,7 @@ impl<M> PortalManager<M> {
 		}
 	}
 
-	pub async fn recv_stream(
+	pub async fn recv_next_stream(
 		&self,
 		handle: &PortalHandle,
 	) -> Result<M, PortalError> {
@@ -145,4 +153,16 @@ impl<M> PortalManager<M> {
 	// 	let (_handle, rx) = self.stream_rx.remove(&handle).unwrap();
 	// 	Ok(rx)
 	// }
+
+	pub async fn recv_next_stream_or_oneshot(
+		&self,
+		handle: &PortalHandle,
+	) -> Result<M, PortalError> {
+		let is_oneshot = self.handle_is_oneshot(handle)?;
+		if is_oneshot {
+			self.recv_next_oneshot(handle).await
+		} else {
+			self.recv_next_stream(handle).await
+		}
+	}
 }

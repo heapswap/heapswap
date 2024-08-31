@@ -12,11 +12,13 @@ use libp2p::{
 	kad, noise, ping,
 	request_response::{self, cbor::Behaviour},
 	swarm::{NetworkBehaviour, SwarmEvent},
-	yamux, StreamProtocol, Swarm,
+	yamux, StreamProtocol, Swarm, swarm::behaviour::toggle::Toggle
 };
 
 #[cfg(feature = "server")]
 use libp2p::{mdns, relay};
+
+use libp2p_stream as stream;
 
 use serde::{Deserialize, Serialize};
 use std::future::Future;
@@ -25,13 +27,19 @@ use std::pin::Pin;
 use std::sync::Arc;
 use std::{io, time::Duration};
 
+
+pub const SUBFIELD_PROTOCOL: StreamProtocol = StreamProtocol::new("/subfield/1.0.0");
+
+
 /**
  * SubfieldBehaviour
 */
 #[derive(NetworkBehaviour)]
 pub struct SubfieldBehaviour {
 	// subfield
-	pub subfield: request_response::cbor::Behaviour<SubfieldRequest,SubfieldResponse>,
+	// pub subfield:
+	// 	request_response::cbor::Behaviour<SubfieldRequest, SubfieldResponse>,
+	pub subfield: stream::Behaviour,
 
 	// utils
 	pub kad: kad::Behaviour<MemoryStore>,
@@ -72,19 +80,20 @@ impl SubfieldBehaviour {
 			gossipsub::MessageAuthenticity::Signed(key.clone()),
 			gossipsub_config,
 		)?;
-		*/
+	*/
 
 		let kad_config =
 			kad::Config::new(StreamProtocol::new("/subfield/kad/1.0.0"));
 
 		let mut behaviour = SubfieldBehaviour {
-			subfield: Behaviour::new(
-				[(
-					StreamProtocol::new("/subfield/1.0.0"),
-					request_response::ProtocolSupport::Full,
-				)],
-				request_response::Config::default(),
-			),
+			// subfield: Behaviour::new(
+			// 	[(
+			// 		StreamProtocol::new("/subfield/1.0.0"),
+			// 		request_response::ProtocolSupport::Full,
+			// 	)],
+			// 	request_response::Config::default(),
+			// ),
+			subfield: stream::Behaviour::new(),
 			//pubsub: gossipsub,
 			kad: kad::Behaviour::with_config(
 				local_peer_id.clone(),
@@ -119,6 +128,7 @@ impl SubfieldBehaviour {
 		{
 			behaviour.kad.set_mode(Some(kad::Mode::Server));
 		}
+
 
 		behaviour
 	}

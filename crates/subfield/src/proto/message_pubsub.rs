@@ -5,7 +5,7 @@ use crate::*;
 */
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct SubscribeRequest {
-	pub subkey: PartialSubkey,
+	pub key: PartialKey,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -15,7 +15,7 @@ pub struct SubscribeSuccess {}
 pub enum SubscribeFailure {
 	Unknown,
 	Invalid,
-	ServiceError(SubfieldError)
+	ServiceError(SubfieldError),
 }
 
 pub type SubscribeResponse = Result<SubscribeSuccess, SubscribeFailure>;
@@ -25,7 +25,7 @@ pub type SubscribeResponse = Result<SubscribeSuccess, SubscribeFailure>;
 */
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct UnsubscribeRequest {
-	pub subkey: PartialSubkey,
+	pub key: PartialKey,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -35,7 +35,7 @@ pub struct UnsubscribeSuccess {}
 pub enum UnsubscribeFailure {
 	Unknown,
 	Invalid,
-	ServiceError(SubfieldError)
+	ServiceError(SubfieldError),
 }
 
 pub type UnsubscribeResponse = Result<UnsubscribeSuccess, UnsubscribeFailure>;

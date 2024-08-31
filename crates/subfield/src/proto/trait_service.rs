@@ -1,39 +1,27 @@
 use crate::*;
 
-
-	
-
 // the service trait is the user-facing trait for interacting with the protocol
-	
+
 #[async_trait]
 pub trait SubfieldServiceTrait {
-	/**
-	 * System
-		*/
+	/*
+	System
+	*/
 
-	async fn echo(&self, subkey: RoutingSubkey, message: &str) -> EchoResponse;
+	async fn echo(&self, key: CompleteKey, message: &str) -> String;
 
 	/*
 	Records
-	   */
+	*/
 
-	   /*
-	async fn get_record(&self, subkey: Subkey) -> GetRecordResponse;
-		*/
+	async fn get_record(&self, key:CompleteKey) -> Record;
+
 	async fn put_record(
 		&self,
-		subkey: CompleteSubkey,
+		key: CompleteKey,
 		record: Record,
 	) -> PutRecordResponse;
 
-	async fn put_record_with_keypair(
-		&self,
-		subkey: CompleteSubkey,
-		record: Record,
-		keypair: Keypair,
-	) -> PutRecordResponse;
-	 
-	
 	/*
 	fn delete_record(
 		&self,
@@ -43,7 +31,7 @@ pub trait SubfieldServiceTrait {
 
 	/*
 	Pubsub
-	  */
+	*/
 	/*
 	fn subscribe(
 		&self,

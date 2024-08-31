@@ -27,9 +27,9 @@ pub struct VersionedBytes {
 }
 
 impl VersionedBytes {
-	/**
-	 * Constructors
-		*/
+	/*
+	Constructors
+	*/
 	pub fn new(version: VersionUsize, data: &[u8]) -> Self {
 		Self {
 			version,
@@ -46,9 +46,9 @@ impl VersionedBytes {
 		Self::new(version, &vec![1; len])
 	}
 
-	/**
-	 * Operations
-		*/
+	/*
+	Operations
+	*/
 	pub fn leading_zeros(&self) -> u32 {
 		let mut count = 0;
 		for i in 0..self.data.len() {
@@ -76,9 +76,9 @@ impl VersionedBytes {
 		count
 	}
 
-	/**
-	 * Random - workaround for wasm not supporting generics
-		*/
+	/*
+	Random - workaround for wasm not supporting generics
+	*/
 
 	pub fn random96() -> Self {
 		let data: Vec<u8> = arr::random(12).try_into().unwrap();
@@ -94,6 +94,10 @@ impl VersionedBytes {
 		let data: Vec<u8> = arr::random(64).try_into().unwrap();
 		VersionedBytes::new(0, data.as_slice())
 	}
+
+	// pub fn to_key(&self) -> libp2p::kad::KBucketKey<Vec<u8>> {
+	// 	libp2p::kad::KBucketKey::new(self.to_vec())
+	// }
 
 	pub fn to_key(&self) -> libp2p::kad::KBucketKey<Vec<u8>> {
 		libp2p::kad::KBucketKey::new(self.to_vec())
@@ -220,18 +224,18 @@ impl Hash for VersionedBytes {
 
 #[wasm_bindgen]
 impl VersionedBytes {
-	/**
-	 * Constructors
-		*/
+	/*
+	Constructors
+	*/
 
 	#[wasm_bindgen(constructor)]
 	pub fn _js_new(version: VersionUsize, data: Uint8Array) -> Self {
 		VersionedBytes::new(version, data.to_vec().as_slice())
 	}
 
-	/**
-	 * Getters
-		*/
+	/*
+	Getters
+	*/
 	#[wasm_bindgen(getter, js_name = "version")]
 	pub fn _js_version(&self) -> VersionUsize {
 		self.version().clone()
@@ -242,9 +246,9 @@ impl VersionedBytes {
 		self.data().clone().as_slice().into()
 	}
 
-	/**
-	 * Random
-		*/
+	/*
+	Random
+	*/
 
 	#[wasm_bindgen(js_name = "random96")]
 	pub fn _js_random96() -> Self {
@@ -261,9 +265,9 @@ impl VersionedBytes {
 		VersionedBytes::random512()
 	}
 
-	/**
-	 * Byteable
-		*/
+	/*
+	Byteable
+	*/
 	#[wasm_bindgen(js_name = "toBytes")]
 	pub fn _js_to_bytes(&self) -> Uint8Array {
 		self.to_vec().clone().as_slice().into()
@@ -274,9 +278,9 @@ impl VersionedBytes {
 		VersionedBytes::from_arr(&data.to_vec()).unwrap()
 	}
 
-	/**
-	 * Stringable
-		*/
+	/*
+	Stringable
+	*/
 	#[wasm_bindgen(js_name = "toString")]
 	pub fn _js_to_string(&self) -> String {
 		self.to_string()

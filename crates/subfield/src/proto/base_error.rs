@@ -1,13 +1,17 @@
 use crate::*;
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+use libp2p_stream::OpenStreamError;
+use thiserror::Error;
+
+#[derive(Debug, Clone, Serialize, Deserialize, strum::Display, Error)]
 pub enum SubfieldError {
+	NoGlobalPeers,
 	BootstrapFailedNoMultiaddrs,
 	BootstrapFailedNoUrls,
 	BootstrapFailedDial,
-	IncompleteSubkey,
-	CompleteSubkeyMissingField,
-	RoutingSubkeyMissingField,
+	IncompleteKey,
+	CompleteKeyMissingField,
+	RoutingKeyMissingField,
 	NoConnectedPeers,
 	NoLocalPeer,
 	SelfIsClosest,
@@ -17,4 +21,8 @@ pub enum SubfieldError {
 	PortalError(PortalError),
 	ChannelClosed,
 	SwarmError,
+	FailedToOpenStream,
+	FailedToWriteStream,
+	FailedToReadStream,
+	FailedToCloseStream,
 }

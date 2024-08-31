@@ -133,46 +133,6 @@ where
 		test_func(subfield_client_clone2).await.unwrap();
 	});
 
-	/*
-	let subfield_client_clone2 = subfield_client.clone();
-	tokio::task::spawn(async move {
-		loop {
-			let _ =
-				tokio::time::sleep(tokio::time::Duration::from_secs(5)).await;
-			// print connected peers
-			let swarm_lock = subfield_client_clone2.swarm().await;
-			let peers = swarm_lock
-				.connected_peers()
-				.map(|peer| peer.to_string())
-				.collect::<Vec<String>>();
-			drop(swarm_lock);
-			tracing::info!("Connected peers: {:?}", peers);
-
-			if peers.len() > 0 {
-				 let res = subfield_client_clone2.echo(proto::EchoRequest { message: "hello".to_string() }).await;
-				 tracing::info!("Successfully recieved Echo response: {:?}", res);
-			 }
-
-		}
-	});
-
-
-	let subfield_client_clone3 = subfield_client.clone();
-	let monitor_lock = false;
-	if monitor_lock {
-		tokio::task::spawn(async move {
-			loop {
-				// print whether the swarm is locked
-				let swarm_lock = subfield_client_clone3.swarm().now_or_never();
-				tracing::info!("Swarm locked: {:?}", swarm_lock.is_none());
-				drop(swarm_lock);
-				tokio::time::sleep(tokio::time::Duration::from_secs(1)).await;
-			}
-
-		});
-	}
-	*/
-
 	// App Router
 
 	let state = AppState { subfield_client };
@@ -279,7 +239,7 @@ async fn test_main() -> EResult<()> {
 
 					if !peers.is_empty() {
 						let res = swarm_client
-							.echo(RoutingSubkey::random(), "hello")
+							.echo("hello".to_string())
 							.await;
 						tracing::info!(
 							"Successfully received Echo response: {:?}",

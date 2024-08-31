@@ -17,7 +17,7 @@ pub struct PingSuccess {
 pub enum PingFailure {
 	Unknown,
 	Invalid,
-	ServiceError(SubfieldError)
+	ServiceError(SubfieldError),
 }
 
 pub type PingResponse = Result<PingSuccess, PingFailure>;
@@ -39,7 +39,7 @@ pub struct EchoSuccess {
 pub enum EchoFailure {
 	Unknown,
 	Invalid,
-	ServiceError(SubfieldError)
+	ServiceError(SubfieldError),
 }
 
 pub type EchoResponse = Result<EchoSuccess, EchoFailure>;

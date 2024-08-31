@@ -26,9 +26,9 @@ pub struct Cipher {
 }
 
 impl Cipher {
-	/**
-	 * Constructors
-		*/
+	/*
+	Constructors
+	*/
 
 	pub fn new(secret: SecretKey) -> Cipher {
 		let key: [u8; 32] = secret.data().clone().try_into().unwrap();
@@ -48,16 +48,16 @@ impl Cipher {
 		Cipher::new(Cipher::random_key())
 	}
 
-	/**
-	 * Getters
-		*/
+	/*
+	Getters
+	*/
 	pub fn secret(&self) -> &SecretKey {
 		&self.secret
 	}
 
-	/**
-	 * Decrypt
-		*/
+	/*
+	Decrypt
+	*/
 	pub fn decrypt(&self, ciphertext: &[u8]) -> Result<Vec<u8>, CipherError> {
 		// check that the ciphertext is at least as long as the nonce
 		if ciphertext.len() < NONCE_LENGTH {
@@ -76,9 +76,9 @@ impl Cipher {
 			.unwrap())
 	}
 
-	/**
-	 * Encrypt
-		*/
+	/*
+	Encrypt
+	*/
 	pub fn encrypt(&self, plaintext: &[u8]) -> Vec<u8> {
 		// Generate nonce
 		let nonce: NonceArray =
@@ -97,9 +97,9 @@ impl Cipher {
 
 #[wasm_bindgen]
 impl Cipher {
-	/**
-	 * Constructors
-		*/
+	/*
+	Constructors
+	*/
 
 	#[wasm_bindgen(constructor)]
 	pub fn _js_new(secret: SecretKey) -> Cipher {
@@ -116,17 +116,17 @@ impl Cipher {
 		Cipher::random()
 	}
 
-	/**
-	 * Getters
-		*/
+	/*
+	Getters
+	*/
 	#[wasm_bindgen(getter, js_name = "secret")]
 	pub fn _js_secret(&self) -> SecretKey {
 		self.secret().clone()
 	}
 
-	/**
-	 * Decrypt
-		*/
+	/*
+	Decrypt
+	*/
 
 	#[wasm_bindgen(js_name = "decrypt")]
 	pub fn _js_decrypt(&self, ciphertext: Uint8Array) -> Uint8Array {
@@ -135,9 +135,9 @@ impl Cipher {
 			.unwrap_or_else(|_| panic!("Invalid ciphertext"))
 	}
 
-	/**
-	 * Encrypt
-		*/
+	/*
+	Encrypt
+	*/
 
 	#[wasm_bindgen(js_name = "encrypt")]
 	pub fn _js_encrypt(&self, plaintext: Uint8Array) -> Uint8Array {

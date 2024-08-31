@@ -48,9 +48,9 @@ impl std::fmt::Debug for PrivateKey {
 }
 
 impl PrivateKey {
-	/**
-	 * Constructors
-		*/
+	/*
+	Constructors
+	*/
 	pub fn new(v256: V256) -> PrivateKey {
 		PrivateKey {
 			v256,
@@ -59,9 +59,9 @@ impl PrivateKey {
 		}
 	}
 
-	/**
-	 * Getters
-		*/
+	/*
+	Getters
+	*/
 
 	pub fn ed(&self) -> &DalekEdPrivateKey {
 		self.ed.get_or_init(|| {
@@ -76,9 +76,9 @@ impl PrivateKey {
 			.get_or_init(|| DalekXPrivateKey::from(self.ed().to_scalar_bytes()))
 	}
 
-	/**
-	 * Operations
-		*/
+	/*
+	Operations
+	*/
 
 	pub fn public_key(&self) -> PublicKey {
 		let public_key = self.ed().verifying_key().to_bytes();
@@ -131,15 +131,15 @@ impl std::hash::Hash for PrivateKey {
 /**
  * Stringable
 */
-impl Stringable<KeyError> for PrivateKey {
+impl Stringable<CryptoKeyError> for PrivateKey {
 	fn to_string(&self) -> String {
 		self.v256.to_string()
 	}
 
-	fn from_string(string: &str) -> Result<Self, KeyError> {
+	fn from_string(string: &str) -> Result<Self, CryptoKeyError> {
 		Ok(PrivateKey::new(
 			V256::from_string(string)
-				.map_err(|_| KeyError::InvalidPrivateKey)?,
+				.map_err(|_| CryptoKeyError::InvalidPrivateKey)?,
 		))
 	}
 }
@@ -147,14 +147,15 @@ impl Stringable<KeyError> for PrivateKey {
 /**
  * Vecable
 */
-impl Vecable<KeyError> for PrivateKey {
+impl Vecable<CryptoKeyError> for PrivateKey {
 	fn to_vec(&self) -> Vec<u8> {
 		self.v256().to_vec()
 	}
 
-	fn from_arr(arr: &[u8]) -> Result<Self, KeyError> {
+	fn from_arr(arr: &[u8]) -> Result<Self, CryptoKeyError> {
 		Ok(PrivateKey::new(
-			V256::from_arr(arr).map_err(|_| KeyError::InvalidPrivateKey)?,
+			V256::from_arr(arr)
+				.map_err(|_| CryptoKeyError::InvalidPrivateKey)?,
 		))
 	}
 }
@@ -163,36 +164,36 @@ impl Vecable<KeyError> for PrivateKey {
  * Protoable
 */
 /*
-impl Protoable<subfield_proto::PrivateKey, KeyError> for PrivateKey {
-	fn from_proto(proto: subfield_proto::PrivateKey) -> Result<Self, KeyError> {
+impl Protoable<subfield_proto::PrivateKey, CryptoKeyError> for PrivateKey {
+	fn from_proto(proto: subfield_proto::PrivateKey) -> Result<Self, CryptoKeyError> {
 		Ok(PrivateKey::new(
 			V256::from_proto(subfield_proto::VersionedBytes {
 				version: proto.version,
 				data: proto.data.clone().into(),
 			})
-			.map_err(|_| KeyError::InvalidPrivateKey)?,
+			.map_err(|_| CryptoKeyError::InvalidPrivateKey)?,
 		))
 	}
 
-	fn to_proto(&self) -> Result<subfield_proto::PrivateKey, KeyError> {
+	fn to_proto(&self) -> Result<subfield_proto::PrivateKey, CryptoKeyError> {
 		Ok(subfield_proto::PrivateKey {
 			version: *self.v256.version(),
 			data: self.v256.data().clone().into(),
 		})
 	}
 
-	fn from_proto_bytes(bytes: Bytes) -> Result<Self, KeyError> {
+	fn from_proto_bytes(bytes: Bytes) -> Result<Self, CryptoKeyError> {
 		Ok(Self::from_proto(
 			proto::deserialize::<subfield_proto::PrivateKey>(bytes).unwrap(),
 		)
-		.map_err(|_| KeyError::InvalidPrivateKey)?)
+		.map_err(|_| CryptoKeyError::InvalidPrivateKey)?)
 	}
 
-	fn to_proto_bytes(&self) -> Result<Bytes, KeyError> {
+	fn to_proto_bytes(&self) -> Result<Bytes, CryptoKeyError> {
 		Ok(proto::serialize::<subfield_proto::PrivateKey>(
-			&self.to_proto().map_err(|_| KeyError::InvalidPrivateKey)?,
+			&self.to_proto().map_err(|_| CryptoKeyError::InvalidPrivateKey)?,
 		)
-		.map_err(|_| KeyError::InvalidPrivateKey)?)
+		.map_err(|_| CryptoKeyError::InvalidPrivateKey)?)
 	}
 }
 */
@@ -200,24 +201,26 @@ impl Protoable<subfield_proto::PrivateKey, KeyError> for PrivateKey {
 /**
  * Libp2pKeypairable
 */
-impl Libp2pKeypairable<KeyError> for PrivateKey {
-	fn to_libp2p_keypair(&self) -> Result<libp2p::identity::Keypair, KeyError> {
+impl Libp2pKeypairable<CryptoKeyError> for PrivateKey {
+	fn to_libp2p_keypair(
+		&self,
+	) -> Result<libp2p::identity::Keypair, CryptoKeyError> {
 		Ok(libp2p::identity::Keypair::ed25519_from_bytes(
 			self.v256().data().clone(),
 		)
-		.map_err(|_| KeyError::InvalidPrivateKey)?)
+		.map_err(|_| CryptoKeyError::InvalidPrivateKey)?)
 		// .to_protobuf_encoding()
-		// .map_err(|_| KeyError::EncodingError)?
+		// .map_err(|_| CryptoKeyError::EncodingError)?
 		// .to_vec()
 		// .as_slice())
 	}
 
 	fn from_libp2p_keypair(
 		keypair: libp2p::identity::Keypair,
-	) -> Result<Self, KeyError> {
+	) -> Result<Self, CryptoKeyError> {
 		let private_key_bytes = keypair
 			.try_into_ed25519()
-			.map_err(|_| KeyError::InvalidPrivateKey)?
+			.map_err(|_| CryptoKeyError::InvalidPrivateKey)?
 			.to_bytes();
 		let private_key_bytes: [u8; SECRET_KEY_LENGTH] =
 			private_key_bytes[..SECRET_KEY_LENGTH].try_into().unwrap();
@@ -252,9 +255,9 @@ impl Eq for PrivateKey {}
 
 #[wasm_bindgen]
 impl PrivateKey {
-	/**
-	 * Constructors
-		*/
+	/*
+	Constructors
+	*/
 
 	#[wasm_bindgen(constructor)]
 	pub fn _js_new(v256: V256) -> Self {
@@ -266,9 +269,9 @@ impl PrivateKey {
 		PrivateKey::random()
 	}
 
-	/**
-	 * Getters
-		*/
+	/*
+	Getters
+	*/
 
 	#[wasm_bindgen(getter, js_name = "ed")]
 	pub fn _js_ed(&self) -> Uint8Array {
@@ -280,9 +283,9 @@ impl PrivateKey {
 		self.x().to_bytes().as_slice().into()
 	}
 
-	/**
-	 * Operations
-		*/
+	/*
+	Operations
+	*/
 
 	#[wasm_bindgen(js_name = "publicKey")]
 	pub fn _js_public_key(&self) -> PublicKey {
@@ -299,9 +302,9 @@ impl PrivateKey {
 		self.sign(message.to_vec().as_slice())
 	}
 
-	/**
-	 * Byteable
-		*/
+	/*
+	Byteable
+	*/
 
 	#[wasm_bindgen(js_name = "toBytes")]
 	pub fn _js_to_bytes(&self) -> Uint8Array {
@@ -313,9 +316,9 @@ impl PrivateKey {
 		PrivateKey::new(V256::_js_from_bytes(bytes))
 	}
 
-	/**
-	 * Stringable
-		*/
+	/*
+	Stringable
+	*/
 
 	#[wasm_bindgen(js_name = "toString")]
 	pub fn _js_to_string(&self) -> String {

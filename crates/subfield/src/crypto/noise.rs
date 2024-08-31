@@ -58,9 +58,9 @@ pub struct Noise {
 }
 
 impl Noise {
-	/**
-	 * Constructors
-		*/
+	/*
+	Constructors
+	*/
 	fn new(
 		role: NoiseRole,
 		keypair: Keypair,
@@ -105,16 +105,16 @@ impl Noise {
 		Noise::new(NoiseRole::Responder, keypair, state)
 	}
 
-	/**
-	 * Getters
-		*/
+	/*
+	Getters
+	*/
 	pub fn keypair(&self) -> Keypair {
 		self.keypair.clone()
 	}
 
-	/**
-	 * Handshake
-		*/
+	/*
+	Handshake
+	*/
 
 	// write a blank message to the buffer
 	fn encrypt_handshake(&mut self) -> Result<NoiseBuffer, NoiseError> {
@@ -185,8 +185,8 @@ impl Noise {
 		let _ = self.transport.set(Mutex::new(transport));
 	}
 
-	/**
-	 * Encrypt
+	/*
+	 Encrypt
 
 	*/
 	pub fn encrypt(&mut self, data: &[u8]) -> Result<NoiseBuffer, NoiseError> {
@@ -205,9 +205,9 @@ impl Noise {
 		Ok(encrypted_data)
 	}
 
-	/**
-	 * Decrypt
-		*/
+	/*
+	Decrypt
+	*/
 	pub fn decrypt(&mut self, data: &[u8]) -> Result<NoiseBuffer, NoiseError> {
 		let mut decrypted_data = Vec::new();
 		let mut buffer = self.buffer.lock().unwrap();
@@ -226,9 +226,9 @@ impl Noise {
 
 #[wasm_bindgen]
 impl Noise {
-	/**
-	 * Constructors
-		*/
+	/*
+	Constructors
+	*/
 	#[wasm_bindgen(js_name = "initiator")]
 	pub fn _js_initiator() -> Noise {
 		Noise::initiator()
@@ -249,17 +249,17 @@ impl Noise {
 		Noise::responder_from_keypair(keypair)
 	}
 
-	/**
-	 * Getters
-		*/
+	/*
+	Getters
+	*/
 	#[wasm_bindgen(getter, js_name = "keypair")]
 	pub fn _js_keypair(&self) -> Keypair {
 		self.keypair()
 	}
 
-	/**
-	 * Handshake
-		*/
+	/*
+	Handshake
+	*/
 	#[wasm_bindgen(js_name = "handshakeStep1")]
 	pub fn _js_handshake_step_1(&mut self) -> Uint8Array {
 		self.handshake_step_1().unwrap().as_slice().into()
@@ -278,9 +278,9 @@ impl Noise {
 		self.handshake_step_3(&message.to_vec().as_slice()).unwrap();
 	}
 
-	/**
-	 * Encrypt
-		*/
+	/*
+	Encrypt
+	*/
 	#[wasm_bindgen(js_name = "encrypt")]
 	pub fn _js_encrypt(&mut self, data: Uint8Array) -> Uint8Array {
 		self.encrypt(&data.to_vec().as_slice())
@@ -289,9 +289,9 @@ impl Noise {
 			.into()
 	}
 
-	/**
-	 * Decrypt
-		*/
+	/*
+	Decrypt
+	*/
 	#[wasm_bindgen(js_name = "decrypt")]
 	pub fn _js_decrypt(&mut self, data: Uint8Array) -> Uint8Array {
 		self.decrypt(&data.to_vec().as_slice())

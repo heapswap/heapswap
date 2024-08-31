@@ -5,12 +5,12 @@ use crate::*;
  */
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct GetRecordRequest {
-	pub routing_subkey: RoutingSubkey,
+	pub routing_key: RoutingKey,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct GetRecordSuccess {
-	pub routing_subkey: RoutingSubkey,
+	pub routing_key: RoutingKey,
 	pub record_bytes: Vec<u8>,
 	pub signature: crypto::Signature,
 }
@@ -19,7 +19,7 @@ pub struct GetRecordSuccess {
 pub enum GetRecordFailure {
 	Unknown,
 	Invalid,
-	ServiceError(SubfieldError)
+	ServiceError(SubfieldError),
 }
 
 pub type GetRecordResponse = Result<GetRecordSuccess, GetRecordFailure>;
@@ -34,22 +34,27 @@ pub struct PutRecordRequest {
 }
 
 impl PutRecordRequest {
-		pub fn verify(&self, routing_subkey: RoutingSubkey) -> Result<(CompleteSubkey, Record), RecordError> {
-			
-		let subkey = routing_subkey.to_complete_subkey().map_err(|e| RecordError::SubfieldError(e))?;
-		let record: Record = cbor_deserialize(&self.record_bytes).map_err(|e| RecordError::DeserializationError)?;
-		
-		// routing subkey must be the same as the internal subkey
-		if subkey != record.subkey {
-			return Err(RecordError::SubkeyMismatch);
+	pub fn verify(
+		&self,
+		routing_key: RoutingKey,
+	) -> Result<(CompleteKey, Record), RecordError> {
+		let key = routing_key
+			.to_complete_key()
+			.map_err(|e| RecordError::SubfieldError(e))?;
+		let record: Record = cbor_deserialize(&self.record_bytes)
+			.map_err(|e| RecordError::DeserializationError)?;
+
+		// routing key must be the same as the internal key
+		if key != record.key {
+			return Err(RecordError::KeyMismatch);
 		}
-		
+
 		// verify the signature
-		let public_key = crypto::PublicKey::new(subkey.signer.clone());
+		let public_key = crypto::PublicKey::new(key.signer.clone());
 		match public_key.verify(&self.record_bytes, &self.signature) {
-			Ok(true) => Ok((subkey, record)),
+			Ok(true) => Ok((key, record)),
 			Ok(false) => Err(RecordError::InvalidSignature),
-			Err(e) => Err(RecordError::KeyError(e)),
+			Err(e) => Err(RecordError::CryptoKeyError(e)),
 		}
 	}
 }
@@ -62,7 +67,7 @@ pub enum PutRecordFailure {
 	Unknown,
 	Invalid,
 	NoPeersConnected,
-	ServiceError(SubfieldError), 
+	ServiceError(SubfieldError),
 	RecordError(RecordError),
 }
 
@@ -89,7 +94,8 @@ pub struct DeleteRecordSuccess {}
 pub enum DeleteRecordFailure {
 	Unknown,
 	Invalid,
-	ServiceError(SubfieldError)
+	ServiceError(SubfieldError),
 }
 
-pub type DeleteRecordResponse = Result<DeleteRecordSuccess, DeleteRecordFailure>;
+pub type DeleteRecordResponse =
+	Result<DeleteRecordSuccess, DeleteRecordFailure>;

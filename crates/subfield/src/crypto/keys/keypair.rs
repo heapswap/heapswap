@@ -39,9 +39,9 @@ pub struct Keypair {
 }
 
 impl Keypair {
-	/**
-	 * Constructors
-		*/
+	/*
+	Constructors
+	*/
 	pub fn new(private_key: PrivateKey) -> Keypair {
 		let public_key = private_key.public_key();
 
@@ -56,10 +56,10 @@ impl Keypair {
 		Keypair::new(private_key)
 	}
 
-	pub fn vanity(prefix: &str) -> Result<Keypair, KeyError> {
+	pub fn vanity(prefix: &str) -> Result<Keypair, CryptoKeyError> {
 		// test if prefix is valid base32
 		let _ = arr::from_base32(prefix)
-			.map_err(|_| KeyError::InvalidVanityPrefix)?;
+			.map_err(|_| CryptoKeyError::InvalidVanityPrefix)?;
 
 		let mut counter = 0;
 		loop {
@@ -79,9 +79,9 @@ impl Keypair {
 		}
 	}
 
-	/**
-	 * Operations
-		*/
+	/*
+	Operations
+	*/
 
 	pub fn sign(&self, message: &[u8]) -> Signature {
 		self.private_key().sign(message)
@@ -91,7 +91,7 @@ impl Keypair {
 		&self,
 		message: &[u8],
 		signature: &Signature,
-	) -> Result<bool, KeyError> {
+	) -> Result<bool, CryptoKeyError> {
 		self.public_key().verify(message, signature)
 	}
 
@@ -100,24 +100,26 @@ impl Keypair {
 	}
 }
 
-impl Stringable<KeyError> for Keypair {
+impl Stringable<CryptoKeyError> for Keypair {
 	fn to_string(&self) -> String {
 		self.private_key().to_string()
 	}
 
-	fn from_string(string: &str) -> Result<Keypair, KeyError> {
+	fn from_string(string: &str) -> Result<Keypair, CryptoKeyError> {
 		Ok(Keypair::new(PrivateKey::from_string(string)?))
 	}
 }
 
-impl Libp2pKeypairable<KeyError> for Keypair {
-	fn to_libp2p_keypair(&self) -> Result<libp2p::identity::Keypair, KeyError> {
+impl Libp2pKeypairable<CryptoKeyError> for Keypair {
+	fn to_libp2p_keypair(
+		&self,
+	) -> Result<libp2p::identity::Keypair, CryptoKeyError> {
 		self.private_key().to_libp2p_keypair()
 	}
 
 	fn from_libp2p_keypair(
 		keypair: libp2p::identity::Keypair,
-	) -> Result<Self, KeyError> {
+	) -> Result<Self, CryptoKeyError> {
 		let private_key = PrivateKey::from_libp2p_keypair(keypair)?;
 		let public_key = private_key.public_key();
 		Ok(Keypair {
@@ -139,42 +141,42 @@ impl Eq for Keypair {}
  * Protoable
 */
 /*
-impl Protoable<subfield_proto::Keypair, KeyError> for Keypair {
-	fn from_proto(proto: subfield_proto::Keypair) -> Result<Self, KeyError> {
+impl Protoable<subfield_proto::Keypair, CryptoKeyError> for Keypair {
+	fn from_proto(proto: subfield_proto::Keypair) -> Result<Self, CryptoKeyError> {
 		Ok(Keypair {
 			private_key: PrivateKey::from_proto(proto.private_key.unwrap())?,
 			public_key: PublicKey::from_proto(proto.public_key.unwrap())?,
 		})
 	}
 
-	fn to_proto(&self) -> Result<subfield_proto::Keypair, KeyError> {
+	fn to_proto(&self) -> Result<subfield_proto::Keypair, CryptoKeyError> {
 		Ok(subfield_proto::Keypair {
 			private_key: Some(self.private_key.to_proto()?),
 			public_key: Some(self.public_key.to_proto()?),
 		})
 	}
 
-	fn from_proto_bytes(bytes: Bytes) -> Result<Self, KeyError> {
+	fn from_proto_bytes(bytes: Bytes) -> Result<Self, CryptoKeyError> {
 		Ok(Self::from_proto(
 			proto::deserialize::<subfield_proto::Keypair>(bytes).unwrap(),
 		)
-		.map_err(|_| KeyError::InvalidKeypair)?)
+		.map_err(|_| CryptoKeyError::InvalidKeypair)?)
 	}
 
-	fn to_proto_bytes(&self) -> Result<Bytes, KeyError> {
+	fn to_proto_bytes(&self) -> Result<Bytes, CryptoKeyError> {
 		Ok(proto::serialize::<subfield_proto::Keypair>(
-			&self.to_proto().map_err(|_| KeyError::InvalidKeypair)?,
+			&self.to_proto().map_err(|_| CryptoKeyError::InvalidKeypair)?,
 		)
-		.map_err(|_| KeyError::InvalidKeypair)?)
+		.map_err(|_| CryptoKeyError::InvalidKeypair)?)
 	}
 }
 */
 
 #[wasm_bindgen]
 impl Keypair {
-	/**
-	 * Constructors
-		*/
+	/*
+	Constructors
+	*/
 	#[wasm_bindgen(constructor)]
 	pub fn _js_new(private_key: PrivateKey) -> Keypair {
 		Keypair::new(private_key)
@@ -190,9 +192,9 @@ impl Keypair {
 		Keypair::vanity(&prefix).unwrap()
 	}
 
-	/**
-	 * Getters
-		*/
+	/*
+	Getters
+	*/
 	#[wasm_bindgen(getter, js_name = "privateKey")]
 	pub fn _js_private_key(&self) -> PrivateKey {
 		self.private_key().clone()
@@ -203,9 +205,9 @@ impl Keypair {
 		self.public_key().clone()
 	}
 
-	/**
-	 * Operations
-		*/
+	/*
+	Operations
+	*/
 	#[wasm_bindgen(js_name = "sign")]
 	pub fn _js_sign(&self, message: Vec<u8>) -> Signature {
 		self.sign(&message)
@@ -221,9 +223,9 @@ impl Keypair {
 		self.shared_secret(&public_key)
 	}
 
-	/**
-	 * Stringable
-		*/
+	/*
+	Stringable
+	*/
 	#[wasm_bindgen(js_name = "toString")]
 	pub fn _js_to_string(&self) -> String {
 		self.to_string()
@@ -233,9 +235,9 @@ impl Keypair {
 		Keypair::from_string(&string).unwrap()
 	}
 
-	/**
-	 * Byteable
-		*/
+	/*
+	Byteable
+	*/
 	#[wasm_bindgen(js_name = "toBytes")]
 	pub fn _js_to_bytes(&self) -> Uint8Array {
 		cbor_serialize(self).unwrap().as_slice().into()

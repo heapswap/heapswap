@@ -4,6 +4,7 @@
 #![allow(unused_variables)]
 #![allow(unused_parens)]
 #![allow(unused_mut)]
+// #![feature(trivial_bounds)]
 
 // pub use bincode::{
 // 	deserialize, serialize,
@@ -32,6 +33,9 @@ pub use std::collections::{HashMap, HashSet};
 
 pub use lazy_static::lazy_static;
 pub use libp2p::request_response::ResponseChannel;
+pub use libp2p::request_response::{InboundRequestId, OutboundRequestId};
+pub use libp2p::{PeerId, Stream};
+pub use libp2p_stream as stream;
 
 /**
  * Reexports
@@ -110,6 +114,7 @@ pub mod constants;
 pub mod crypto;
 pub mod misc;
 pub mod proto;
+// pub mod networking;
 pub mod store;
 pub mod swarm;
 
@@ -117,6 +122,7 @@ pub mod prelude {
 	pub use super::constants::*;
 	pub use super::crypto::*;
 	pub use super::proto::*;
+	// pub use super::networking::*;
 	pub use super::store::*;
 	pub use super::swarm::*;
 	pub use crate::misc::*;

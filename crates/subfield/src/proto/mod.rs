@@ -19,17 +19,17 @@ pub use message_system::*;
 // traits
 mod trait_service;
 pub use trait_service::*;
-mod trait_events; 
+mod trait_events;
 pub use trait_events::*;
 mod trait_handler;
 pub use trait_handler::*;
 
-// subkeys
-mod subkey_common;
-pub use subkey_common::*;
-mod subkey_routing;
-pub use subkey_routing::*;
-mod subkey_partial;
-pub use subkey_partial::*;
-mod subkey_complete;
-pub use subkey_complete::*;
+// keys
+mod key_common;
+pub use key_common::*;
+mod key_routing;
+pub use key_routing::*;
+mod key_partial;
+pub use key_partial::*;
+mod key_complete;
+pub use key_complete::*;

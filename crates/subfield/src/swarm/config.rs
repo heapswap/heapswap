@@ -46,8 +46,9 @@ impl SubfieldConfig {
 			tracing::info!("Dialing bootstrap URL: {:?}", url);
 
 			// get the json multiaddr list from the url
-			let multiaddr_list_res = 				reqwest::get(url).await?.json::<Vec<String>>().await;
-			
+			let multiaddr_list_res =
+				reqwest::get(url).await?.json::<Vec<String>>().await;
+
 			match multiaddr_list_res {
 				Ok(multiaddr_list) => {
 					for multiaddr in multiaddr_list {
@@ -59,10 +60,8 @@ impl SubfieldConfig {
 					// failed to get the multiaddr list, try the next url
 				}
 			}
-
-
 		}
-		
+
 		if self.bootstrap_multiaddrs.is_empty() {
 			tracing::error!("Failed to get bootstrap multiaddrs from urls");
 			// return Err(eyr!("Failed to get bootstrap multiaddrs from urls"));

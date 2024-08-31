@@ -1,28 +1,17 @@
-
 use crate::*;
 
 #[async_trait]
 pub trait SubfieldHandlerTrait<MessageType: Clone + Send + 'static> {
-	
-	async fn handle_self_is_closest<'a>(
+	async fn handle_request<'a>(
 		&self,
-		handle: u64,
+		request_id: InboundRequestId,
 		request: MessageType,
 		response_channel: ResponseChannel<SubfieldResponse>,
-		swarm: &mut MutexGuard<'a, libp2p::swarm::Swarm<swarm::SubfieldBehaviour>>,
-	) -> Result<(), SubfieldError>{
-		Ok(())
-	}
-	
-	async fn handle_self_is_not_closest<'a>(
-		&self,
-		handle: u64,
-		request: MessageType,
-		response_channel: ResponseChannel<SubfieldResponse>,
-		closest_peer: libp2p::PeerId,
-		swarm: &mut MutexGuard<'a, libp2p::swarm::Swarm<swarm::SubfieldBehaviour>>,
+		swarm: &mut MutexGuard<
+			'a,
+			libp2p::swarm::Swarm<swarm::SubfieldBehaviour>,
+		>,
 	) -> Result<(), SubfieldError> {
 		Ok(())
 	}
-	
 }

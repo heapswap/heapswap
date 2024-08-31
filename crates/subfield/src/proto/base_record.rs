@@ -8,7 +8,7 @@ pub enum RecordType {
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Record {
 	pub record_type: RecordType,
-	pub subkey: CompleteSubkey,
+	pub key: CompleteKey,
 
 	pub is_encrypted: bool,
 	hash_seed: VersionedBytes,
@@ -22,55 +22,54 @@ pub struct Record {
 pub enum RecordError {
 	SerializationError,
 	DeserializationError,
-	SubkeyIncomplete,
-	SubkeyMismatch,
+	KeyIncomplete,
+	KeyMismatch,
 	KeypairNotSigner,
 	InvalidSignature,
 	GetRecordFailure(GetRecordFailure),
-	KeyError(KeyError),
+	CryptoKeyError(CryptoKeyError),
 	SubfieldError(SubfieldError),
 }
 
 impl Record {
 	pub fn to_put_record_requests(
 		&self,
-		subkey: &CompleteSubkey,
+		key: &CompleteKey,
 		keypair: &Keypair,
 	) -> Result<[SubfieldRequest; 3], RecordError> {
-		
-		// The keypair's public key must be equal to the subkey's signer
-		if *keypair.public_key().v256() != subkey.clone().signer {
+		// The keypair's public key must be equal to the key's signer
+		if *keypair.public_key().v256() != key.clone().signer {
 			return Err(RecordError::KeypairNotSigner);
 		}
 
 		let record_bytes = cbor_serialize(self).unwrap();
 
 		let signature = keypair.sign(&record_bytes);
-		
-		let partial_subkey = PartialSubkey::from_complete(subkey.clone());
+
+		let partial_key = PartialKey::from_complete(key.clone());
 
 		let put_record_requests = [
 			SubfieldRequest {
-				subkey: RoutingSubkey::Signer(partial_subkey.clone()),
+				routing_key: RoutingKey::Signer(partial_key.clone()),
 				body: SubfieldRequestBody::PutRecord(PutRecordRequest {
 					record_bytes: record_bytes.clone(),
 					signature: signature.clone(),
 				}),
 			},
 			SubfieldRequest {
-				subkey: RoutingSubkey::Cosigner(partial_subkey.clone()),
+				routing_key: RoutingKey::Cosigner(partial_key.clone()),
 				body: SubfieldRequestBody::PutRecord(PutRecordRequest {
 					record_bytes: record_bytes.clone(),
 					signature: signature.clone(),
 				}),
 			},
 			SubfieldRequest {
-				subkey: RoutingSubkey::Tangent(partial_subkey.clone()),
+				routing_key: RoutingKey::Tangent(partial_key.clone()),
 				body: SubfieldRequestBody::PutRecord(PutRecordRequest {
 					record_bytes: record_bytes.clone(),
 					signature: signature.clone(),
 				}),
-			},			
+			},
 		];
 
 		Ok(put_record_requests)
@@ -82,10 +81,13 @@ impl Record {
 		let success = get_record_response
 			.map_err(|failure| RecordError::GetRecordFailure(failure))?;
 
-		let subkey = success.routing_subkey.to_complete_subkey().map_err(|e| RecordError::SubfieldError(e))?;
+		let key = success
+			.routing_key
+			.to_complete_key()
+			.map_err(|e| RecordError::SubfieldError(e))?;
 
 		// verify signature
-		let public_key = PublicKey::new(subkey.signer);
+		let public_key = PublicKey::new(key.signer);
 		match public_key.verify(&success.record_bytes, &success.signature) {
 			Ok(is_valid) => {
 				if !is_valid {

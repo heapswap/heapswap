@@ -103,7 +103,8 @@ libp2p = { workspace = true, features = [
 libp2p-webrtc-websys = { workspace = true, optional = true }
 libp2p-websocket-websys = { workspace = true, optional = true }
 libp2p-webrtc = { workspace = true, optional = true }
-libp2p-core = { workspace = true }
+libp2p-core = { workspace = true } 
+libp2p-stream = { workspace = true }
 # reqwest
 reqwest = { workspace = true }
 reqwest-websocket = { workspace = true }
@@ -111,7 +112,7 @@ reqwest-websocket = { workspace = true }
 # poem = { workspace = true, optional = true}
 # poem-grpc = { workspace = true, optional = true}
 # poem-openapi = { workspace = true, optional = true}
-# yamux = { workspace = true }
+yamux = { workspace = true }
 # Crypto
 #crypto-bigint.workspace = true
 #num-bigint.workspace = true
@@ -168,6 +169,7 @@ itertools.workspace = true
 thiserror.workspace = true
 generational-arena.workspace = true
 async-trait.workspace = true
+flume.workspace = true
 
 [dev-dependencies]
 timeit.workspace = true

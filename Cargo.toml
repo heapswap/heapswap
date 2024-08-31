@@ -131,6 +131,8 @@ yamux = { version = "0.13.3" } # Multiplexing
 ## Libp2p
 ##
 libp2p = { path = "../rust-libp2p/libp2p" }
+# libp2p-stream = { version = "0.2.0-alpha" }
+libp2p-stream = { path = "../rust-libp2p/protocols/stream" }
 #
 ## Concurrency
 ##

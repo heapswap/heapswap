@@ -4,59 +4,58 @@ use crate::*;
 use std::collections::HashSet;
 use std::hash::Hash;
 
+pub type PartialKeyField = Option<CompleteKeyField>;
 
-
-pub type PartialSubkeyField = Option<CompleteSubkeyField>;
-
-// this is the base subkey type
+// this is the base key type
 // all fields are optional, but at least one is expected to be set
 #[derive(Debug, Clone, PartialEq, Eq, Getters, Serialize, Deserialize)]
-pub struct PartialSubkey {
-	pub signer: PartialSubkeyField,
-	pub cosigner: PartialSubkeyField,
-	pub tangent: PartialSubkeyField,
+pub struct PartialKey {
+	pub signer: PartialKeyField,
+	pub cosigner: PartialKeyField,
+	pub tangent: PartialKeyField,
 }
 
-impl PartialSubkey {
-	
-	/**
-	 * Conversions
+impl SubfieldKey for PartialKey {}
+
+impl PartialKey {
+	/*
+	 Conversions
 	*/
-	
+
 	pub fn is_complete(&self) -> bool {
 		self.signer.is_some()
 			&& self.cosigner.is_some()
 			&& self.tangent.is_some()
 	}
-	
-	pub fn to_complete(&self) -> Result<CompleteSubkey, SubkeyError> {
+
+	pub fn to_complete(&self) -> Result<CompleteKey, KeyError> {
 		if !self.is_complete() {
-			return Err(SubkeyError::IncompleteSubkey);
+			return Err(KeyError::IncompleteKey);
 		}
-		Ok(CompleteSubkey {
+		Ok(CompleteKey {
 			signer: self.signer.clone().unwrap(),
 			cosigner: self.cosigner.clone().unwrap(),
 			tangent: self.tangent.clone().unwrap(),
 		})
 	}
-	
-	pub fn from_complete(complete: CompleteSubkey) -> PartialSubkey {
-		PartialSubkey {
+
+	pub fn from_complete(complete: CompleteKey) -> PartialKey {
+		PartialKey {
 			signer: Some(complete.signer),
 			cosigner: Some(complete.cosigner),
 			tangent: Some(complete.tangent),
 		}
 	}
 
-	/**
-	 * Hashing
+	/*
+	 Hashing
 	*/
 
 	pub fn hash(&self) -> V256 {
 		Self::hash_concat(&[&self.signer, &self.cosigner, &self.tangent])
 	}
 
-	// hash multiple subkeys put together
+	// hash multiple keys put together
 	pub fn hash_concat(hashes: &[&Option<V256>]) -> V256 {
 		let concatenated: Vec<u8> = hashes
 			.iter()
@@ -65,11 +64,11 @@ impl PartialSubkey {
 		crypto::hash(&concatenated)
 	}
 
-	// get all the combinations of a subkey, for use when publishing to pubsub
-	pub fn hash_combinations(&self) -> Result<Vec<V256>, SubkeyError> {
-		// // pubsub publishing requires a complete subkey
+	// get all the combinations of a key, for use when publishing to pubsub
+	pub fn hash_combinations(&self) -> Result<Vec<V256>, KeyError> {
+		// // pubsub publishing requires a complete key
 		// if !self.is_complete() {
-		// 	return Err(SubkeyError::IncompleteSubkey);
+		// 	return Err(KeyError::IncompleteKey);
 		// }
 
 		let mut res = HashSet::new();
@@ -87,20 +86,19 @@ impl PartialSubkey {
 		Ok(res.into_iter().collect())
 	}
 
-
 	/*
-	// build the 3 get record requests to get a subkey
+	// build the 3 get record requests to get a key
 	pub fn to_get_record_requests(
 		&self,
-	) -> Result<[proto::GetRecordRequest; 3], SubkeyError> {
+	) -> Result<[proto::GetRecordRequest; 3], KeyError> {
 		// must be complete
 		if !self.is_complete() {
-			return Err(SubkeyError::IncompleteSubkey);
+			return Err(KeyError::IncompleteKey);
 		}
 
 		let requests = SUBKEY_FIELDS.map(|field| {
 			proto::GetRecordRequest {
-				subkey: Some(self.to_proto().unwrap()),
+				key: Some(self.to_proto().unwrap()),
 				field: field.into(),
 			}
 		});
@@ -108,13 +106,13 @@ impl PartialSubkey {
 		Ok(requests)
 	}
 
-	pub fn signer_is_signer(&self, signer: crypto::Keypair) -> Result<bool, SubkeyError> {
+	pub fn signer_is_signer(&self, signer: crypto::Keypair) -> Result<bool, KeyError> {
 		if signer.public_key().v256() == self.signer.clone().unwrap().v256() {
 			Ok(true)
 		} else if signer.public_key().v256() == self.cosigner.clone().unwrap().v256() {
 			Ok(false)
 		} else {
-			Err(SubkeyError::RequiresEitherSignerOrCosigner)
+			Err(KeyError::RequiresEitherSignerOrCosigner)
 		}
 	}
 
@@ -122,20 +120,20 @@ impl PartialSubkey {
 		&self,
 		signer: &crypto::Keypair,
 		record: proto::Record,
-	) -> Result<[proto::PutRecordRequest; 3], SubkeyError> {
+	) -> Result<[proto::PutRecordRequest; 3], KeyError> {
 		// must be complete
 		if !self.is_complete() {
-			return Err(SubkeyError::IncompleteSubkey);
+			return Err(KeyError::IncompleteKey);
 		}
 
-		let record_bytes = proto::serialize(&record).map_err(|_| SubkeyError::EncodeError)?.to_vec();
+		let record_bytes = proto::serialize(&record).map_err(|_| KeyError::EncodeError)?.to_vec();
 
 		let mut signature: Option<signed_record::Signature>;
 		if self.signer_is_signer(signer)? {
-			let sig = signer.sign(&record_bytes).to_proto().map_err(|_| SubkeyError::SignatureError)?;
+			let sig = signer.sign(&record_bytes).to_proto().map_err(|_| KeyError::SignatureError)?;
 			signature = Some(signed_record::Signature::SignerSignature(sig));
 		} else {
-			let sig = signer.sign(&record_bytes).to_proto().map_err(|_| SubkeyError::SignatureError)?;
+			let sig = signer.sign(&record_bytes).to_proto().map_err(|_| KeyError::SignatureError)?;
 			signature = Some(signed_record::Signature::CosignerSignature(sig));
 		}
 
@@ -144,11 +142,11 @@ impl PartialSubkey {
 			record_bytes,
 		});
 
-		let subkey = Some(self.to_proto().map_err(|e| SubkeyError::InvalidProto)?);
+		let key = Some(self.to_proto().map_err(|e| KeyError::InvalidProto)?);
 
 		let requests = SUBKEY_FIELDS.map(|field| {
 			proto::PutRecordRequest {
-				subkey,
+				key,
 				signed_record,
 				field: field.into(),
 			}
@@ -162,7 +160,7 @@ impl PartialSubkey {
 /**
  * Randomable
 */
-impl Randomable for PartialSubkey {
+impl Randomable for PartialKey {
 	fn random() -> Self {
 		Self {
 			signer: Some(V256::random256()),
@@ -175,7 +173,7 @@ impl Randomable for PartialSubkey {
 /**
  * Hash (for use in maps)
 */
-impl Hash for PartialSubkey {
+impl Hash for PartialKey {
 	fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
 		self.hash().hash(state)
 	}
