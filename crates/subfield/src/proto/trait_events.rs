@@ -2,7 +2,6 @@ use libp2p::request_response::OutboundRequestId;
 
 use crate::*;
 
-
 /*
 	The events trait is the internal trait for handling events
 */

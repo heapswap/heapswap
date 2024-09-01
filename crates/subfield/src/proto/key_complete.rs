@@ -42,6 +42,18 @@ impl CompleteKey {
 				.ok_or(SubfieldError::CompleteKeyMissingField)?,
 		})
 	}
+	
+	pub fn to_signer_routing_key(&self) -> RoutingKey {
+		RoutingKey::Signer(self.to_partial())
+	}
+	
+	pub fn to_cosigner_routing_key(&self) -> RoutingKey {
+		RoutingKey::Cosigner(self.to_partial())
+	}
+	
+	pub fn to_tangent_routing_key(&self) -> RoutingKey {
+		RoutingKey::Tangent(self.to_partial())
+	}
 
 	/*
 	 Hashing

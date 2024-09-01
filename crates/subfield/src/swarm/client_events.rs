@@ -1,7 +1,7 @@
-use libp2p::{request_response::OutboundRequestId, Stream};
-use tracing::event;
-use std::{io, time::Duration};
 use crate::*;
+use libp2p::{request_response::OutboundRequestId, Stream};
+use std::{io, time::Duration};
+use tracing::event;
 
 // pub enum LocalClosestKeyResult {
 // 	SelfIsClosest,
@@ -63,11 +63,14 @@ impl SubfieldEventsTrait for SubfieldClient {
 	async fn event_loop(&self) {
 		loop {
 			let mut swarm_lock = self.swarm_lock().await;
-			
-			while let Some(Some((peer, stream))) = self.incoming_streams().await.next().now_or_never() {
-				match echo(stream).await {
-					Ok(n) => {
-						tracing::info!(%peer, "Echoed {n} bytes!");
+
+			while let Some(Some((peer, mut stream))) =
+				self.incoming_streams().await.next().now_or_never()
+			{
+				match recv::<SubfieldRequest>(&mut stream).await {
+					Ok(req) => {
+						
+						// send(n, &mut stream).await.unwrap();
 					}
 					Err(e) => {
 						tracing::warn!(%peer, "Echo failed: {e}");
@@ -79,73 +82,14 @@ impl SubfieldEventsTrait for SubfieldClient {
 			let Some(Some(event)) = swarm_lock.next().now_or_never() else {
 				continue;
 			};
-
+			
 			#[allow(unused_mut)]
 			let mut behaviour: &mut swarm::SubfieldBehaviour =
 				swarm_lock.behaviour_mut();
 
 			match event {
-				// swarm::SubfieldSwarmEvent::Behaviour(event) => {
-				// 	match event {
-				// 		SubfieldBehaviourEvent::Subfield(event) => {
-							
-				// 		}
-						
-				// 		_ => {}
-				// 	}
-				// }
-		
-				
 				swarm::SubfieldSwarmEvent::Behaviour(event) => {
 					match event {
-					/*
-						swarm::SubfieldBehaviourEvent::Subfield(event) => {
-							match event {
-								// an incoming response
-								libp2p::request_response::Event::Message {
-									peer,
-									message,
-								} => {
-									match message {
-										// an incoming request
-										libp2p::request_response::Message::Request {
-											request_id,
-											request,
-											channel,
-										} => {							
-											
-											match self.closest_local_peer(&request.routing_key).await {
-												Ok(Some(peer_id)) => {
-													let res = self.send_request_to_closest_local_peer(request).await.unwrap();
-												}
-												Ok(None) => {
-													match request {
-														SubfieldRequest::Echo(request) => {
-															let _ = self.handle_request(request_id, request, channel, swarm_lock).await;
-														}
-														_ => {}
-													}
-												}
-												Err(e) => {
-													tracing::error!("Error finding local peer: {:?}", e);
-												}
-											}
-										}
-										// an incoming response
-										libp2p::request_response::Message::Response {
-											request_id,
-											response,
-										} => {
-											
-											// let handle = Self::strip_outbound_request_id(request_id);
-											self.recv_response_from_swarm(request_id, response);
-										}
-									}
-								} 
-								_ => {}
-							}
-						}
-					*/
 						#[cfg(feature = "server")]
 						swarm::SubfieldBehaviourEvent::Mdns(event) => match event {
 							libp2p::mdns::Event::Discovered(peer_id) => {
@@ -153,13 +97,12 @@ impl SubfieldEventsTrait for SubfieldClient {
 									let _ = swarm_lock.dial(multiaddr);
 								}
 							}
-							libp2p::mdns::Event::Expired(peer_id) => {
-							}
+							libp2p::mdns::Event::Expired(peer_id) => {}
 						},
 						_ => {}
-			}
+					}
 				}
-				
+
 				libp2p::swarm::SwarmEvent::ConnectionEstablished {
 					peer_id,
 					connection_id,
@@ -212,8 +155,6 @@ impl SubfieldEventsTrait for SubfieldClient {
 	/*
 	Peer selection
 	*/
-
-
 
 	// most common case: closest local peer
 	async fn closest_local_peer(
@@ -285,70 +226,58 @@ impl SubfieldEventsTrait for SubfieldClient {
 		self.send_request_to_local_peer(peer_id, request).await
 	}
 	*/
-
+	
 }
 
-
+/*
 /// A very simple, `async fn`-based connection handler for our custom echo protocol.
 async fn connection_handler(peer: PeerId, mut control: stream::Control) {
-    loop {
-        tokio::time::sleep(Duration::from_secs(1)).await; // Wait a second between echos.
+	loop {
+		tokio::time::sleep(Duration::from_secs(1)).await; // Wait a second between echos.
 
-        let stream = match control.open_stream(peer, SUBFIELD_PROTOCOL).await {
-            Ok(stream) => stream,
-            Err(error @ stream::OpenStreamError::UnsupportedProtocol(_)) => {
-                tracing::info!(%peer, %error);
-                return;
-            }
-            Err(error) => {
-                // Other errors may be temporary.
-                // In production, something like an exponential backoff / circuit-breaker may be more appropriate.
-                tracing::debug!(%peer, %error);
-                continue;
-            }
-        };
+		let stream = match control.open_stream(peer, SUBFIELD_PROTOCOL).await {
+			Ok(stream) => stream,
+			Err(error @ stream::OpenStreamError::UnsupportedProtocol(_)) => {
+				tracing::info!(%peer, %error);
+				return;
+			}
+			Err(error) => {
+				// Other errors may be temporary.
+				// In production, something like an exponential backoff / circuit-breaker may be more appropriate.
+				tracing::debug!(%peer, %error);
+				continue;
+			}
+		};
 
-        if let Err(e) = send(stream).await {
-            tracing::warn!(%peer, "Echo protocol failed: {e}");
-            continue;
-        }
+		if let Err(e) = send(stream).await {
+			tracing::warn!(%peer, "Echo protocol failed: {e}");
+			continue;
+		}
 
-        tracing::info!(%peer, "Echo complete!")
-    }
+		tracing::info!(%peer, "Echo complete!")
+	}
 }
+*/
 
+/*
 async fn echo(mut stream: Stream) -> io::Result<usize> {
-    let mut total = 0;
+	let mut total = 0;
 
-    let mut buf = [0u8; 100];
+	let mut buf = [0u8; 100];
 
-    loop {
-        let read = stream.read(&mut buf).await?;
-        if read == 0 {
-            return Ok(total);
-        }
+	loop {
+		let read = stream.read(&mut buf).await?;
+		if read == 0 {
+			return Ok(total);
+		}
 
-        total += read;
-        stream.write_all(&buf[..read]).await?;
-    }
+		total += read;
+		stream.write_all(&buf[..read]).await?;
+	}
 }
+*/
 
-async fn send(mut stream: Stream) -> io::Result<()> {
-    let num_bytes = rand::random::<usize>() % 1000;
-
-    let mut bytes = vec![0; num_bytes];
-    rand::thread_rng().fill_bytes(&mut bytes);
-
-    stream.write_all(&bytes).await?;
-
-    let mut buf = vec![0; num_bytes];
-    stream.read_exact(&mut buf).await?;
-
-    if bytes != buf {
-        return Err(io::Error::new(io::ErrorKind::Other, "incorrect echo"));
-    }
-
-    stream.close().await?;
-
-    Ok(())
-}
+// #[derive(Serialize, Deserialize, Clone, Debug)]
+// pub struct Echo {
+// 	pub message: String,
+// }

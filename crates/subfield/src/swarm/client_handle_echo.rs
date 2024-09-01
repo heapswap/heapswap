@@ -4,9 +4,8 @@ use crate::*;
 impl SubfieldHandlerTrait<EchoRequest> for SubfieldClient {
 	async fn handle_request<'a>(
 		&self,
-		request_id: InboundRequestId,
+		routing_key: RoutingKey,
 		request: EchoRequest,
-		response_channel: ResponseChannel<SubfieldResponse>,
 		swarm: &mut MutexGuard<
 			'a,
 			libp2p::swarm::Swarm<swarm::SubfieldBehaviour>,
@@ -15,10 +14,10 @@ impl SubfieldHandlerTrait<EchoRequest> for SubfieldClient {
 		let response = SubfieldResponse::Echo(Ok(EchoSuccess {
 			message: request.message,
 		}));
-		let _ = swarm
-			.behaviour_mut()
-			.subfield
-			.send_response(response_channel, response);
+		// let _ = swarm
+		// 	.behaviour_mut()
+		// 	.subfield
+		// 	.send_response(response_channel, response);
 		Ok(())
 	}
 }

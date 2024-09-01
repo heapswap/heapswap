@@ -8,19 +8,21 @@ pub trait SubfieldServiceTrait {
 	System
 	*/
 
-	async fn echo(&self, key: CompleteKey, message: &str) -> String;
+	async fn echo(&self, key: CompleteKey, message: &str) -> Result<String, SubfieldError>;
 
 	/*
 	Records
 	*/
 
-	async fn get_record(&self, key:CompleteKey) -> Record;
+	/*
+	async fn get_record(&self, key: CompleteKey) -> Record;
 
 	async fn put_record(
 		&self,
 		key: CompleteKey,
 		record: Record,
 	) -> PutRecordResponse;
+	 */
 
 	/*
 	fn delete_record(

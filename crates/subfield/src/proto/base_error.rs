@@ -25,4 +25,7 @@ pub enum SubfieldError {
 	FailedToWriteStream,
 	FailedToReadStream,
 	FailedToCloseStream,
+	SerializationFailed,
+	DeserializationFailed,
+	EchoFailure
 }

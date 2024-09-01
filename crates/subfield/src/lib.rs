@@ -18,12 +18,12 @@ pub use eyre::{
 	Result as EResult,
 };
 
-pub fn cbor_serialize<T: Serialize>(value: &T) -> EResult<Vec<u8>> {
-	EOk(cbor4ii::serde::to_vec(Vec::new(), value)?)
+pub fn cbor_serialize<T: Serialize>(value: &T) -> Result<Vec<u8>, SubfieldError> {
+	cbor4ii::serde::to_vec(Vec::new(), value).map_err(|e| SubfieldError::SerializationFailed)
 }
 
-pub fn cbor_deserialize<'a, T: Deserialize<'a>>(bytes: &'a [u8]) -> EResult<T> {
-	EOk(cbor4ii::serde::from_slice(bytes)?)
+pub fn cbor_deserialize<'a, T: Deserialize<'a>>(bytes: &'a [u8]) -> Result<T, SubfieldError> {
+	cbor4ii::serde::from_slice(bytes).map_err(|e| SubfieldError::DeserializationFailed)
 }
 
 pub use chrono::{DateTime, Utc};
