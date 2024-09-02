@@ -137,8 +137,8 @@ impl PartialEq for Keypair {
 }
 impl Eq for Keypair {}
 
-/**
- * Protoable
+/*
+   Protoable
 */
 /*
 impl Protoable<subfield_proto::Keypair, CryptoKeyError> for Keypair {

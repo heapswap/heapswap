@@ -211,7 +211,7 @@ impl SubfieldEventsTrait for SubfieldClient {
 	) -> Result<OutboundRequestId, SubfieldError> {
 		let mut swarm_lock = self.swarm_lock().await;
 
-		let behaviour = &mut *swarm_lock.behaviour_mut();
+		let behaviour = &mut  swarm_lock.behaviour_mut();
 
 		// let request_id =
 		// 	behaviour.subfield.send_request(&peer_id, request.clone());

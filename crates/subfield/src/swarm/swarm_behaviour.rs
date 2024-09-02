@@ -31,8 +31,8 @@ use std::{io, time::Duration};
 pub const SUBFIELD_PROTOCOL: StreamProtocol =
 	StreamProtocol::new("/subfield/1.0.0");
 
-/**
- * SubfieldBehaviour
+/*
+   SubfieldBehaviour
 */
 #[derive(NetworkBehaviour)]
 pub struct SubfieldBehaviour {

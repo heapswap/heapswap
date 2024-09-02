@@ -157,8 +157,8 @@ impl PartialKey {
 	*/
 }
 
-/**
- * Randomable
+/*
+   Randomable
 */
 impl Randomable for PartialKey {
 	fn random() -> Self {
@@ -170,8 +170,8 @@ impl Randomable for PartialKey {
 	}
 }
 
-/**
- * Hash (for use in maps)
+/*
+   Hash (for use in maps)
 */
 impl Hash for PartialKey {
 	fn hash<H: std::hash::Hasher>(&self, state: &mut H) {

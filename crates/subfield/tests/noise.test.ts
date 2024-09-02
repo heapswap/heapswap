@@ -1,4 +1,4 @@
-import * as hs from "../index.ts"
+import   as hs from "../index.ts"
 import { expect, test } from "bun:test"
 
 test("noise", async () => {
@@ -31,7 +31,7 @@ test("noise", async () => {
 	expect(encrypted.length - decrypted.length).toBe(16)
 
 	// test - responder -> initiator
-	let large = "a".repeat(1024 * 1024)
+	let large = "a".repeat(1024   1024)
 	const largeMessage = hs.fromString(large)
 	encrypted = responder.encrypt(largeMessage)
 	decrypted = initiator.decrypt(encrypted)

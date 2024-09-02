@@ -41,8 +41,8 @@ pub trait Protoable<T, E>: Sized {
 }
 */
 
-/**
- * Has data of 32 bytes
+/*
+   Has data of 32 bytes
 */
 pub trait HasV256 {
 	fn v256(&self) -> &V256;

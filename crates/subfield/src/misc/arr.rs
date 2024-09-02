@@ -5,8 +5,8 @@ use rand::{Rng, RngCore};
 use crate::*;
 use std::ops::BitXor;
 
-/**
- * Errors
+/*
+   Errors
 */
 
 #[derive(Debug)]
@@ -17,8 +17,8 @@ pub enum ArrError {
 pub type Arr = [u8];
 pub type Vrr = Vec<u8>;
 
-/**
- * Conversions
+/*
+   Conversions
 */
 
 // string
@@ -72,7 +72,7 @@ pub fn from_proto<M: prost::Message>(proto: &M) -> Vec<u8> {
 */
 
 /*
- * Operations
+   Operations
 */
 pub fn random(len: usize) -> Vrr {
 	let mut rng = rand::thread_rng();

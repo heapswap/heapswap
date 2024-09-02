@@ -114,8 +114,8 @@ impl HasV256 for VersionedBytes {
 	}
 }
 
-/**
- * Stringable
+/*
+   Stringable
 */
 impl Stringable<VersionedBytesError> for VersionedBytes {
 	fn to_string(&self) -> String {
@@ -136,8 +136,8 @@ impl Into<String> for VersionedBytes {
 	}
 }
 
-/**
- * Vecable
+/*
+   Vecable
 */
 impl Vecable<VersionedBytesError> for VersionedBytes {
 	fn from_arr(arr: &[u8]) -> Result<Self, VersionedBytesError> {
@@ -152,8 +152,8 @@ impl Vecable<VersionedBytesError> for VersionedBytes {
 	}
 }
 
-/**
- * Serde
+/*
+   Serde
 */
 use serde::{Serialize, Serializer};
 
@@ -178,8 +178,8 @@ impl<'de> Deserialize<'de> for VersionedBytes {
 	}
 }
 
-/**
- * Equality
+/*
+   Equality
 */
 impl PartialEq for VersionedBytes {
 	fn eq(&self, other: &Self) -> bool {
@@ -189,8 +189,8 @@ impl PartialEq for VersionedBytes {
 
 impl Eq for VersionedBytes {}
 
-/**
- * Impls
+/*
+   Impls
 */
 impl From<String> for VersionedBytes {
 	fn from(string: String) -> Self {
@@ -204,8 +204,8 @@ impl From<&str> for VersionedBytes {
 	}
 }
 
-/**
- * Clone
+/*
+   Clone
 */
 impl Clone for VersionedBytes {
 	fn clone(&self) -> Self {
@@ -213,8 +213,8 @@ impl Clone for VersionedBytes {
 	}
 }
 
-/**
- * Hash
+/*
+   Hash
 */
 impl Hash for VersionedBytes {
 	fn hash<H: std::hash::Hasher>(&self, state: &mut H) {

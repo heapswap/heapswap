@@ -1,6 +1,6 @@
 import init from "./wasm/subfield"
-import * as hs from "./wasm/subfield"
-export * from "./wasm/subfield"
+import   as hs from "./wasm/subfield"
+export   from "./wasm/subfield"
 
 await init()
 

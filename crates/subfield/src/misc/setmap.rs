@@ -19,34 +19,39 @@ impl<K: Eq + Hash + Clone + std::fmt::Debug, V: Eq + Hash + Clone + std::fmt::De
 		self.vk_map.entry(v).or_insert_with(HashSet::new).insert(k);
 	}
 
-    pub fn remove_only(&mut self, k: K, v: V) -> Option<()> {
+    pub fn remove_only(&mut self, k: &K, v: &V) -> bool {
 
-			if let Some(mut v_set) = self.kv_map.get_mut(&k) {
-					v_set.remove(&v);
-					if v_set.is_empty() {
-					self.kv_map.remove(&k);
-				}
+		let mut exists = false;
+				
+		if let Some(mut v_set) = self.kv_map.get_mut(k) {
+			exists = true;
+			v_set.remove(&v);
+			if v_set.is_empty() {
+				self.kv_map.remove(k);
 			}
+		}
 
-            if let Some(mut k_set) = self.vk_map.get_mut(&v) {
-                k_set.remove(&k);
-                if k_set.is_empty() {
-                    self.vk_map.remove(&v);
-                }
-            }
+		if let Some(mut k_set) = self.vk_map.get_mut(v) {
+			exists = true;
+			k_set.remove(&k);
+			if k_set.is_empty() {
+				self.vk_map.remove(v);
+			}
+		}
 
-        Some(())
+        exists
     }
 	
 	// remove a key from the kv_map and remove all occurences of k from the vk_map
-	pub fn remove_key(&mut self, k: K) -> HashSet<V> {
+	// returns the values that were removed
+	pub fn remove_key(&mut self, k: &K) -> HashSet<V> {
 		// remove the key from the kv_map
-		let v_set = self.kv_map.remove(&k).unwrap_or_default();
+		let v_set = self.kv_map.remove(k).unwrap_or_default();
 		
 		// loop through all values in the v_set and remove the key from the vk_map
 		for v in v_set.iter() {
-			if let Some(k_set) = self.vk_map.get_mut(&v) {
-				k_set.remove(&k);
+			if let Some(k_set) = self.vk_map.get_mut(v) {
+				k_set.remove(k);
 				if k_set.is_empty() {
 					self.vk_map.remove(&v);
 				}
@@ -56,16 +61,17 @@ impl<K: Eq + Hash + Clone + std::fmt::Debug, V: Eq + Hash + Clone + std::fmt::De
 	}
 	
 	// remove a value from the vk_map and remove all occurences of v from the kv_map
-	pub fn remove_value(&mut self, v: V) -> HashSet<K> {
+	// returns the keys that were removed
+	pub fn remove_value(&mut self, v: &V) -> HashSet<K> {
 		// remove the value from the vk_map
-		let k_set = self.vk_map.remove(&v).unwrap_or_default();
+		let k_set = self.vk_map.remove(v).unwrap_or_default();
 		
 		// loop through all keys in the k_set and remove the value from the kv_map
 		for k in k_set.iter() {
-			if let Some(v_set) = self.kv_map.get_mut(&k) {
-				v_set.remove(&v);
+			if let Some(v_set) = self.kv_map.get_mut(k) {
+				v_set.remove(v);
 				if v_set.is_empty() {
-					self.kv_map.remove(&k);
+					self.kv_map.remove(k);
 				}
 			}
 		}
@@ -73,12 +79,12 @@ impl<K: Eq + Hash + Clone + std::fmt::Debug, V: Eq + Hash + Clone + std::fmt::De
 	}
 	
 
-	pub fn get_key(&mut self, k: K) -> Option<HashSet<V>> {
-		self.kv_map.get(&k).map(|ref_val| ref_val.clone())
+	pub fn get_key(&mut self, k: &K) -> Option<HashSet<V>> {
+		self.kv_map.get(k).map(|ref_val| ref_val.clone())
 	}
 
-	pub fn get_value(&mut self, v: V) -> Option<HashSet<K>> {
-		self.vk_map.get(&v).map(|ref_val| ref_val.clone())
+	pub fn get_value(&mut self, v: &V) -> Option<HashSet<K>> {
+		self.vk_map.get(v).map(|ref_val| ref_val.clone())
 	}
 }
 
@@ -97,7 +103,6 @@ fn test_dashdex() {
 	// vk
 	// z -> a
 	// y -> a, b, c
-	
 
 	dex.insert("a".to_string(), "z".to_string());
 	dex.insert("a".to_string(), "y".to_string());
@@ -107,29 +112,29 @@ fn test_dashdex() {
 
 	// test keys
 
-	let Some(a_vals) = dex.get_key("a".to_string()) else {
+	let Some(a_vals) = dex.get_key(&"a".to_string()) else {
 		panic!("a_vals not found");
 	};
 	assert!(a_vals == HashSet::from_iter(["z".to_string(), "y".to_string()]));
 	
-	let Some(b_vals) = dex.get_key("b".to_string()) else {
+	let Some(b_vals) = dex.get_key(&"b".to_string()) else {
 		panic!("b_vals not found");
 	};
 	assert!(b_vals == HashSet::from_iter(["y".to_string()]));
 	
-	let Some(c_vals) = dex.get_key("c".to_string()) else {
+	let Some(c_vals) = dex.get_key(&"c".to_string()) else {
 		panic!("c_vals not found");
 	};
 	assert!(c_vals == HashSet::from_iter(["y".to_string()]));
 	
 	// test values
 	
-	let Some(z_keys) = dex.get_value("z".to_string()) else {
+	let Some(z_keys) = dex.get_value(&"z".to_string()) else {
 		panic!("z_keys not found");
 	};
 	assert!(z_keys == HashSet::from_iter(["a".to_string()]));
 	
-	let Some(y_keys) = dex.get_value("y".to_string()) else {
+	let Some(y_keys) = dex.get_value(&"y".to_string()) else {
 		panic!("y_keys not found");
 	};
 	assert!(y_keys == HashSet::from_iter(["a".to_string(), "b".to_string(), "c".to_string()]));
@@ -137,7 +142,7 @@ fn test_dashdex() {
 	
 	
 	// remove a key
-	dex.remove_key("b".to_string());
+	dex.remove_key(&"b".to_string());
 	// kv
 	// a -> z, y
 	// b -> none
@@ -147,17 +152,17 @@ fn test_dashdex() {
 	// z -> a
 	// y -> a, c
 		
-	let b_vals = dex.get_key("b".to_string());
+	let b_vals = dex.get_key(&"b".to_string());
 	assert!(b_vals == None);
 	
-	let Some(y_keys) = dex.get_value("y".to_string()) else {
+	let Some(y_keys) = dex.get_value(&"y".to_string()) else {
 		panic!("y_keys not found");
 	};
 	assert!(y_keys == HashSet::from_iter(["a".to_string(), "c".to_string()]));
 	
 	
 	// remove only
-	dex.remove_only("a".to_string(), "z".to_string()); 
+	dex.remove_only(&"a".to_string(), &"z".to_string()); 
 	// kv
 	// a -> y
 	// b -> none
@@ -167,12 +172,12 @@ fn test_dashdex() {
 	// z -> none
 	// y -> a, c
 	
-	let Some(a_vals) = dex.get_key("a".to_string()) else {
+	let Some(a_vals) = dex.get_key(&"a".to_string()) else {
 		panic!("a_vals not found");
 	};
 	assert!(a_vals == HashSet::from_iter(["y".to_string()]));
 	
-	let z_keys = dex.get_value("z".to_string());
+	let z_keys = dex.get_value(&"z".to_string());
 	assert!(z_keys == None); 	
 	
 	

@@ -1,7 +1,7 @@
 use crate::*;
 
-/**
- * Ping
+/*
+   Ping
 */
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct PingRequest {
@@ -22,8 +22,8 @@ pub enum PingFailure {
 
 pub type PingResponse = Result<PingSuccess, PingFailure>;
 
-/**
- * Echo
+/*
+   Echo
 */
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct EchoRequest {

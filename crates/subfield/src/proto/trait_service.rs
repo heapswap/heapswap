@@ -22,7 +22,7 @@ pub trait SubfieldServiceTrait {
 		key: CompleteKey,
 		record: Record,
 	) -> PutRecordResponse;
-	 */
+	*/
 
 	/*
 	fn delete_record(

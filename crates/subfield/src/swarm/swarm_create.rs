@@ -59,9 +59,9 @@ pub enum SubfieldSwarmMode {
 
 const IDLE_CONNECTION_TIMEOUT: u64 = 60;
 
-/**
- * Create a Subfield Swarm
- * Switches between client and server based on the feature flags
+/*
+   Create a Subfield Swarm
+   Switches between client and server based on the feature flags
 */
 // #[wasm_bindgen]
 pub async fn create_swarm(
@@ -87,8 +87,8 @@ pub async fn create_swarm(
 	}
 }
 
-/**
- * Client - Wasm
+/*
+   Client - Wasm
 */
 #[cfg(feature = "client")]
 async fn create_client(
@@ -139,8 +139,8 @@ async fn create_client(
 	panic!("client not implemented on non-wasm32")
 }
 
-/**
- * Server - Non-Wasm
+/*
+   Server - Non-Wasm
 */
 #[cfg(feature = "server")]
 async fn create_server(

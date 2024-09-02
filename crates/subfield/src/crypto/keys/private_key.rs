@@ -110,8 +110,8 @@ impl PrivateKey {
 	}
 }
 
-/**
- * Randomable
+/*
+   Randomable
 */
 impl Randomable for PrivateKey {
 	fn random() -> Self {
@@ -119,8 +119,8 @@ impl Randomable for PrivateKey {
 	}
 }
 
-/**
- * Hash
+/*
+   Hash
 */
 impl std::hash::Hash for PrivateKey {
 	fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
@@ -128,8 +128,8 @@ impl std::hash::Hash for PrivateKey {
 	}
 }
 
-/**
- * Stringable
+/*
+   Stringable
 */
 impl Stringable<CryptoKeyError> for PrivateKey {
 	fn to_string(&self) -> String {
@@ -144,8 +144,8 @@ impl Stringable<CryptoKeyError> for PrivateKey {
 	}
 }
 
-/**
- * Vecable
+/*
+   Vecable
 */
 impl Vecable<CryptoKeyError> for PrivateKey {
 	fn to_vec(&self) -> Vec<u8> {
@@ -160,8 +160,8 @@ impl Vecable<CryptoKeyError> for PrivateKey {
 	}
 }
 
-/**
- * Protoable
+/*
+   Protoable
 */
 /*
 impl Protoable<subfield_proto::PrivateKey, CryptoKeyError> for PrivateKey {
@@ -177,7 +177,7 @@ impl Protoable<subfield_proto::PrivateKey, CryptoKeyError> for PrivateKey {
 
 	fn to_proto(&self) -> Result<subfield_proto::PrivateKey, CryptoKeyError> {
 		Ok(subfield_proto::PrivateKey {
-			version: *self.v256.version(),
+			version:  self.v256.version(),
 			data: self.v256.data().clone().into(),
 		})
 	}
@@ -198,8 +198,8 @@ impl Protoable<subfield_proto::PrivateKey, CryptoKeyError> for PrivateKey {
 }
 */
 
-/**
- * Libp2pKeypairable
+/*
+   Libp2pKeypairable
 */
 impl Libp2pKeypairable<CryptoKeyError> for PrivateKey {
 	fn to_libp2p_keypair(
@@ -231,8 +231,8 @@ impl Libp2pKeypairable<CryptoKeyError> for PrivateKey {
 	}
 }
 
-/**
- * HasV256
+/*
+   HasV256
 */
 
 impl HasV256 for PrivateKey {
@@ -241,8 +241,8 @@ impl HasV256 for PrivateKey {
 	}
 }
 
-/**
- * Equality
+/*
+   Equality
 */
 impl PartialEq for PrivateKey {
 	fn eq(&self, other: &Self) -> bool {

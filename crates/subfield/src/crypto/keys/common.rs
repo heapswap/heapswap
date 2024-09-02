@@ -27,8 +27,8 @@ use x25519_dalek::{
 use crate::arr;
 use crate::*;
 
-/**
- * Types
+/*
+   Types
 */
 pub type Key = [u8; SECRET_KEY_LENGTH];
 
@@ -43,8 +43,8 @@ pub type DalekEdPublicKeyArr = [u8; PUBLIC_KEY_LENGTH];
 pub type SharedSecret = V256;
 pub type Signature = V512;
 
-/**
- * Errors
+/*
+   Errors
 */
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub enum CryptoKeyError {

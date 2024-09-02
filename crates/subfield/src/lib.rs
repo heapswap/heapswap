@@ -37,8 +37,8 @@ pub use libp2p::request_response::{InboundRequestId, OutboundRequestId};
 pub use libp2p::{PeerId, Stream};
 pub use libp2p_stream as stream;
 
-/**
- * Reexports
+/*
+   Reexports
 */
 // pub use futures::prelude::*;
 pub use std::fmt;
@@ -64,8 +64,8 @@ pub use strum;
 pub use tracing;
 pub use wasm_bindgen::prelude::*;
 
-/**
- * Channel Reexports
+/*
+   Channel Reexports
 */
 
 #[cfg(not(any(feature = "server", test)))]
@@ -91,8 +91,8 @@ pub fn unbounded<T>() -> (UnboundedSender<T>, UnboundedReceiver<T>) {
 	(tx, rx)
 }
 
-/**
- * Mutex Reexports
+/*
+   Mutex Reexports
 */
 #[cfg(not(feature = "server"))]
 pub use {
@@ -107,8 +107,8 @@ pub use {
 	tokio::task::yield_now,
 };
 
-/**
- * Prelude
+/*
+   Prelude
 */
 pub mod constants;
 pub mod crypto;
@@ -133,8 +133,8 @@ pub use crate::prelude::*;
 #[cfg(test)]
 pub mod tests;
 
-/**
- * WASM Setup
+/*
+   WASM Setup
 */
 use tracing::subscriber::SetGlobalDefaultError;
 use tracing_subscriber::prelude::*;
@@ -150,8 +150,8 @@ pub fn try_set_as_global_default_with_config(
 	)
 }
 
-/**
- * WASM Entrypoint
+/*
+   WASM Entrypoint
 */
 #[wasm_bindgen(start)]
 pub fn start() {

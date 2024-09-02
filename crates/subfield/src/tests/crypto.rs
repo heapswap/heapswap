@@ -1,8 +1,8 @@
 use crate::crypto::*;
 use crate::*;
 
-/**
- * Cipher
+/*
+   Cipher
 */
 #[test]
 fn test_cipher() {
@@ -13,8 +13,8 @@ fn test_cipher() {
 	assert_eq!(plaintext.to_vec(), decrypted);
 }
 
-/**
- * Noise
+/*
+   Noise
 */
 #[test]
 fn test_noise() {
@@ -40,8 +40,8 @@ fn test_noise() {
 	assert_eq!(data.to_vec(), decrypted);
 }
 
-/**
- * Keypair
+/*
+   Keypair
 */
 #[test]
 fn test_sign_and_verify() {

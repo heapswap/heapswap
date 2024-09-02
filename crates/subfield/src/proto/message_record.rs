@@ -1,8 +1,8 @@
 use crate::*;
 
-/**
- * GetRecord
- */
+/*
+   GetRecord
+*/
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct GetRecordRequest {
 	pub routing_key: RoutingKey,
@@ -24,8 +24,8 @@ pub enum GetRecordFailure {
 
 pub type GetRecordResponse = Result<GetRecordSuccess, GetRecordFailure>;
 
-/**
- * PutRecord
+/*
+   PutRecord
 */
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct PutRecordRequest {
@@ -73,8 +73,8 @@ pub enum PutRecordFailure {
 
 pub type PutRecordResponse = Result<PutRecordSuccess, PutRecordFailure>;
 
-/**
- * DeleteRecord
+/*
+   DeleteRecord
 */
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct DeleteRecordRequest {

@@ -67,8 +67,8 @@ impl CompleteKey {
 	}
 }
 
-/**
- * Randomable
+/*
+   Randomable
 */
 impl Randomable for CompleteKey {
 	fn random() -> Self {
@@ -80,8 +80,8 @@ impl Randomable for CompleteKey {
 	}
 }
 
-/**
- * Hash (for use in maps)
+/*
+   Hash (for use in maps)
 */
 impl Hash for CompleteKey {
 	fn hash<H: std::hash::Hasher>(&self, state: &mut H) {

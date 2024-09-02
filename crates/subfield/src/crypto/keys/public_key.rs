@@ -29,8 +29,8 @@ pub struct PublicKey {
 	x: OnceCell<DalekXPublicKey>,
 }
 
-/**
- * PublicKey
+/*
+   PublicKey
 */
 impl PublicKey {
 	pub fn new(v256: V256) -> PublicKey {
@@ -87,8 +87,8 @@ impl HasV256 for PublicKey {
 	}
 }
 
-/**
- * Hash
+/*
+   Hash
 */
 impl std::hash::Hash for PublicKey {
 	fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
@@ -96,8 +96,8 @@ impl std::hash::Hash for PublicKey {
 	}
 }
 
-/**
- * Stringable
+/*
+   Stringable
 */
 impl Stringable<CryptoKeyError> for PublicKey {
 	fn to_string(&self) -> String {
@@ -112,8 +112,8 @@ impl Stringable<CryptoKeyError> for PublicKey {
 	}
 }
 
-/**
- * Vecable
+/*
+   Vecable
 */
 impl Vecable<CryptoKeyError> for PublicKey {
 	fn to_vec(&self) -> Vec<u8> {
@@ -128,8 +128,8 @@ impl Vecable<CryptoKeyError> for PublicKey {
 	}
 }
 
-/**
- * Randomable (nonsense, only used for testing)
+/*
+   Randomable (nonsense, only used for testing)
 */
 impl Randomable for PublicKey {
 	fn random() -> Self {
@@ -137,8 +137,8 @@ impl Randomable for PublicKey {
 	}
 }
 
-/**
- * Equality
+/*
+   Equality
 */
 impl PartialEq for PublicKey {
 	fn eq(&self, other: &Self) -> bool {
@@ -149,8 +149,8 @@ impl PartialEq for PublicKey {
 
 impl Eq for PublicKey {}
 
-/**
- * Protoable
+/*
+   Protoable
 */
 /*
 impl Protoable<subfield_proto::PublicKey, CryptoKeyError> for PublicKey {
@@ -166,7 +166,7 @@ impl Protoable<subfield_proto::PublicKey, CryptoKeyError> for PublicKey {
 
 	fn to_proto(&self) -> Result<subfield_proto::PublicKey, CryptoKeyError> {
 		Ok(subfield_proto::PublicKey {
-			version: *self.v256.version(),
+			version:  self.v256.version(),
 			data: self.v256.data().clone().into(),
 		})
 	}

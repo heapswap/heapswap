@@ -1,7 +1,7 @@
 use crate::*;
 
-/**
- * Subscribe
+/*
+   Subscribe
 */
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct SubscribeRequest {
@@ -20,8 +20,8 @@ pub enum SubscribeFailure {
 
 pub type SubscribeResponse = Result<SubscribeSuccess, SubscribeFailure>;
 
-/**
- * Unsubscribe
+/*
+   Unsubscribe
 */
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct UnsubscribeRequest {

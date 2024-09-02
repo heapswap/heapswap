@@ -3,8 +3,8 @@ use crate::*;
 pub type Sender<T> = UnboundedSender<T>;
 pub type Receiver<R> = UnboundedReceiver<R>;
 
-/**
- * Unidirectional channel
+/*
+   Unidirectional channel
 */
 pub fn portal<U>() -> (Sender<U>, Receiver<U>) {
 	let (tx, rx) = unbounded::<U>();
@@ -47,8 +47,8 @@ where
 	}
 }
 
-/**
- * Bidirectional channel
+/*
+   Bidirectional channel
 */
 struct Portals<L, R>
 where

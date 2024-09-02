@@ -11,7 +11,7 @@ npm install heapswap
 # Usage
 
 ```javascript
-import * as hs from "heapswap"
+import   as hs from "heapswap"
 
 await hs.init() // Initialize the WASM module, only necessary if the environment does not support top-level await
 ```

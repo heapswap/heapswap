@@ -38,7 +38,7 @@ impl Record {
 		keypair: &Keypair,
 	) -> Result<[SubfieldRequest; 3], RecordError> {
 		// The keypair's public key must be equal to the key's signer
-		if *keypair.public_key().v256() != key.clone().signer {
+		if  keypair.public_key().v256() != &key.signer {
 			return Err(RecordError::KeypairNotSigner);
 		}
 
