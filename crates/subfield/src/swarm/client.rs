@@ -27,7 +27,7 @@ pub struct SubfieldClient {
 	// keypairs for use in signing requests
 	keypairs: DashMap<PublicKey, Keypair>,
 
-	switchboard: Switchboard,
+	// switchboard: Switchboard,
 	
 
 	current_handle: Arc<AtomicU64>,
@@ -63,7 +63,7 @@ impl SubfieldClient {
 			incoming_streams,
 			store: DashMap::new(),
 			keypairs: DashMap::new(),
-			switchboard: Switchboard::new(),
+			// switchboard: Switchboard::new(),
 			current_handle: Arc::new(AtomicU64::new(0)),
 		})
 	}

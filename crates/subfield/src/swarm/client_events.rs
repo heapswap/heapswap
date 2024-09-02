@@ -133,6 +133,16 @@ impl SubfieldEventsTrait for SubfieldClient {
 						behaviour.kad.add_address(&peer_id, send_back_addr);
 					}
 				},
+				libp2p::swarm::SwarmEvent::ConnectionClosed { peer_id, connection_id, endpoint, num_established, cause } => {
+					match endpoint {
+						libp2p_core::ConnectedPoint::Dialer { address, role_override, port_use } => {
+							behaviour.kad.remove_address(&peer_id, &address);
+						}
+						libp2p_core::ConnectedPoint::Listener { local_addr, send_back_addr } => {
+							behaviour.kad.remove_address(&peer_id, &send_back_addr);
+						}
+					}
+				},
 				_ => {}
 			}
 

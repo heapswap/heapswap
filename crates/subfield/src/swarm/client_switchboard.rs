@@ -10,17 +10,32 @@ pub struct ClientReceiver<T>(Receiver<T>);
  	- keep track of all the subscriptions to keys
 	- route messages to connected peers
 	- handle peers joining and leaving
+	
+	
+	process
+	
+	- when a peer connects, add it to the switchboard
+	
+	
+	
+	
+	
+	
+	
+	
+	
 */
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub struct Switchboard {
+	// streams: DashMap<PeerId, Stream>,
 
 }
 
 impl Switchboard {
-	pub fn new() -> Self {
-		Self {
-		}
-	}
+	// pub fn new() -> Self {
+	// 	Self {
+	// 	}
+	// }
 }
 
 
