@@ -36,7 +36,11 @@ pub const SUBFIELD_PROTOCOL: StreamProtocol =
 */
 #[derive(NetworkBehaviour)]
 pub struct SubfieldNetworkBehaviour {
-	// pub chord: ChordBehaviour,
+	
+	// subfield
+	pub subfield : stream::Behaviour,
+	
+	// dht
 	pub kad: kad::Behaviour<MemoryStore>,
 
 	// networking
@@ -57,9 +61,7 @@ impl SubfieldNetworkBehaviour {
 			kad::Config::new(StreamProtocol::new("/subfield/kad/1.0.0"));
 
 		let mut behaviour = SubfieldNetworkBehaviour {
-			// chord: ChordBehaviour::new(ChordBehaviourConfig {
-			// 	..Default::default()
-			// }),
+			subfield: stream::Behaviour::new(),
 			kad: kad::Behaviour::with_config(
 				local_peer_id.clone(),
 				MemoryStore::new(local_peer_id.clone()),
@@ -83,7 +85,8 @@ impl SubfieldNetworkBehaviour {
 				relay::Config::default(),
 			),
 		};
-
+		
+	
 		// set mode
 		#[cfg(feature = "client")]
 		{

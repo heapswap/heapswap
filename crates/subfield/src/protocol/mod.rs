@@ -17,6 +17,8 @@ mod message_system;
 pub use message_system::*;
 
 // traits
+mod trait_system;
+pub use trait_system::*;
 
 // keys
 mod key_common;

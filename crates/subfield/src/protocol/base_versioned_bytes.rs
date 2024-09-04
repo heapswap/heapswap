@@ -129,9 +129,44 @@ impl VersionedBytes {
 	
 	pub fn from_bigint(bigint: num_bigint::BigUint) -> Self {
 	 	VersionedBytes::new(0, bigint.to_bytes_be().as_slice())
-	 }
+	}
+	
+	pub fn to_record_key(&self) -> libp2p::kad::RecordKey {
+		libp2p::kad::RecordKey::from(self.data.as_slice().to_vec())
+	}
+	
+	pub fn from_record_key(key: libp2p::kad::RecordKey) -> Self {
+		VersionedBytes::new(0, key.to_vec().as_slice())
+	}
+	
+	pub fn to_kbucket_key(&self) -> libp2p::kad::KBucketKey<Vec<u8>> {
+		libp2p::kad::KBucketKey::new(self.data.as_slice().to_vec())
+	}
+	
+	pub fn from_kbucket_key(key: libp2p::kad::KBucketKey<Vec<u8>>) -> Self {
+		VersionedBytes::new(0, key.preimage().as_slice())
+	}
 
 }
+
+
+#[test]
+fn test_v256_to_key() {
+	let key_vb = VersionedBytes::random256();
+	let key_libp2p = key_vb.to_record_key();
+	let key_back = VersionedBytes::from_record_key(key_libp2p);
+	assert_eq!(key_vb, key_back);
+}
+
+#[test]
+fn test_v256_to_kbucket_key() {
+	let key_vb = VersionedBytes::random256();
+	let key_libp2p = key_vb.to_kbucket_key();
+	let key_back = VersionedBytes::from_kbucket_key(key_libp2p);
+	assert_eq!(key_vb, key_back);
+}
+
+
 
 impl HasV256 for VersionedBytes {
 	fn v256(&self) -> &V256 {

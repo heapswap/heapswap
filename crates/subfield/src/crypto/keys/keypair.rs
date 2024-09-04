@@ -113,7 +113,6 @@ impl Stringable<CryptoKeyError> for Keypair {
 /*
    Libp2pKeypairable
 */
-/*
 impl Libp2pKeypairable<CryptoKeyError> for Keypair {
 	fn to_libp2p_keypair(
 		&self,
@@ -132,7 +131,6 @@ impl Libp2pKeypairable<CryptoKeyError> for Keypair {
 		})
 	}
 }
-*/
 
 
 impl PartialEq for Keypair {

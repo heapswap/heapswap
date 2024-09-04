@@ -188,7 +188,7 @@ impl Protoable<subfield_proto::PublicKey, CryptoKeyError> for PublicKey {
 */
 
 
-/*
+
 type Libp2pPublicKey = libp2p::identity::PublicKey;
 type Libp2pEdPublicKey = libp2p::identity::ed25519::PublicKey;
 
@@ -221,7 +221,7 @@ impl Libp2pPeerIdable<CryptoKeyError> for PublicKey {
 		Ok(libp2p::PeerId::from_public_key(&libp2p_public_key))
 	}
 }
-*/
+
 
 
 #[wasm_bindgen]
