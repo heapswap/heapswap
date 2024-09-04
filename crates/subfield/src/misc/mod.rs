@@ -1,10 +1,10 @@
 pub mod traits;
 pub use traits::*;
 
-mod portal;
-pub use portal::*;
-mod portal_manager;
-pub use portal_manager::*;
+mod channels;
+pub use channels::*;
+// mod channel_manager;
+// pub use channel_manager::*;
 
 pub mod arr;
 
@@ -13,3 +13,5 @@ pub use arena::*;
 
 mod setmap;
 pub use setmap::*;
+mod ordered_map;
+pub use ordered_map::*;

@@ -7,8 +7,8 @@ use chacha20poly1305::{
 
 pub type Plaintext = Vec<u8>;
 pub type Ciphertext = Vec<u8>;
-pub type SecretKey = V256;
-pub type SecretKeyArray = [u8; 32];
+pub type CipherSecretKey = V256;
+pub type CipherSecretKeyArray = [u8; 32];
 const NONCE_LENGTH: usize = 12;
 pub type Nonce = Vec<u8>; // [u8; NONCE_LENGTH];
 pub type NonceArray = [u8; NONCE_LENGTH];
@@ -30,7 +30,7 @@ impl Cipher {
 	Constructors
 	*/
 
-	pub fn new(secret: SecretKey) -> Cipher {
+	pub fn new(secret: CipherSecretKey) -> Cipher {
 		let key: [u8; 32] = secret.data().clone().try_into().unwrap();
 		let cipher = ChaCha20Poly1305::new(&generic_array::GenericArray::<
 			u8,
@@ -40,7 +40,7 @@ impl Cipher {
 		Cipher { secret, cipher }
 	}
 
-	pub fn random_key() -> SecretKey {
+	pub fn random_key() -> CipherSecretKey {
 		V256::random256()
 	}
 
@@ -51,7 +51,7 @@ impl Cipher {
 	/*
 	Getters
 	*/
-	pub fn secret(&self) -> &SecretKey {
+	pub fn secret(&self) -> &CipherSecretKey {
 		&self.secret
 	}
 
@@ -102,12 +102,12 @@ impl Cipher {
 	*/
 
 	#[wasm_bindgen(constructor)]
-	pub fn _js_new(secret: SecretKey) -> Cipher {
+	pub fn _js_new(secret: CipherSecretKey) -> Cipher {
 		Cipher::new(secret)
 	}
 
 	#[wasm_bindgen(js_name = "randomKey")]
-	pub fn _js_random_key() -> SecretKey {
+	pub fn _js_random_key() -> CipherSecretKey {
 		Cipher::random_key()
 	}
 
@@ -120,7 +120,7 @@ impl Cipher {
 	Getters
 	*/
 	#[wasm_bindgen(getter, js_name = "secret")]
-	pub fn _js_secret(&self) -> SecretKey {
+	pub fn _js_secret(&self) -> CipherSecretKey {
 		self.secret().clone()
 	}
 

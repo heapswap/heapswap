@@ -149,6 +149,7 @@ async-compat = { version = "0.2.4" }
 futures = { version = "0.3.30" }
 futures-util = { version = "0.3.30" }
 futures-channel = { version = "0.3.30" }
+asynchronous-codec = { version = "0.7.0" }
 ### Concurrency
 # crossbeam = { version = "0.8.4" }
 # crossbeam-utils = { version = "0.8.19" }
@@ -178,7 +179,7 @@ tracing-subscriber = { version = "0.3.18", features = [
 #
 ## Storage
 ##
-gluesql = { version = "0.16.2", default-features = false }
+gluesql = { version = "0.16.2", default-features = true }
 # gluesql-idb-storage = "0.15.0"
 # sea-orm = { version = "0.12.15" } # ORM
 #redb = { version = "2.1.0" } # KV-store
@@ -254,7 +255,7 @@ once_cell = { version = "1.19.0" } # Single assignment cells and lazy values
 owning_ref = { version = "0.4.1" } # References that carry their owner with them
 arbitrary = { version = "1.3.2" } # Construct arbitrary instances of a type
 delegate = { version = "0.12.0" } # Macros for method delegation
-either = { version = "1.11.0" } # General purpose sum type with two cases
+either = { version = "1.13.0" } # General purpose sum type with two cases
 flume = { version = "0.11.0" } # Multi-producer, multi-consumer channel
 fn_name = { version = "0.1.0" } #  Macros that produce the name of the function they're invoked within
 semver = { version = "1.0.23" } # Parser and evaluator for Cargo's semantic versioning format (like v0.0.0)
@@ -284,3 +285,6 @@ ordered-float = { version = "4.2.2" }
 pin-utils = { version = "0.1.0" }
 generational-arena = { version = "0.2.9" }
 async-trait = { version = "0.1" }
+unsigned-varint = { version = "0.8.0" }
+quickcheck = { version = "1.0.3"}
+void = { version = "1.0.2" }

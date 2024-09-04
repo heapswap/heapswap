@@ -48,6 +48,8 @@ pub trait HasV256 {
 	fn v256(&self) -> &V256;
 }
 
+
+/*
 pub trait Libp2pKeypairable<E>: Sized {
 	fn to_libp2p_keypair(&self) -> Result<libp2p::identity::Keypair, E>;
 	fn from_libp2p_keypair(
@@ -65,3 +67,4 @@ pub trait Libp2pPeerIdable<E>: Sized {
 	fn to_libp2p_peer_id(&self) -> Result<libp2p::PeerId, E>;
 	// fn from_libp2p_peer_id(peer_id: libp2p::PeerId) -> Result<Self, E>;
 }
+*/

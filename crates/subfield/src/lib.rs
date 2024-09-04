@@ -4,60 +4,68 @@
 #![allow(unused_variables)]
 #![allow(unused_parens)]
 #![allow(unused_mut)]
-// #![feature(trivial_bounds)]
 
-// pub use bincode::{
-// 	deserialize, serialize,
-// };
-// pub use subfield_proto::*;
-// pub use subfield_proto as proto;
-// pub use subfield_proto::{proto_serialize, proto_deserialize};
+/*
+   Prelude
+*/
+mod constants;
+mod crypto;
+mod misc;
+mod protocol;
+mod store;
+mod swarm;
+#[cfg(feature = "client")]
+mod client;
+#[cfg(feature = "server")]
+mod server;
+
+pub mod prelude {
+	pub use crate::constants::*;
+	pub use crate::crypto::*;
+	pub use crate::misc::*;
+	pub use crate::protocol::*;
+	pub use crate::store::*;
+	pub use crate::swarm::*;
+	#[cfg(feature = "client")]
+	pub use crate::client::*;
+	#[cfg(feature = "server")]
+	pub use crate::server::*;
+}
+pub use crate::prelude::*;
+
+// tests 
+#[cfg(test)]
+pub mod tests;
+
+/*
+   Reexports
+*/
 pub use bytes::{Buf, BufMut, Bytes, BytesMut};
 pub use eyre::{
 	eyre as eyr, Ok as EOk, OptionExt as _, Report as EReport,
 	Result as EResult,
 };
-
-pub fn cbor_serialize<T: Serialize>(value: &T) -> Result<Vec<u8>, SubfieldError> {
-	cbor4ii::serde::to_vec(Vec::new(), value).map_err(|e| SubfieldError::SerializationFailed)
-}
-
-pub fn cbor_deserialize<'a, T: Deserialize<'a>>(bytes: &'a [u8]) -> Result<T, SubfieldError> {
-	cbor4ii::serde::from_slice(bytes).map_err(|e| SubfieldError::DeserializationFailed)
-}
-
+pub use std::borrow::Cow;
 pub use chrono::{DateTime, Utc};
 pub type DateTimeUtc = DateTime<Utc>;
-
-pub use std::collections::{HashMap, HashSet};
-
-pub use lazy_static::lazy_static;
-pub use libp2p::request_response::ResponseChannel;
-pub use libp2p::request_response::{InboundRequestId, OutboundRequestId};
-pub use libp2p::{PeerId, Stream};
-pub use libp2p_stream as stream;
-
-/*
-   Reexports
-*/
-// pub use futures::prelude::*;
-pub use std::fmt;
-// pub use libp2p;
-pub use getset::{CopyGetters, Getters, MutGetters, Setters};
-pub use once_cell::sync::{Lazy, OnceCell};
-pub use reqwest;
-// pub use prost::Message;
 pub use async_trait::async_trait;
 pub use dashmap::{DashMap, DashSet};
+pub use either::Either;
+pub use futures::prelude::*;
 pub use futures::{AsyncReadExt, AsyncWriteExt, FutureExt, SinkExt, StreamExt};
+pub use getset::{CopyGetters, Getters, MutGetters, Setters};
 pub use itertools::Itertools;
 pub use js_sys::Uint8Array;
-pub use libp2p;
+pub use lazy_static::lazy_static;
+pub use once_cell::sync::{Lazy, OnceCell};
 pub use ordered_float::OrderedFloat;
 pub use rand::{prelude::*, thread_rng, Rng};
+pub use reqwest;
 pub use serde::{
 	de::DeserializeOwned, Deserialize, Deserializer, Serialize, Serializer,
 };
+pub use std::collections::{HashMap, HashSet};
+pub use std::fmt;
 pub use std::pin::Pin;
 pub use std::sync::Arc;
 pub use strum;
@@ -108,32 +116,6 @@ pub use {
 };
 
 /*
-   Prelude
-*/
-pub mod constants;
-pub mod crypto;
-pub mod misc;
-pub mod proto;
-// pub mod networking;
-pub mod store;
-pub mod swarm;
-
-pub mod prelude {
-	pub use super::constants::*;
-	pub use super::crypto::*;
-	pub use super::proto::*;
-	// pub use super::networking::*;
-	pub use super::store::*;
-	pub use super::swarm::*;
-	pub use crate::misc::*;
-}
-pub use crate::prelude::*;
-
-// tests
-#[cfg(test)]
-pub mod tests;
-
-/*
    WASM Setup
 */
 use tracing::subscriber::SetGlobalDefaultError;
@@ -154,7 +136,7 @@ pub fn try_set_as_global_default_with_config(
    WASM Entrypoint
 */
 #[wasm_bindgen(start)]
-pub fn start() {
+pub async fn main() {
 	// set tracing level
 	console_error_panic_hook::set_once();
 	let level = tracing::Level::INFO;
@@ -164,7 +146,23 @@ pub fn start() {
 	let _ = try_set_as_global_default_with_config(tracing_cfg);
 }
 
-#[wasm_bindgen(js_name = "hello")]
-pub fn hello() -> String {
-	"hello".to_string()
+/*
+ Libp2p
+*/
+pub fn serialize<T: Serialize>(value: &T) -> Result<Vec<u8>, SubfieldError> {
+	cbor4ii::serde::to_vec(Vec::new(), value)
+		.map_err(|e| SubfieldError::SerializationFailed)
 }
+
+pub fn deserialize<'a, T: Deserialize<'a>>(
+	bytes: &'a [u8],
+) -> Result<T, SubfieldError> {
+	cbor4ii::serde::from_slice(bytes)
+		.map_err(|e| SubfieldError::DeserializationFailed)
+}
+
+pub use libp2p;
+// pub use libp2p::request_response::ResponseChannel;
+// pub use libp2p::request_response::{InboundRequestId, OutboundRequestId};
+pub use libp2p::{Multiaddr, PeerId, Stream};
+pub use libp2p_stream as stream;

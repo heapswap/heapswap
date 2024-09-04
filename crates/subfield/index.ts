@@ -1,7 +1,7 @@
 import { keys } from "@libp2p/crypto"
 
-import init,   as hs from "./pkg"
-export   from "./pkg"
+import init, * as hs from "./pkg"
+export * from "./pkg"
 
 // initialize the wasm module
 await init()

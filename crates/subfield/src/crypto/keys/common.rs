@@ -30,7 +30,7 @@ use crate::*;
 /*
    Types
 */
-pub type Key = [u8; SECRET_KEY_LENGTH];
+pub type SecretKey = [u8; SECRET_KEY_LENGTH];
 
 pub type PrivateKeyArr = [u8; SECRET_KEY_LENGTH];
 pub type DalekXPrivateKeyArr = [u8; SECRET_KEY_LENGTH];

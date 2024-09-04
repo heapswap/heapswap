@@ -201,6 +201,7 @@ impl Protoable<subfield_proto::PrivateKey, CryptoKeyError> for PrivateKey {
 /*
    Libp2pKeypairable
 */
+/*
 impl Libp2pKeypairable<CryptoKeyError> for PrivateKey {
 	fn to_libp2p_keypair(
 		&self,
@@ -230,6 +231,8 @@ impl Libp2pKeypairable<CryptoKeyError> for PrivateKey {
 		Ok(private_key)
 	}
 }
+*/
+
 
 /*
    HasV256

@@ -1,4 +1,3 @@
-use super::SubfieldConfig;
 use crate::*;
 
 use futures::{prelude::*, StreamExt};
@@ -40,8 +39,8 @@ use {
 	libp2p_webrtc_websys as webrtc_websys,
 };
 
-pub type SubfieldSwarm = Swarm<SubfieldBehaviour>;
-pub type SubfieldSwarmEvent = SwarmEvent<SubfieldBehaviourEvent>;
+pub type SubfieldSwarm = Swarm<SubfieldNetworkBehaviour>;
+pub type SubfieldSwarmEvent = SwarmEvent<SubfieldNetworkBehaviourEvent>;
 pub type ThreadsafeSubfieldSwarm = Arc<Mutex<SubfieldSwarm>>;
 pub type ThreadsafeSubfieldSwarmLock<'a> = MutexGuard<'a, SubfieldSwarm>;
 
@@ -123,7 +122,7 @@ async fn create_client(
 				// webrtc
 				// webrtc_websys::Transport::new(webrtc_websys::Config::new(&key)).boxed()
 			})?
-			.with_behaviour(|key| Ok(SubfieldBehaviour::new(key)))?
+			.with_behaviour(|key| Ok(SubfieldNetworkBehaviour::new(key)))?
 			.with_swarm_config(|c| {
 				c.with_idle_connection_timeout(Duration::from_secs(
 					IDLE_CONNECTION_TIMEOUT,
@@ -171,7 +170,7 @@ async fn create_server(
 				)
 				.map(|(peer_id, conn), _| (peer_id, StreamMuxerBox::new(conn))))
 			})?*/
-			.with_behaviour(|key| Ok(SubfieldBehaviour::new(key)))
+			.with_behaviour(|key| Ok(SubfieldNetworkBehaviour::new(key)))
 			.map_err(|e| eyr!(e.to_string()))?
 			.with_swarm_config(|c| {
 				c.with_idle_connection_timeout(Duration::from_secs(

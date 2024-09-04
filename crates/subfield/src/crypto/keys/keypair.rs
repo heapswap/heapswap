@@ -110,6 +110,10 @@ impl Stringable<CryptoKeyError> for Keypair {
 	}
 }
 
+/*
+   Libp2pKeypairable
+*/
+/*
 impl Libp2pKeypairable<CryptoKeyError> for Keypair {
 	fn to_libp2p_keypair(
 		&self,
@@ -128,6 +132,8 @@ impl Libp2pKeypairable<CryptoKeyError> for Keypair {
 		})
 	}
 }
+*/
+
 
 impl PartialEq for Keypair {
 	fn eq(&self, other: &Self) -> bool {
@@ -240,10 +246,10 @@ impl Keypair {
 	*/
 	#[wasm_bindgen(js_name = "toBytes")]
 	pub fn _js_to_bytes(&self) -> Uint8Array {
-		cbor_serialize(self).unwrap().as_slice().into()
+		serialize(self).unwrap().as_slice().into()
 	}
 	#[wasm_bindgen(js_name = "fromBytes")]
 	pub fn _js_from_bytes(bytes: Uint8Array) -> Keypair {
-		cbor_deserialize(&bytes.to_vec()).unwrap()
+		deserialize(&bytes.to_vec()).unwrap()
 	}
 }

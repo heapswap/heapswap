@@ -29,34 +29,27 @@ server = [
 	"libp2p/dns",
 	"libp2p/mdns",
 	"libp2p/tokio",
-	"libp2p/websocket",
-	"libp2p/tcp",
-	"libp2p/tls",
-	"libp2p/dns",
+	# "libp2p/websocket",
+	# "libp2p/tcp",
+	# "libp2p/tls",
+	# "libp2p/dns",
 	"libp2p/relay",
 	# "libp2p/quic",
-
+	# "gluesql/gluesql_memory_storage",
+	# "gluesql/gluesql-sled-storage"
 ]
 #
 ## Browser
 ##
 client = [
 	"libp2p/wasm-bindgen",
-	"libp2p/websocket-websys",
+	# "libp2p/websocket-websys",
 	"libp2p-webrtc-websys",
+	# "gluesql/gluesql-idb-storage",
+	# "gluesql/gluesql_memory_storage"
 ]
 
-# client = []
-# [[bin]]
-# name = "client"
-# path = "src/client.rs"
-# [[bin]]
-# name = "server"
-# path = "src/main.rs"
-# required-features = ["server"]
 [dependencies]
-# subfield_proto = { path = "../subfield_proto" }
-# prost = { workspace = true }
 #
 ## Networking
 ##
@@ -84,7 +77,7 @@ libp2p = { workspace = true, features = [
 	# 	"quic",
 	#    "relay",
 	# 	"rendezvous",
-	"request-response",
+	#   "request-response",
 	# 	"rsa",
 	# 	"secp256k1",
 	"serde",
@@ -112,35 +105,37 @@ reqwest-websocket = { workspace = true }
 # poem = { workspace = true, optional = true}
 # poem-grpc = { workspace = true, optional = true}
 # poem-openapi = { workspace = true, optional = true}
-yamux = { workspace = true }
+# yamux = { workspace = true }
 # Crypto
-#crypto-bigint.workspace = true
-#num-bigint.workspace = true
 rand.workspace = true
 getrandom.workspace = true
 blake3.workspace = true
 chacha20poly1305.workspace = true
-#curve25519-dalek.workspace = true
 ed25519-dalek.workspace = true
 x25519-dalek.workspace = true
 snow.workspace = true
+# crypto-bigint.workspace = true
+num-bigint.workspace = true
 # Encoding
 base32.workspace = true
 serde.workspace = true
 serde_bytes.workspace = true
 # bincode.workspace = true
-cbor4ii.workspace = true
+cbor4ii = { workspace = true, features = ["serde1"] }
 # Datastructures
 bytes.workspace = true
 dashmap.workspace = true
 # Storage
-# gluesql.workspace = true
+# gluesql = {workspace = true, features = ["gluesql_memory_storage"]}
 # Concurrency
 async-stream.workspace = true
 futures.workspace = true
 futures-channel.workspace = true
+asynchronous-codec = { workspace = true }
+# tokio
 tokio = { workspace = true, optional = true }
 tokio-stream = { workspace = true, optional = true }
+# tokio_with_wasm = { workspace = true }
 # Logging
 tracing.workspace = true
 # tracing-subscriber = { workspace = true, optional = true }
@@ -170,24 +165,29 @@ thiserror.workspace = true
 generational-arena.workspace = true
 async-trait.workspace = true
 flume.workspace = true
+unsigned-varint.workspace = true
+either = { workspace = true, features = ["serde"] }
+void = { workspace = true }
 
 [dev-dependencies]
 timeit.workspace = true
 wasm-bindgen-test = { workspace = true }
 tokio = { workspace = true, features = ["full"] }
 tokio-stream = { workspace = true }
+quickcheck.workspace = true
 
 [build]
 
 # rustflags = ["-Z", "threads=8"]
+
 [target.'cfg(target_arch = "wasm32")'.dependencies]
 gluesql = { workspace = true, features = [
 	"gluesql-idb-storage",
-	"gluesql-shared-memory-storage"
+	"gluesql_memory_storage"
 ] }
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 gluesql = { workspace = true, features = [
 	"gluesql_sled_storage",
-	"gluesql-shared-memory-storage"
+	"gluesql_memory_storage"
 ] }

@@ -45,7 +45,7 @@ pub enum SubfieldStoreError {
 }
 
 type ThreadSafeFullStore = Arc<Mutex<Pin<Box<dyn FullStore + Send + 'static>>>>;
-// type ThreadSafeFullStoreGuard = MutexGuard<Pin<Box<dyn FullStore + Send>>>;
+type ThreadSafeFullStoreGuard<'a> = MutexGuard<'a, Pin<Box<dyn FullStore + Send>>>;
 
 #[derive(Clone)]
 pub struct SubfieldStore {
@@ -55,11 +55,11 @@ pub struct SubfieldStore {
 
 impl SubfieldStore {
 	pub async fn new(
-		config: swarm::SubfieldConfig,
+		config: SubfieldStoreConfig,
 	) -> Result<Self, SubfieldStoreError> {
 		let cache: ThreadSafeFullStore =
-			Arc::new(Mutex::new(Box::pin(SharedMemoryStorage::new())));
-
+			Arc::new(Mutex::new(Box::pin(gluesql::gluesql_memory_storage::MemoryStorage::default())));
+			
 		let store_path = config.store_path.clone();
 
 		#[cfg(not(target_arch = "wasm32"))]
@@ -88,15 +88,15 @@ impl SubfieldStore {
 
 	pub async fn cache<'a>(
 		&'a self,
-	) -> MutexGuard<'a, Pin<Box<dyn FullStore + Send>>> {
+	) -> ThreadSafeFullStoreGuard<'a> {
 		self.cache.lock().await
 	}
 
 	pub async fn perma<'a>(
 		&'a self,
-	) -> MutexGuard<'a, Pin<Box<dyn FullStore + Send>>> {
+	) -> ThreadSafeFullStoreGuard<'a> {
 		self.perma.lock().await
 	}
 }
 
-unsafe impl Send for SubfieldStore {}
+
