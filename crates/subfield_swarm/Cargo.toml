@@ -1,0 +1,22 @@
+[package]
+name = "subfield_swarm"
+version = "0.1.0"
+authors = ["kahnpoint <96557890+kahnpoint@users.noreply.github.com>"]
+edition = "2021"
+
+[dependencies]
+subfield_utils = { path = "../subfield_utils" }
+subfield_dht = { path = "../subfield_dht" }
+futures.workspace = true
+serde.workspace = true
+libp2p = { workspace = true, features = ["autonat", "dcutr", "gossipsub", "kad", "noise", "ping", "yamux"] }
+libp2p-stream = { workspace = true }
+libp2p-webrtc = { workspace = true, optional = true }
+libp2p-webrtc-websys = { workspace = true, optional = true }
+reqwest.workspace = true
+bytes.workspace = true
+eyre.workspace = true
+
+[features]
+client = ["subfield_utils/client", "libp2p/wasm-bindgen", "libp2p-webrtc-websys"]
+server = ["subfield_utils/server","libp2p/tokio", "libp2p-webrtc/tokio",  "libp2p/mdns", "libp2p/relay"]

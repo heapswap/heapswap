@@ -2,6 +2,8 @@
 resolver = "2"
 members = ["crates/*"]
 
+[workspace.lints]
+
 ########################################
 ##
 ### Dependencies
@@ -133,6 +135,20 @@ yamux = { version = "0.13.3" } # Multiplexing
 libp2p = { path = "../rust-libp2p/libp2p" }
 # libp2p-stream = { version = "0.2.0-alpha" }
 libp2p-stream = { path = "../rust-libp2p/protocols/stream" }
+libp2p-identify = { path = "../rust-libp2p/protocols/identify" }
+libp2p-noise = { path = "../rust-libp2p/transports/noise" }
+libp2p-swarm = { path = "../rust-libp2p/swarm", features = ["macros"] }
+libp2p-swarm-test = { path = "../rust-libp2p/swarm-test" }
+libp2p-yamux = { path = "../rust-libp2p/muxers/yamux" }
+libp2p-identity = { path = "../rust-libp2p/identity", features = ["rand", "peerid"] }
+#libp2p-webrtc-websys = {version = "0.3.0-alpha.1"}
+# libp2p-websocket-websys = { version = "0.4" }
+libp2p-websocket-websys = { path = "../rust-libp2p/transports/websocket-websys" }
+# libp2p-webrtc = { version = "0.7.1-alpha" } # WebRTC
+libp2p-webrtc = { path = "../rust-libp2p/transports/webrtc" } # WebRTC (browser)
+# libp2p-webrtc-websys = { version = "0.4.0-alpha" } # WebRTC (browser)
+libp2p-webrtc-websys = { path = "../rust-libp2p/transports/webrtc-websys" } # WebRTC (browser)
+libp2p-core = { path = "../rust-libp2p/core" }
 #
 ## Concurrency
 ##
@@ -216,13 +232,6 @@ wasm-bindgen-struct = { version = "0.1.0" } # Macro for adeclaring wasm-bindgen 
 wasm-bindgen-rayon = { version = "1.2.1" }
 wasm-bindgen-test = { version = "0.3" }
 rayon = { version = "1.10.0" }
-#libp2p-webrtc-websys = {version = "0.3.0-alpha.1"}
-libp2p-websocket-websys = { version = "0.4" }
-# libp2p-webrtc = { version = "0.7.1-alpha" } # WebRTC
-libp2p-webrtc = { path = "../rust-libp2p/transports/webrtc" } # WebRTC (browser)
-# libp2p-webrtc-websys = { version = "0.4.0-alpha" } # WebRTC (browser)
-libp2p-webrtc-websys = { path = "../rust-libp2p/transports/webrtc-websys" } # WebRTC (browser)
-libp2p-core = { path = "../rust-libp2p/core" }
 ### Web
 web-sys = { version = "0.3.69" } # Bindings for all Web APIs
 gloo = { version = "0.11.0" } # Convenience crate for common `web_sys` features
@@ -284,7 +293,16 @@ ordered-float = { version = "4.2.2" }
 #num-traits = {version = "0.2.19"}
 pin-utils = { version = "0.1.0" }
 generational-arena = { version = "0.2.9" }
-async-trait = { version = "0.1" }
+async-trait = { version = "0.1.82" }
 unsigned-varint = { version = "0.8.0" }
-quickcheck = { version = "1.0.3"}
 void = { version = "1.0.2" }
+arrayvec = "0.7.4"
+fnv = "1.0"
+futures-bounded = "0.2.4"
+quickcheck = { package = "quickcheck-ext", path = "../rust-libp2p/misc/quickcheck-ext" }
+quick-protobuf = "0.8"
+quick-protobuf-codec = { path = "../rust-libp2p/misc/quick-protobuf-codec" }
+sha2 = "0.10.8"
+uint = "0.9"
+futures-timer = "3.0.3"
+web-time = "1.1.0"

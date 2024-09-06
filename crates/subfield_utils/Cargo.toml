@@ -1,0 +1,192 @@
+[package]
+name = "subfield_utils"
+version = "0.1.0"
+authors = ["kahnpoint <96557890+kahnpoint@users.noreply.github.com>"]
+edition = "2021"
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[features]
+default = []
+#
+## Server
+##
+server = [
+	# "axum",
+	# "axum-extra",
+	# "http",
+	# "headers",
+	"tokio/full",
+	"tokio-stream",
+	# "tokio-tungstenite",
+	# "tower",
+	# "tower-http",
+	# "poem",
+	# "poem-grpc",
+	# "poem-openapi"
+	# "libp2p-webrtc/tokio",
+	# "libp2p/dns",
+	# "libp2p/mdns",
+	# "libp2p/tokio",
+	# # "libp2p/websocket",
+	# # "libp2p/tcp",
+	# # "libp2p/tls",
+	# # "libp2p/dns",
+	# "libp2p/relay",
+	# # "libp2p/quic",
+	# "gluesql/gluesql_memory_storage",
+	# "gluesql/gluesql-sled-storage"
+]
+#
+## Browser
+##
+client = [
+	# "libp2p/wasm-bindgen",
+	# "libp2p/websocket-websys",
+	# "libp2p-webrtc-websys",
+	# "gluesql/gluesql-idb-storage",
+	# "gluesql/gluesql_memory_storage"
+]
+
+[dependencies]
+#
+## Networking
+##
+# libp2p
+libp2p = { workspace = true, features = [
+# 	# 	"async-std",
+# 	"autonat",
+# 	"cbor",
+# 	"dcutr",
+# 	# 	"dns",
+# 	# 	"ecdsa",
+ 	"ed25519",
+# 	"gossipsub",
+ 	"identify",
+# 	# 	"json",
+# 	"kad",
+ 	"macros",
+# 	# 	"mdns",
+# 	# 	"memory-connection-limits",
+# 	# 	"metrics",
+# 	"noise",
+# 	"ping",
+# 	# 	"plaintext",
+# 	# 	"pnet",
+# 	# 	"quic",
+# 	#    "relay",
+# 	# 	"rendezvous",
+# 	#   "request-response",
+# 	# 	"rsa",
+# 	# 	"secp256k1",
+ 	"serde",
+# 	# 	"tcp",
+# 	# 	"tls",
+# 	# 	"tokio",
+# 	# 	"uds",
+# 	# 	"wasm-bindgen",
+# 	# 	"websocket-websys",
+# 	# 	"websocket",
+# 	# 	"webtransport-websys",
+# 	"yamux",
+# 	# 	"upnp",
+] }
+# libp2p-webrtc-websys = { workspace = true, optional = true }
+# libp2p-websocket-websys = { workspace = true, optional = true }
+# libp2p-webrtc = { workspace = true, optional = true }
+# libp2p-core = { workspace = true } 
+# libp2p-stream = { workspace = true }
+# reqwest
+# reqwest = { workspace = true }
+# reqwest-websocket = { workspace = true }
+# poem
+# poem = { workspace = true, optional = true}
+# poem-grpc = { workspace = true, optional = true}
+# poem-openapi = { workspace = true, optional = true}
+# yamux = { workspace = true }
+# Crypto
+rand.workspace = true
+getrandom.workspace = true
+blake3.workspace = true
+chacha20poly1305.workspace = true
+ed25519-dalek.workspace = true
+x25519-dalek.workspace = true
+snow.workspace = true
+# crypto-bigint.workspace = true
+num-bigint.workspace = true
+# Encoding
+base32.workspace = true
+serde.workspace = true
+serde_bytes.workspace = true
+bincode.workspace = true
+# cbor4ii = { workspace = true, features = ["serde1"] }
+# Datastructures
+bytes.workspace = true
+dashmap.workspace = true
+# Storage
+# gluesql = {workspace = true, features = ["gluesql_memory_storage"]}
+# Concurrency
+async-stream.workspace = true
+futures.workspace = true
+futures-channel.workspace = true
+asynchronous-codec = { workspace = true }
+# tokio
+tokio = { workspace = true, optional = true }
+tokio-stream = { workspace = true, optional = true }
+# tokio_with_wasm = { workspace = true }
+# Logging
+tracing.workspace = true
+# tracing-subscriber = { workspace = true, optional = true }
+tracing-subscriber = { workspace = true }
+eyre.workspace = true
+# WASM
+gloo = { workspace = true, features = ["futures"] }
+wasm-bindgen = { workspace = true }
+wasm-bindgen-futures = { workspace = true }
+web-sys = { workspace = true }
+js-sys = { workspace = true }
+console_error_panic_hook = { workspace = true }
+tracing-wasm = { workspace = true }
+# Misc
+lazy_static.workspace = true
+once_cell.workspace = true
+getset.workspace = true
+num-traits.workspace = true
+strum.workspace = true
+ndarray = { workspace = true, features = ["serde"] }
+ndarray-rand = { workspace = true }
+chrono.workspace = true
+ordered-float.workspace = true
+priority-queue.workspace = true
+itertools.workspace = true
+thiserror.workspace = true
+generational-arena.workspace = true
+async-trait.workspace = true
+flume.workspace = true
+unsigned-varint.workspace = true
+either = { workspace = true, features = ["serde"] }
+void = { workspace = true }
+
+[dev-dependencies]
+timeit.workspace = true
+wasm-bindgen-test = { workspace = true }
+tokio = { workspace = true, features = ["full"] }
+tokio-stream = { workspace = true }
+quickcheck.workspace = true
+
+[build]
+
+# rustflags = ["-Z", "threads=8"]
+
+# [target.'cfg(target_arch = "wasm32")'.dependencies]
+# gluesql = { workspace = true, features = [
+# 	"gluesql-idb-storage",
+# 	"gluesql_memory_storage"
+# ] }
+
+# [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
+# gluesql = { workspace = true, features = [
+# 	"gluesql_sled_storage",
+# 	"gluesql_memory_storage"
+# ] }

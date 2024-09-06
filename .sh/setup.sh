@@ -5,6 +5,7 @@ npm install -g prettier@2.8.8 prettier-plugin-rust@0.1.9 prettier-plugin-toml@0.
 
 cargo install cargo-watch
 cargo install wasm-server-runner
+cargo install pb-rs
 #cargo install sccache --locked
 
 rustup default nightly

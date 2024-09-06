@@ -1,19 +1,15 @@
 {
 	"rust-analyzer.linkedProjects": [
 		"Cargo.toml",
-		"crates/subfield/Cargo.toml",
-		// "crates/heapswap/Cargo.toml"
-		// "crates/subfield_proto/Cargo.toml"
-		// "crates/subfield_macro_proto_ext/Cargo.toml",
-		// "crates/subfield_macro_proto_ext_proc/Cargo.toml",
-		//"crates/browser/Cargo.toml",
-		//{ "root": "crates/browser", "target": "wasm32-unknown-unknown" },
-		//"crates/server/Cargo.toml",
-		//"crates/protos/Cargo.toml"
+		"crates/heapswap/Cargo.toml",
+		"crates/subfield_swarm/Cargo.toml",
+		"crates/subfield_dht/Cargo.toml",
+		"crates/subfield_utils/Cargo.toml"
+		
 	],
 	//"rust-analyzer.cargo.target": "wasm32-unknown-unknown",
 	"rust-analyzer.server.extraEnv": {
-		//"CHALK_OVERFLOW_DEPTH": "1000"
+		"CHALK_OVERFLOW_DEPTH": "1000"
 		//"RUSTC_WRAPPER":"sccache",
 		//"RUSTFLAGS": "-Clinker=clang -Clink-arg=-fuse-ld=mold"
 	},

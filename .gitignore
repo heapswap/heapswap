@@ -8,7 +8,6 @@ debug_info.txt
 scratch.txt
 crates/browser/static
 crates/core/static
-kad
 pkg
 wasm
 certs
