@@ -97,8 +97,8 @@ impl<
 }
 
 #[test]
-fn test_dashdex() {
-	let mut dex = SetMap::new();
+fn test_setmap() {
+	let mut sm = SetMap::new();
 
 	// kv
 	// a -> z, y
@@ -109,37 +109,37 @@ fn test_dashdex() {
 	// z -> a
 	// y -> a, b, c
 
-	dex.insert("a".to_string(), "z".to_string());
-	dex.insert("a".to_string(), "y".to_string());
-	dex.insert("b".to_string(), "y".to_string());
-	dex.insert("b".to_string(), "y".to_string());
-	dex.insert("c".to_string(), "y".to_string());
+	sm.insert("a".to_string(), "z".to_string());
+	sm.insert("a".to_string(), "y".to_string());
+	sm.insert("b".to_string(), "y".to_string());
+	sm.insert("b".to_string(), "y".to_string());
+	sm.insert("c".to_string(), "y".to_string());
 
 	// test keys
 
-	let Some(a_vals) = dex.get_key(&"a".to_string()) else {
+	let Some(a_vals) = sm.get_key(&"a".to_string()) else {
 		panic!("a_vals not found");
 	};
 	assert!(a_vals == HashSet::from_iter(["z".to_string(), "y".to_string()]));
 
-	let Some(b_vals) = dex.get_key(&"b".to_string()) else {
+	let Some(b_vals) = sm.get_key(&"b".to_string()) else {
 		panic!("b_vals not found");
 	};
 	assert!(b_vals == HashSet::from_iter(["y".to_string()]));
 
-	let Some(c_vals) = dex.get_key(&"c".to_string()) else {
+	let Some(c_vals) = sm.get_key(&"c".to_string()) else {
 		panic!("c_vals not found");
 	};
 	assert!(c_vals == HashSet::from_iter(["y".to_string()]));
 
 	// test values
 
-	let Some(z_keys) = dex.get_value(&"z".to_string()) else {
+	let Some(z_keys) = sm.get_value(&"z".to_string()) else {
 		panic!("z_keys not found");
 	};
 	assert!(z_keys == HashSet::from_iter(["a".to_string()]));
 
-	let Some(y_keys) = dex.get_value(&"y".to_string()) else {
+	let Some(y_keys) = sm.get_value(&"y".to_string()) else {
 		panic!("y_keys not found");
 	};
 	assert!(
@@ -152,7 +152,7 @@ fn test_dashdex() {
 	);
 
 	// remove a key
-	dex.remove_key(&"b".to_string());
+	sm.remove_key(&"b".to_string());
 	// kv
 	// a -> z, y
 	// b -> none
@@ -162,16 +162,16 @@ fn test_dashdex() {
 	// z -> a
 	// y -> a, c
 
-	let b_vals = dex.get_key(&"b".to_string());
+	let b_vals = sm.get_key(&"b".to_string());
 	assert!(b_vals == None);
 
-	let Some(y_keys) = dex.get_value(&"y".to_string()) else {
+	let Some(y_keys) = sm.get_value(&"y".to_string()) else {
 		panic!("y_keys not found");
 	};
 	assert!(y_keys == HashSet::from_iter(["a".to_string(), "c".to_string()]));
 
 	// remove only
-	dex.remove_only(&"a".to_string(), &"z".to_string());
+	sm.remove_only(&"a".to_string(), &"z".to_string());
 	// kv
 	// a -> y
 	// b -> none
@@ -181,11 +181,11 @@ fn test_dashdex() {
 	// z -> none
 	// y -> a, c
 
-	let Some(a_vals) = dex.get_key(&"a".to_string()) else {
+	let Some(a_vals) = sm.get_key(&"a".to_string()) else {
 		panic!("a_vals not found");
 	};
 	assert!(a_vals == HashSet::from_iter(["y".to_string()]));
 
-	let z_keys = dex.get_value(&"z".to_string());
+	let z_keys = sm.get_value(&"z".to_string());
 	assert!(z_keys == None);
 }

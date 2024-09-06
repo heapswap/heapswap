@@ -1,8 +1,0 @@
-[package]
-name = "subfield_dht"
-edition = "2021"
-version = "0.1.0"
-authors = ["kahnpoint <96557890+kahnpoint@users.noreply.github.com>"]
-
-[dependencies]
-subfield_utils = { path = "../subfield_utils" }

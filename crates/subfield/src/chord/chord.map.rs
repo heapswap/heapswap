@@ -3,7 +3,7 @@ use crate::*;
 const KEYSPACE_SIZE: usize = 256;
 
 lazy_static! {
-	static ref KEYSPACE_SIZE_BIGINT: BigUint = BigUint::from(256u32);
+	static ref KEYSPACE_SIZE_BIGINT: BigUint = BigUint::from(KEYSPACE_SIZE as u32);
     static ref _2_TO_KEYSPACE_SIZE: BigUint = BigUint::from(2u32).pow(KEYSPACE_SIZE as u32);
 	static ref _2K_LOOKUP: Vec<BigUint> = (1..=KEYSPACE_SIZE).map(|k| BigUint::from(2u32).pow(k as u32)).collect();
 }

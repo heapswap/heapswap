@@ -2,10 +2,7 @@
 	"rust-analyzer.linkedProjects": [
 		"Cargo.toml",
 		"crates/heapswap/Cargo.toml",
-		"crates/subfield_swarm/Cargo.toml",
-		"crates/subfield_dht/Cargo.toml",
-		"crates/subfield_utils/Cargo.toml"
-		
+		"crates/subfield/Cargo.toml",
 	],
 	//"rust-analyzer.cargo.target": "wasm32-unknown-unknown",
 	"rust-analyzer.server.extraEnv": {

@@ -1,5 +1,5 @@
 [package]
-name = "subfield_utils"
+name = "subfield"
 version = "0.1.0"
 authors = ["kahnpoint <96557890+kahnpoint@users.noreply.github.com>"]
 edition = "2021"

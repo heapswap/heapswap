@@ -4,6 +4,9 @@
 #![allow(unused_variables)]
 #![allow(unused_parens)]
 #![allow(unused_mut)]
+#![allow(unreachable_code)]
+#![allow(unreachable_patterns)]
+
 
 /*
    Prelude
@@ -12,6 +15,8 @@ mod constants;
 mod crypto;
 mod misc;
 mod protocol;
+mod dht;
+
 // mod chord;
 // mod store;
 // mod swarm;
@@ -25,6 +30,7 @@ pub mod prelude {
 	pub use crate::crypto::*;
 	pub use crate::misc::*;
 	pub use crate::protocol::*;
+	pub use crate::dht::*;
 	// pub use crate::chord::*;
 	// pub use crate::store::*;
 	// pub use crate::swarm::*;
